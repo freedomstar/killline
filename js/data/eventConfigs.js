@@ -265,7 +265,7 @@ export const eventConfigs = {
             moveOut: { mentalLoss: 30 }
         },
         friend_help: {
-            accept: { moneyGain: 1000, mentalGain: 15, mentalGainShelter: 25 },
+            accept: { moneyGain: 300, mentalGain: 15, mentalGainShelter: 25 },
             decline: { mentalGain: 5, socialGain: 5 }
         },
         sell_car_emergency: {
