@@ -245,10 +245,10 @@ export const eventConfigs = {
             repair: {
                 baseCost: 1200,
                 coverageRates: { full_coverage: 0.6, liability: 0.4, none: 0 },
-                mentalLoss: 20
+                mentalLoss: 10
             },
-            credit: { creditScoreLoss: 30, mentalLoss: 40 },
-            skip: { mentalLoss: 40 }
+            credit: { creditScoreLoss: 30, mentalLoss: 15 },
+            skip: { mentalLoss: 25 }
         },
         burglary: {
             report: { insuredDeductible: 250, uninsuredLoss: 2000, insuredMentalLoss: 15, uninsuredMentalLoss: 30 }

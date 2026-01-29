@@ -607,7 +607,15 @@ export function generateDailyWorkEvent(state, context) {
 
 
 export function getAvailableDailyActions(state, context) {
-    if (state.hospitalDaysLeft > 0 || state.health < 30) {
+    // V2.XX 统一的重病/住院/手术限制条件
+    const isMedicalRestricted =
+        state.hospitalDaysLeft > 0 ||
+        state.health < 30 ||
+        ((state.health < 50 && state.insurance.healthPlanId !== 'none') || // 需手术
+            state.surgeryApprovalDaysLeft > 0 ||
+            state.surgeryApprovalPending);
+
+    if (isMedicalRestricted) {
         return [
             { id: 'none', text: I18n.t('events.daily_actions.none.text'), hint: I18n.t('events.daily_actions.none.hint'), hintType: 'neutral' }
         ];
@@ -635,7 +643,15 @@ export function getAvailableLunchOptions(state, context) {
     const options = [];
     const base = GameData.lunchOptions;
 
-    if (state.hospitalDaysLeft > 0 || state.health < 30) {
+    // V2.XX 统一的重病/住院/手术限制条件
+    const isMedicalRestricted =
+        state.hospitalDaysLeft > 0 ||
+        state.health < 30 ||
+        ((state.health < 50 && state.insurance.healthPlanId !== 'none') || // 需手术
+            state.surgeryApprovalDaysLeft > 0 ||
+            state.surgeryApprovalPending);
+
+    if (isMedicalRestricted) {
         const allowed = ['hospital_cafeteria', 'skip'];
         for (const key of allowed) {
             if (base[key]) {
@@ -701,7 +717,15 @@ export function getAvailableCommuteOptions(state, context) {
     const options = [];
     const base = GameData.commuteOptions;
 
-    if (state.hospitalDaysLeft > 0 || state.health < 30) {
+    // V2.XX 统一的重病/住院/手术限制条件
+    const isMedicalRestricted =
+        state.hospitalDaysLeft > 0 ||
+        state.health < 30 ||
+        ((state.health < 50 && state.insurance.healthPlanId !== 'none') || // 需手术
+            state.surgeryApprovalDaysLeft > 0 ||
+            state.surgeryApprovalPending);
+
+    if (isMedicalRestricted) {
         if (base.hospital_stay) {
             const opt = { ...base.hospital_stay, key: 'hospital_stay' };
             opt.name = I18n.t('data.commuteOptions.hospital_stay.name');
