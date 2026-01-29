@@ -202,6 +202,7 @@ export const UI = {
         this.elements.seedInput = document.getElementById('seed-input');
 
         // V2.12 游戏说明 (Manual Screen)
+        this.elements.helpContainer = document.querySelector('.help-container');
         this.elements.helpButton = document.getElementById('help-button');
         this.elements.manualBackBtn = document.getElementById('manual-back-btn');
         this.elements.manualCloseHeader = document.getElementById('manual-close-header');
@@ -452,8 +453,11 @@ export const UI = {
             }
         });
 
-        // 显示/隐藏帮助按钮（仅在开始界面显示）
-        if (this.elements.helpButton) {
+        // 显示/隐藏帮助按钮容器（仅在开始界面显示）
+        if (this.elements.helpContainer) {
+            this.elements.helpContainer.style.display = screenName === 'start' ? 'flex' : 'none';
+        } else if (this.elements.helpButton) {
+            // Fallback old behavior just in case
             this.elements.helpButton.style.display = screenName === 'start' ? 'flex' : 'none';
         }
 
