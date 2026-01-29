@@ -200,10 +200,27 @@ export const EventsMixin = {
                     totalCost += tipAmount;
                 }
                 state.money -= totalCost;
-                state.health = Math.max(0, Math.min(100, state.health + lunchOpt.healthEffect));
+
+                // Apply all effects
+                if (lunchOpt.healthEffect) state.health = Math.max(0, Math.min(100, state.health + lunchOpt.healthEffect));
+                if (lunchOpt.energyEffect) state.energy = Math.min(100, state.energy + lunchOpt.energyEffect); // V2.55 Fix
+                if (lunchOpt.mentalEffect) state.mental = Math.min(100, state.mental + lunchOpt.mentalEffect);
+                if (lunchOpt.socialEffect) state.socialValue = Math.min(100, (state.socialValue || 50) + lunchOpt.socialEffect);
+
                 if (state.lunchType === 'bento') state.hasPreparedMeal = false;
                 const lunchName = typeof lunchOpt.name === 'function' ? lunchOpt.name() : lunchOpt.name;
                 result.message += `\n🍱 午餐：${lunchName}${totalCost > 0 ? ` -$${totalCost}` : ''}`;
+
+                // Append effect descriptions to message
+                const parts = [];
+                if (lunchOpt.healthEffect) parts.push(`健康${lunchOpt.healthEffect > 0 ? '+' : ''}${lunchOpt.healthEffect}`);
+                if (lunchOpt.energyEffect) parts.push(`精力${lunchOpt.energyEffect > 0 ? '+' : ''}${lunchOpt.energyEffect}`);
+                if (lunchOpt.mentalEffect) parts.push(`精神${lunchOpt.mentalEffect > 0 ? '+' : ''}${lunchOpt.mentalEffect}`);
+                if (lunchOpt.socialEffect) parts.push(`社交${lunchOpt.socialEffect > 0 ? '+' : ''}${lunchOpt.socialEffect}`);
+
+                if (parts.length > 0) {
+                    // result.message += ` (${parts.join(', ')})`;
+                }
             }
         }
 

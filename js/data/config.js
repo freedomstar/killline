@@ -24,7 +24,7 @@ export const initialState = {
     job: 'fulltime',        // 工作状态
     energy: 90,             // 精力值
     maxEnergy: 100,         // 精力上限
-    mental: 70,             // 精神值
+    mental: 90,             // 精神值
     maxMental: 100,         // 精神上限 (精力耗尽会永久减少)
     health: 100,             // 健康值
     maxHealth: 100,          // 健康上限

@@ -329,7 +329,13 @@ const GameController = {
                     totalCost += Math.round(lunchOpt.cost * GameData.usaFeatures.tipRate);
                 }
                 simState.money -= totalCost;
-                simState.health = Math.max(0, Math.min(100, simState.health + lunchOpt.healthEffect));
+
+                // Apply all effects
+                if (lunchOpt.healthEffect) simState.health = Math.max(0, Math.min(100, simState.health + lunchOpt.healthEffect));
+                if (lunchOpt.energyEffect) simState.energy = Math.min(100, simState.energy + lunchOpt.energyEffect);
+                if (lunchOpt.mentalEffect) simState.mental = Math.min(100, simState.mental + lunchOpt.mentalEffect);
+                if (lunchOpt.socialEffect) simState.socialValue = Math.min(100, (simState.socialValue || 50) + lunchOpt.socialEffect);
+
                 if (simState.lunchType === 'bento') simState.hasPreparedMeal = false;
             }
         }
