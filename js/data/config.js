@@ -17,7 +17,7 @@ export const randomEventLimits = {
 };
 
 export const initialState = {
-    money: 300,            // 初始存款 (10天/月节奏)
+    money: 200,            // 初始存款 (10天/月节奏)
     monthlyIncome: 1500,    // 月薪 (10天周期)
     housing: 'apartment',   // 住所类型
     housingCost: 1000,       // 月租 (10天周期)
