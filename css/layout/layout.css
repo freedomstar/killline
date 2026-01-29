@@ -1,0 +1,73 @@
+/* 游戏容器 */
+#game-container {
+    width: 100%;
+    max-width: 600px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 屏幕切换 */
+.screen {
+    display: none;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: var(--spacing-md);
+    flex-direction: column;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ========================================
+   游戏主界面
+   ======================================== */
+#game-screen {
+    padding: 0;
+    gap: 0;
+}
+
+/* 顶部状态栏 - 玻璃态 */
+/* 顶部固定区域容器 */
+#ui-header-container {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 4px;
+    /* Slight padding for bottom edge */
+}
+
+/* V2.6 Bottom Navigation & Insurance Styles */
+
+#main-scroll-container {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 80px;
+    /* 留出底部 Tab 的空间 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 安全区域 */
+@supports (padding: max(0px)) {
+    #status-bar {
+        padding-top: max(var(--spacing-md), env(safe-area-inset-top));
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* General Utilities */
+.spacer-bottom {
+    height: 80px;
+}

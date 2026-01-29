@@ -1,0 +1,92 @@
+/* 保险界面 */
+#insurance-screen {
+    padding: 0;
+    background: var(--color-background);
+    padding-bottom: 80px;
+}
+
+.screen-header {
+    padding: var(--spacing-md);
+    background: var(--color-surface-elevated);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.screen-header h2 {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.money-badge {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--color-money);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.insurance-scroll-container {
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    /* height: calc(100vh - 130px); */
+}
+
+.plan-badge {
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.plan-badge.info {
+    background: var(--color-info);
+}
+
+.plan-badge.warning {
+    background: var(--color-warning);
+    color: black;
+}
+
+.deductible-section {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.progress-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.small-hint {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* V2.24 强制特定元素右对齐 */
+#car-plan-name {
+    text-align: right;
+    display: block;
+    /* 确保占位行为正常 */
+}

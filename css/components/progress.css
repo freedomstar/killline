@@ -1,0 +1,82 @@
+/* 进度条 - 改进版 */
+.progress-container {
+    width: 100%;
+    max-width: 100%;
+    /* Ensure it doesn't overflow */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition-normal);
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+}
+
+.energy-bar {
+    background: linear-gradient(90deg, #ffeb3b, #fff176);
+    box-shadow: 0 0 10px rgba(255, 235, 59, 0.6);
+}
+
+.mental-bar {
+    background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+    box-shadow: 0 0 10px rgba(162, 155, 254, 0.5);
+}
+
+.health-bar {
+    background: linear-gradient(90deg, #e74c3c, #ff6b6b);
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
+.social-bar {
+    background: linear-gradient(90deg, #00b894, #55efc4);
+    box-shadow: 0 0 10px rgba(85, 239, 196, 0.5);
+}
+
+.work-efficiency-bar {
+    background: linear-gradient(90deg, #0984e3, #74b9ff);
+    box-shadow: 0 0 10px rgba(116, 185, 255, 0.5);
+}
+
+#task-progress-bar {
+    background: linear-gradient(90deg, #e84393, #fd79a8);
+    box-shadow: 0 0 10px rgba(253, 121, 168, 0.5);
+}
+
+/* 低精力警告脉冲 */
+@keyframes lowEnergyPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.low-energy .energy-bar {
+    animation: lowEnergyPulse 1.5s ease-in-out infinite;
+}

@@ -1,0 +1,136 @@
+/* Investment Mood Effects */
+.investment-mood-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    animation: moodFadeIn 0.5s forwards;
+}
+
+.investment-mood-overlay.fade-out {
+    animation: moodFadeOut 0.5s forwards;
+}
+
+/* Boom Theme */
+.investment-mood-overlay.boom {
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, rgba(46, 213, 115, 0.2) 60%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* Crash Theme */
+.investment-mood-overlay.crash {
+    background: radial-gradient(circle, rgba(255, 71, 87, 0.4) 0%, rgba(47, 53, 66, 0.6) 80%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.mood-content {
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2rem 4rem;
+    border-radius: 16px;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transform: scale(0.8);
+    animation: moodPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.mood-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.mood-percent {
+    font-size: 2rem;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.boom .mood-percent {
+    color: #2ed573;
+}
+
+.crash .mood-percent {
+    color: #ff4757;
+}
+
+/* Emoji Particles */
+.mood-emoji {
+    position: absolute;
+    font-size: 2rem;
+    opacity: 0.8;
+    user-select: none;
+}
+
+.boom .mood-emoji {
+    animation: floatUp linear forwards;
+}
+
+.crash .mood-emoji {
+    animation: floatDown linear forwards;
+}
+
+@keyframes moodFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes moodFadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes moodPopIn {
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-80vh) translateX(var(--tx)) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes floatDown {
+    0% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(80vh) translateX(var(--tx)) rotate(-360deg);
+        opacity: 0;
+    }
+}

@@ -1,0 +1,76 @@
+/* Toast消息 */
+.toast {
+    position: fixed;
+    bottom: 90px;
+    /* Clear the 70px tab bar */
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px var(--spacing-lg);
+    background: var(--color-surface-elevated);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    z-index: 1000;
+    animation: toastIn 0.3s ease;
+    max-width: 90%;
+    text-align: center;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.toast.hidden {
+    display: none;
+}
+
+.toast.positive {
+    border-color: var(--color-success);
+    box-shadow: 0 0 20px var(--color-success-glow);
+}
+
+.toast.negative {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 20px var(--color-danger-glow);
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* 屏幕震动效果 */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-6px);
+    }
+
+    40% {
+        transform: translateX(6px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+.shake {
+    animation: shake 0.5s ease;
+}

@@ -1,0 +1,77 @@
+/* 按钮 - 更精致 */
+.primary-button {
+    font-family: var(--font-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: var(--spacing-md) var(--spacing-2xl);
+    min-height: 56px;
+    background: linear-gradient(135deg, var(--color-danger) 0%, #c0392b 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    box-shadow:
+        var(--shadow-button),
+        0 0 30px var(--color-danger-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all var(--transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.primary-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.primary-button:hover::before {
+    left: 100%;
+}
+
+.primary-button:active {
+    transform: scale(0.98);
+    box-shadow: var(--shadow-button);
+}
+
+/* 基本按钮样式追加 */
+.action-btn {
+    font-family: var(--font-primary);
+    background: var(--color-info);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 12px;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.action-btn.outline {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.action-btn.outline:hover {
+    border-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+}
+
+/* 红色危险按钮 */
+.danger-btn {
+    background: var(--color-danger);
+    color: white;
+}

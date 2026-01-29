@@ -1,0 +1,98 @@
+/* ========================================
+   响应式优化
+   ======================================== */
+@media (min-width: 420px) {
+    .title {
+        font-size: 3.2rem;
+    }
+
+    #status-bar {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .event-title {
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .title {
+        font-size: 2.2rem;
+    }
+
+    .status-value {
+        font-size: 0.75rem;
+    }
+}
+
+/* ========================================
+   Mobile Layout Polish (V2.9.1)
+   ======================================== */
+@media (max-width: 600px) {
+
+    /* 均衡布局 (V2.9.5) - 两边留少量空白 */
+    .assets-container {
+        padding: 8px 6px;
+        /* 左右留6px空白 */
+    }
+
+    /* 标题 */
+    .screen-title {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+
+    /* 恢复圆角和边框 */
+    .asset-card,
+    .assets-summary,
+    .market-sentiment,
+    .news-banner,
+    .asset-tabs {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        border-radius: 12px;
+        /* 恢复圆角 */
+        padding: 14px 12px;
+        margin-bottom: 8px;
+    }
+
+    /* 资产摘要充满宽度 */
+    .assets-summary {
+        gap: 6px;
+        padding: 14px 12px;
+    }
+
+    .summary-label {
+        font-size: 0.7rem;
+    }
+
+    .summary-value {
+        font-size: 1rem;
+    }
+
+    /* 资产卡片内部更充实 */
+    .asset-card {
+        padding: 14px 12px;
+    }
+
+    .asset-header {
+        margin-bottom: 10px;
+    }
+
+    .price-value {
+        font-size: 1.2rem;
+    }
+
+    .asset-btn {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+    }
+
+    /* 分类标签保留圆角 */
+    .asset-tabs {
+        border-radius: 12px;
+        margin-bottom: 0;
+        padding: 8px 12px;
+    }
+}

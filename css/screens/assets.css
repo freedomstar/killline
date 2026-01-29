@@ -1,0 +1,373 @@
+/* ========================================
+   V2.8 资产管理页面
+   ======================================== */
+#assets-screen {
+    padding: 0;
+    background: var(--color-background);
+    padding-bottom: 80px;
+}
+
+.assets-container {
+    width: 100%;
+    /* 充满父容器宽度，不收缩 */
+    padding: 8px 6px;
+    /* 左右留少量padding */
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.screen-title {
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-money);
+}
+
+/* 资产概览 */
+.assets-summary {
+    background: var(--color-surface-elevated);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.summary-item {
+    text-align: center;
+    flex: 1;
+}
+
+.summary-item.total {
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+}
+
+.summary-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 2px;
+}
+
+.summary-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.summary-item.total .summary-value {
+    color: var(--color-money);
+}
+
+/* 资产卡片 */
+.asset-cards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.asset-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    transition: var(--transition-fast);
+}
+
+.asset-card:hover {
+    border-color: var(--color-border-glow);
+    box-shadow: var(--shadow-glow);
+}
+
+.asset-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.asset-icon {
+    font-size: 1.2rem;
+}
+
+.asset-name {
+    font-weight: 600;
+    flex: 1;
+}
+
+.asset-risk {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.asset-risk.low {
+    background: rgba(46, 213, 115, 0.2);
+    color: var(--color-success);
+}
+
+.asset-risk.medium {
+    background: rgba(255, 165, 2, 0.2);
+    color: var(--color-warning);
+}
+
+.asset-risk.high {
+    background: rgba(255, 71, 87, 0.2);
+    color: var(--color-danger);
+}
+
+.asset-price {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.price-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+.price-change {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.price-change.up {
+    background: rgba(46, 213, 115, 0.2);
+    color: var(--color-success);
+}
+
+.price-change.down {
+    background: rgba(255, 71, 87, 0.2);
+    color: var(--color-danger);
+}
+
+.asset-holding {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.asset-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.asset-btn {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.asset-btn.buy {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.asset-btn.buy:hover {
+    background: #27ae60;
+}
+
+.asset-btn.sell {
+    background: var(--color-danger);
+    color: #fff;
+}
+
+.asset-btn.sell:hover {
+    background: #c0392b;
+}
+
+/* V2.9 新闻横幅 */
+.news-banner {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.1));
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    animation: news-pulse 2s ease-in-out infinite;
+}
+
+.news-banner.hidden {
+    display: none;
+}
+
+@keyframes news-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.85;
+    }
+}
+
+.news-icon {
+    font-size: 1.2rem;
+}
+
+.news-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--color-text-primary);
+}
+
+.news-desc {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    margin-left: auto;
+}
+
+/* 市场情绪指示器 */
+.market-sentiment {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+    border-radius: var(--radius-sm);
+}
+
+.sentiment-label {
+    font-size: 0.7rem;
+    color: var(--color-text-secondary);
+}
+
+.sentiment-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 40px;
+}
+
+.sentiment-value.fear {
+    color: var(--color-danger);
+}
+
+.sentiment-value.greed {
+    color: var(--color-success);
+}
+
+.sentiment-bar {
+    flex: 1;
+    height: 6px;
+    background: linear-gradient(90deg, var(--color-danger), #888, var(--color-success));
+    border-radius: 3px;
+    position: relative;
+}
+
+.sentiment-fill {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    top: -1px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    transition: left 0.3s ease;
+}
+
+/* 资产分类标签 */
+.asset-tabs {
+    display: flex;
+    gap: 4px;
+    /* Segmented control gap */
+    margin-bottom: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.3);
+    /* Dark recessed background */
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.asset-tab {
+    flex: 1;
+    text-align: center;
+    padding: var(--spacing-sm) 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--color-text-secondary);
+    border: 1px solid transparent;
+}
+
+.asset-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-primary);
+}
+
+.asset-tab.active {
+    background: var(--color-surface-elevated);
+    color: var(--color-text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 特定资产的高亮颜色 */
+.asset-tab.active[data-category="commodity"] {
+    background: rgba(255, 215, 0, 0.15);
+    color: #ffd700;
+    border-color: rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+.asset-tab.active[data-category="stock"] {
+    background: rgba(255, 71, 87, 0.15);
+    /* 使用红色作为默认股票色 */
+    color: #ff6b6b;
+    border-color: rgba(255, 71, 87, 0.3);
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.1);
+}
+
+.asset-tab.active[data-category="crypto"] {
+    background: rgba(162, 155, 254, 0.15);
+    color: #a29bfe;
+    border-color: rgba(162, 155, 254, 0.3);
+    box-shadow: 0 0 10px rgba(162, 155, 254, 0.1);
+}
+
+/* 盈亏显示 */
+.asset-profit {
+    font-size: 0.7rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.asset-profit .profit {
+    color: var(--color-success);
+}
+
+.asset-profit .loss {
+    color: var(--color-danger);
+}
+
+.asset-avgcost {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+}
+
+/* 极高风险标签 */
+.asset-risk.extreme {
+    background: rgba(139, 0, 0, 0.3);
+    color: #ff4444;
+}

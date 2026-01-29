@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="M国斩杀线生存 - 一款讽刺中产阶级财务脆弱性的文字冒险游戏">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>斩杀线生存 | Killzone Survivor</title>
+    <!-- Fonts: Using System Fonts for Offline Performance -->
+    <!-- Main Style Index -->
+    <link rel="stylesheet" href="css/style.css?v=2.43">
+
+    <!-- Mobile Debugging: Show errors on screen -->
+    <script>
+        window.onerror = function (msg, url, line, col, error) {
+            var extra = !col ? '' : '\ncolumn: ' + col;
+            extra += !error ? '' : '\nerror: ' + error;
+            var errorMsg = "Error: " + msg + "\nurl: " + url + "\nline: " + line + extra;
+
+            // Only create error div if it doesn't exist to avoid spam
+            if (!document.getElementById('errDiv')) {
+                var errDiv = document.createElement('div');
+                errDiv.id = 'errDiv';
+                errDiv.style.position = 'fixed';
+                errDiv.style.top = '0';
+                errDiv.style.left = '0';
+                errDiv.style.width = '100%';
+                errDiv.style.backgroundColor = 'rgba(255,0,0,0.95)';
+                errDiv.style.color = 'white';
+                errDiv.style.padding = '10px';
+                errDiv.style.zIndex = '999999';
+                errDiv.style.fontFamily = 'monospace';
+                errDiv.style.whiteSpace = 'pre-wrap';
+                errDiv.style.fontSize = '12px';
+                errDiv.style.pointerEvents = 'none';
+                errDiv.innerText = errorMsg;
+                document.body.appendChild(errDiv);
+            } else {
+                document.getElementById('errDiv').innerText += "\n\n" + errorMsg;
+            }
+            return false;
+        };
+        console.log("Debug mode: Error handler initialized");
+    </script>
+</head>
+
+<body>
+    <!-- SECTION: Background -->
+    <div id="game-background" class="morning"></div>
+
+    <!-- SECTION: Main Container -->
+    <div id="game-container">
+
+        <!-- SECTION: HELP & MODALS -->
+        <!-- SECTION: HELP & MODALS -->
+        <!-- Wrapped in container for positioning and label -->
+        <div class="help-container">
+            <button id="help-button" class="help-button" aria-label="游戏说明">?</button>
+            <span class="help-label">游戏说明 (建议简单阅读)</span>
+        </div>
+
+        <!-- SECTION: MANUAL SCREEN -->
+        <div id="manual-screen" class="screen">
+            <div class="manual-container glass-panel">
+                <div class="manual-header">
+                    <h2 class="manual-title">📖 生存指南</h2>
+                    <button class="manual-close-btn" id="manual-close-header">×</button>
+                </div>
+                <div class="manual-content">
+                    <h1>🏙️ 生存之路 (Killzone Survivor) - 官方手册</h1>
+                    <p>欢迎来到残酷的都市生存模拟。在这里，你需要平衡工作、健康、社交与财富，在都市生活的重压下寻找一线生机。</p>
+                    <blockquote>
+                        ⚠️ <strong>免责声明</strong>: 本游戏纯属图一乐，如有雷同，纯属巧合。请勿代入现实。
+                    </blockquote>
+
+                    <h2>⏳ 特殊游戏规则 (必读)</h2>
+                    <p>为了模拟高压环境，本游戏的时间流速与现实不同：</p>
+                    <ul>
+                        <li><strong>🗓️ 10天等于一个月</strong>:
+                            <ul>
+                                <li><strong>发薪日</strong>: 每10天发一次工资。</li>
+                                <li><strong>账单日</strong>: 房租、水电、保险也是每10天扣除一次。</li>
+                                <li><strong>节奏</strong>: 必须在极短的周期内赚够 30 天的生活费，容错率极低。</li>
+                            </ul>
+                        </li>
+                        <li><strong>📅 4天等于一周</strong>:
+                            <ul>
+                                <li><strong>工作日</strong>: 第 1, 2, 3 天。</li>
+                                <li><strong>休息日</strong>: 第 4 天 (以及倍数)。</li>
+                                <li><strong>策略</strong>: 休息日是唯一的喘息机会，用来备餐 (Cook) 或大补觉 (Sleep)。</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <hr>
+
+                    <h2>🖥️ 界面概览</h2>
+
+                    <h3>1. 主控面板 (Dashboard)</h3>
+                    <p>这里是你监控生存状态的核心区域。</p>
+                    <img src="assets/images/manual_ui.png" alt="主界面概览">
+
+                    <ul>
+                        <li><strong>核心属性栏</strong> (左上):
+                            <ul>
+                                <li><strong>⚡ 精力 (Energy)</strong>: 也就是你的体力。工作、加班、熬夜都会消耗。耗尽会导致强制睡眠甚至过度劳累。</li>
+                                <li><strong>🧠 精神 (Mental)</strong>: 你的SAN值。压力过大、社交隔离或投资失败会扣除。精神崩溃将导致游戏失败。</li>
+                                <li><strong>❤️ 健康 (Health)</strong>: 身体状况。生病、长期吃快餐、缺乏休息会降低健康。</li>
+                                <li><strong>🤝 社交 (Social)</strong>: 容易被忽视的属性。社交过低会引发抑郁，影响精神值。</li>
+                                <li><strong>📈 工作能力 (Work Ability)</strong>: 决定了你升职加薪的概率以及应对突发工作事件的能力。</li>
+                            </ul>
+                        </li>
+                        <li><strong>生活状态</strong> (右上):
+                            <ul>
+                                <li>住所、工作状态、食物储备、月度账单倒计时。</li>
+                                <li><strong>⚠️ 账单警告</strong>: 务必留意距离下一次发薪和付房租的天数 (10天为一个账单周期)。</li>
+                            </ul>
+                        </li>
+                        <li><strong>行动区域</strong> (中下):
+                            <ul>
+                                <li><strong>工作决策</strong>: 选择"专注工作" (消耗大量精力，提升能力) 或 "摸鱼划水" (恢复精神，但在PIP期间高风险)。</li>
+                                <li><strong>额外行动</strong>: 午休时的选择 (买咖啡续命、社交八卦、极速午睡) 对属性微调至关重要。</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <hr>
+
+                    <h2>💰 财富管理</h2>
+
+                    <h3>2. 投资系统</h3>
+                    <p>你不理财，财不理你。这是实现财务自由(&gt; $50,000)的关键途径，也是快速破产的捷径。</p>
+                    <img src="assets/images/manual_invest.png" alt="投资界面">
+
+                    <ul>
+                        <li><strong>市场情绪</strong>: 顶部的进度条显示当前市场是恐慌还是贪婪。
+                            <ul>
+                                <li><strong>恐慌时刻</strong>: 高风险资产(Crypto, Tech)可能暴跌，避险资产(<strong>黄金</strong>)通常会上涨。</li>
+                                <li><strong>贪婪时刻</strong>: 泡沫涌现，是获利了结的好时机。</li>
+                            </ul>
+                        </li>
+                        <li><strong>资产类型</strong>:
+                            <ul>
+                                <li>🔰 <strong>稳健型</strong>: 黄金 (Gold), REITs, 能源股。</li>
+                                <li>📈 <strong>成长型</strong>: 标普500 (S&P500), 科技巨头 (Tech)。</li>
+                                <li>🎢 <strong>高风险</strong>: 生物科技 (Biotech), 比特币 (BTC), 甚至 Meme Coin。</li>
+                            </ul>
+                        </li>
+                        <li><strong>操作策略</strong>: 关注新闻弹窗！虽然市场有20%的概率"反常" (与新闻反向变动)，但大概率还是跟随新闻趋势。</li>
+                    </ul>
+
+                    <h3>3. 保险系统 (风险对冲)</h3>
+                    <p>在美国生存，一场大病足以让中产返贫。保险是最后的防线。</p>
+                    <img src="assets/images/manual_insurance.png" alt="保险界面">
+
+                    <ul>
+                        <li><strong>⚕️ 健康保险</strong>:
+                            <ul>
+                                <li><strong>免赔额 (Deductible)</strong>: 保险赔付前你自己需要先掏的钱。</li>
+                                <li><strong>Out-of-Network</strong>: 紧急情况下有20%概率遇到网外医生，费用不仅翻倍而且保险可能拒赔。</li>
+                                <li><strong>建议</strong>: 身体不好或积蓄微薄时，尽量升级到更好的保险计划。</li>
+                            </ul>
+                        </li>
+                        <li><strong>🚗 汽车保险</strong>:
+                            <ul>
+                                <li>半险 (Liability) 便宜但覆盖面窄，全险 (Full Coverage) 贵但省心。</li>
+                            </ul>
+                        </li>
+                        <li><strong>🏠 租客险</strong>: 极便宜 ($15/月)，遭遇火灾盗窃时的救命稻草。</li>
+                    </ul>
+
+                    <hr>
+
+                    <h2>⚡ 精力管理与过劳 (Exhaustion)</h2>
+                    <p>精力值不仅仅是行动点数，更是你的生命红线。</p>
+
+                    <h3>1. 低精力惩罚</h3>
+                    <p>当精力低于特定阈值时，会在每天结算时扣除健康值：</p>
+                    <ul>
+                        <li><strong>&lt; 30 (疲劳)</strong>: 健康 <strong>-2</strong> /天。</li>
+                        <li><strong>&lt; 10 (透支)</strong>: 健康 <strong>-5</strong> /天。</li>
+                    </ul>
+
+                    <h3>2. 精力耗尽 (Energy = 0)</h3>
+                    <p>一旦精力归零，将触发<strong>强制昏睡 (Forced Sleep)</strong>，后果极其严重：</p>
+                    <ol>
+                        <li><strong>跳过晚间行动</strong>: 你将无法在晚上 "备餐" (Cook) 或 "学习" (Learn)。</li>
+                        <li><strong>恢复减半</strong>: 只能恢复 <strong>20点</strong> 精力 (正常睡眠可回 50点+)，意味着第二天醒来依然是残血状态，陷入恶性循环。
+                        </li>
+                        <li><strong>永久损伤</strong>: 每次昏睡都会 <strong>永久扣除</strong> 你的生命上限与精神上限。</li>
+                    </ol>
+
+                    <hr>
+
+                    <h2>🏢 职场进阶：项目系统</h2>
+                    <p>除此之外，你还需要处理长期的<strong>工作项目</strong>。</p>
+                    <img src="assets/images/manual_insurance.png" alt="项目进度">
+                    <!-- TODO: Fix image reference if wrong -->
+
+                    <ul>
+                        <li><strong>项目栏</strong>: 显示当前任务名称 (如"客户方案")、进度、难度及剩余天数。</li>
+                        <li><strong>推进方式</strong>:
+                            <ul>
+                                <li>选择 <strong>"专注工作"</strong> 可大幅推进进度。</li>
+                                <li><strong>工作能力 (Work Ability)</strong> 越高，每次推进的进度越快。</li>
+                                <li><strong>难度 (Difficulty)</strong>: 难度越高 (Max 5)，推进越慢，需要更多天数。</li>
+                            </ul>
+                        </li>
+                        <li><strong>Deadline</strong>: 必须在倒计时结束前完成 (100%)。
+                            <ul>
+                                <li><strong>完成奖励</strong>: 获得丰厚奖金或提升绩效。</li>
+                                <li><strong>超时惩罚</strong>: 绩效大跌，甚至触发裁员危机。</li>
+                                <li><strong>应对</strong>: 进入PIP后必须"专注工作"提升表现分，或者赶紧找下家 (Quit)。</li>
+                                <li><strong>结局</strong>: PIP失败会被直接开除 (Fired)，不仅没有赔偿金，精神也会重创。</li>
+                            </ul>
+                        </li>
+                        <li><strong>突发事件</strong>:
+                            <ul>
+                                <li><strong>加班</strong>: 加班能大幅提升工作能力，但严重透支精力。</li>
+                                <li><strong>办公室政治</strong>: 站队需谨慎，"独善其身"可能掉Social，"参与八卦"可能掉精力但回SAN值。</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <hr>
+
+                    <h2>🏆 结局一览</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>结局</th>
+                                <th>触发条件</th>
+                                <th>是否胜利</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>财务自由</strong></td>
+                                <td>存款 &gt; $50,000</td>
+                                <td>✅ 胜利</td>
+                            </tr>
+                            <tr>
+                                <td><strong>生存大师</strong></td>
+                                <td>存活满 50 天</td>
+                                <td>✅ 胜利</td>
+                            </tr>
+                            <tr>
+                                <td><strong>彻底破产</strong></td>
+                                <td>信用分 &lt; 500</td>
+                                <td>❌ 失败</td>
+                            </tr>
+                            <tr>
+                                <td><strong>流落街头</strong></td>
+                                <td>失业 &gt; 20 天</td>
+                                <td>❌ 失败</td>
+                            </tr>
+                            <tr>
+                                <td><strong>过劳死</strong></td>
+                                <td>健康或精力归零</td>
+                                <td>❌ 失败</td>
+                            </tr>
+                            <tr>
+                                <td><strong>精神崩溃</strong></td>
+                                <td>精神归零</td>
+                                <td>❌ 失败</td>
+                            </tr>
+                            <tr>
+                                <td><strong>债务螺旋</strong></td>
+                                <td>负债 &gt; $3,000</td>
+                                <td>❌ 失败</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>祝你好运，生存者！</p>
+                </div>
+                <div class="manual-footer">
+                    <button class="primary-button manual-back-btn" id="manual-back-btn">返回标题</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="load-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel">
+                <button id="close-load-modal" class="close-button">×</button>
+                <h2 class="modal-title">📂 选择存档</h2>
+                <div class="save-modal-slots" id="load-modal-slots">
+                    <!-- JS Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <div id="save-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel">
+                <button id="close-save-modal" class="close-button">×</button>
+                <h2 class="modal-title" data-i18n="ui_static.modals.save_game">💾 保存游戏</h2>
+                <div class="save-modal-slots" id="save-modal-slots">
+                    <!-- JS Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Confirm Modal (replaces native confirm) -->
+        <div id="confirm-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel confirm-modal-content">
+                <h2 class="modal-title" id="confirm-modal-title" data-i18n="ui.confirm.defaultTitle">确认操作</h2>
+                <p class="confirm-modal-message" id="confirm-modal-message" data-i18n="ui.confirm.defaultMessage">
+                    确定要执行此操作吗？</p>
+                <div class="confirm-modal-actions">
+                    <button id="confirm-modal-cancel" class="action-btn outline"
+                        data-i18n="ui_static.modals.cancel">取消</button>
+                    <button id="confirm-modal-ok" class="primary-button"
+                        data-i18n="ui_static.modals.confirm">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="trade-modal" class="modal-overlay hidden">
+            <div class="modal-content trade-modal-content">
+                <div class="modal-header">
+                    <h3 id="trade-modal-title" data-i18n="ui_static.trade_modal.buy_title">买入资产</h3>
+                    <button id="trade-modal-close" class="close-button">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="trade-asset-info">
+                        <span class="trade-asset-icon" id="trade-asset-icon">🥇</span>
+                        <span class="trade-asset-name" id="trade-asset-name">--</span>
+                    </div>
+                    <div class="trade-price-info">
+                        <span class="trade-price-label" data-i18n="ui_static.trade_modal.price_label">当前价格:</span>
+                        <span class="trade-price-value" id="trade-price-value">$2,000</span>
+                    </div>
+                    <div class="trade-holding-info">
+                        <span class="trade-holding-label" data-i18n="ui_static.trade_modal.holding_label">当前持仓:</span>
+                        <span class="trade-holding-value" id="trade-holding-value">0</span>
+                    </div>
+                    <div class="trade-input-group">
+                        <label for="trade-quantity-input" data-i18n="ui_static.trade_modal.quantity_label">交易数量:</label>
+                        <input type="number" id="trade-quantity-input" min="0" step="0.01"
+                            data-i18n="ui_static.trade_modal.quantity_placeholder" placeholder="输入数量">
+                    </div>
+                    <div class="trade-total-info">
+                        <span class="trade-total-label" data-i18n="ui_static.trade_modal.total_label">预计金额:</span>
+                        <span class="trade-total-value" id="trade-total-value">$0</span>
+                    </div>
+                    <div class="trade-cash-info">
+                        <span class="trade-cash-label" data-i18n="ui_static.trade_modal.cash_label">可用现金:</span>
+                        <span class="trade-cash-value" id="trade-cash-value">$15,000</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="trade-confirm-btn" class="primary-button"
+                        data-i18n="ui_static.trade_modal.confirm_btn">确认交易</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="bill-detail-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel">
+                <button id="close-bill-detail" class="close-button">×</button>
+                <h2 class="modal-title" data-i18n="ui_static.bill_detail.title">🧾 账单详情</h2>
+                <div class="bill-detail-list" id="bill-detail-list">
+                    <!-- Dynamic Content -->
+                </div>
+                <div class="bill-total-row">
+                    <span data-i18n="ui_static.bill_detail.total_label">总计:</span>
+                    <span id="bill-detail-total">...</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="dev-editor-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel">
+                <button id="close-dev-editor" class="close-button">×</button>
+                <h2 class="modal-title" data-i18n="ui_static.modals.dev_editor">🔧 修改属性</h2>
+                <div class="dev-editor-form">
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.money">存款 ($)</label>
+                        <input type="number" id="dev-input-money" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.energy">精力 (0-100)</label>
+                        <input type="number" id="dev-input-energy" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.mental">精神 (0-100)</label>
+                        <input type="number" id="dev-input-mental" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.health">健康 (0-100)</label>
+                        <input type="number" id="dev-input-health" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.social">社交 (0-100)</label>
+                        <input type="number" id="dev-input-social" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.efficiency">工作能力 (0-100)</label>
+                        <input type="number" id="dev-input-efficiency" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.ingredients">食材 (个)</label>
+                        <input type="number" id="dev-input-ingredients" min="0">
+                    </div>
+                    <button id="dev-save-btn" class="primary-button" style="margin-top: 16px;"
+                        data-i18n="ui_static.dev_editor.save_btn">保存修改</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dev-editor-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel">
+                <button id="close-dev-editor" class="close-button">×</button>
+                <h2 class="modal-title" data-i18n="ui_static.modals.dev_editor">🔧 修改属性</h2>
+                <div class="dev-editor-form">
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.money">存款 ($)</label>
+                        <input type="number" id="dev-input-money" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.energy">精力 (0-100)</label>
+                        <input type="number" id="dev-input-energy" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.mental">精神 (0-100)</label>
+                        <input type="number" id="dev-input-mental" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.health">健康 (0-100)</label>
+                        <input type="number" id="dev-input-health" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.social">社交 (0-100)</label>
+                        <input type="number" id="dev-input-social" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.efficiency">工作能力 (0-100)</label>
+                        <input type="number" id="dev-input-efficiency" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.ingredients">食材 (个)</label>
+                        <input type="number" id="dev-input-ingredients" min="0">
+                    </div>
+                    <button id="dev-save-btn" class="primary-button" style="margin-top: 16px;"
+                        data-i18n="ui_static.dev_editor.save_btn">保存修改</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: START SCREEN -->
+        <div id="start-screen" class="screen active">
+            <div class="title-area">
+                <h1 class="title" data-i18n="ui_static.start.title">斩杀线生存</h1>
+                <p class="subtitle" data-i18n="ui_static.start.subtitle">KILLZONE SURVIVOR</p>
+                <p class="tagline" data-i18n="ui_static.start.tagline">"一次裁员，离流浪汉只有三个月"</p>
+            </div>
+
+            <div class="start-info">
+                <p data-i18n="ui_static.start.intro_1">你是一名硅谷科技公司的中产阶级员工。</p>
+                <p data-i18n="ui_static.start.intro_2">存款看似充裕，生活看似稳定。</p>
+                <p data-i18n="ui_static.start.intro_3">但M国梦的背后，是一条<span class="danger">隐形的斩杀线</span>。</p>
+                <p style="margin-top: 16px; font-size: 0.85rem; opacity: 0.7;">
+                    <span data-i18n="ui_static.start.intro_footer">⚡ 管理你的精力 | 🧠 维持你的精神 | 💰 守住你的存款</span>
+                </p>
+            </div>
+
+            <button id="start-button" class="primary-button start-btn-lg" data-i18n="ui_static.start.start_btn">
+                开始游戏
+            </button>
+
+            <div class="seed-input-container seed-group">
+                <label for="seed-input" class="seed-label" data-i18n="ui_static.start.seed_label">世界线种子
+                    (选填):</label>
+                <input type="text" id="seed-input" class="seed-input" data-i18n="ui_static.start.seed_placeholder"
+                    placeholder="留空则随机">
+            </div>
+
+            <div class="dev-tools-container dev-tools-area">
+                <a href="devtools.html" class="dev-tools-btn dev-tools-link">
+                    <span data-i18n="ui_static.start.dev_tools">🔧 开发者工具</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- SECTION: GAME SCREEN -->
+        <div id="game-screen" class="screen">
+            <!-- Header Container -->
+            <div id="ui-header-container">
+                <!-- Time Display -->
+                <div id="time-display">
+                    <div class="time-info">
+                        <span id="day-count">第 1 天</span>
+                        <span id="time-period">
+                            <span class="time-icon" id="time-icon">☀️</span>
+                            <span id="period-name">白天</span>
+                        </span>
+                    </div>
+                    <div class="period-indicator">
+                        <div class="period-dot day active" id="dot-day"></div>
+                        <div class="period-dot night" id="dot-night"></div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Layout -->
+                <div id="dashboard-container">
+                    <!-- Left Column: Status Bars -->
+                    <div id="dashboard-stats">
+                        <!-- Energy -->
+                        <div class="status-item status-item-full">
+                            <span class="status-icon">⚡</span>
+                            <div class="status-text-row">
+                                <span class="status-label" data-i18n="ui_static.game_header.energy">精力</span>
+                                <span class="status-value-text" id="energy-val">100/100</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill energy-bar" id="energy-bar" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Mental -->
+                        <div class="status-item status-item-full">
+                            <span class="status-icon">🧠</span>
+                            <div class="status-text-row">
+                                <span class="status-label" data-i18n="ui_static.game_header.mental">精神</span>
+                                <span class="status-value-text" id="mental-val">100/100</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill mental-bar" id="mental-bar" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Health -->
+                        <div class="status-item status-item-full">
+                            <span class="status-icon">❤️</span>
+                            <div class="status-text-row">
+                                <span class="status-label" data-i18n="ui_static.game_header.health">健康</span>
+                                <span class="status-value-text" id="health-val">100/100</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill health-bar" id="health-bar" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Social -->
+                        <div class="status-item status-item-full">
+                            <span class="status-icon">🤝</span>
+                            <div class="status-text-row">
+                                <span class="status-label" data-i18n="ui_static.game_header.social">社交</span>
+                                <span class="status-value-text" id="social-val">50/100</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill social-bar" id="social-bar" style="width: 50%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Work Efficiency -->
+                        <div class="status-item status-item-full">
+                            <span class="status-icon">📈</span>
+                            <div class="status-text-row">
+                                <span class="status-label" data-i18n="ui_static.game_header.work_efficiency">工作能力</span>
+                                <span class="status-value-text" id="work-efficiency-val">100%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill work-efficiency-bar" id="work-efficiency-bar"
+                                        style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Info Grid -->
+                    <div id="dashboard-info">
+                        <!-- Row 1 -->
+                        <div class="finance-item compact-stat">
+                            <div class="finance-card-header">
+                                <span class="status-icon">🏠</span>
+                                <span class="status-label" data-i18n="ui_static.game_header.housing">住所</span>
+                            </div>
+                            <span class="status-value" id="housing-value">公寓</span>
+                        </div>
+                        <div class="finance-item compact-stat">
+                            <div class="finance-card-header">
+                                <span class="status-icon">💼</span>
+                                <span class="status-label" data-i18n="ui_static.game_header.job">工作</span>
+                            </div>
+                            <span class="status-value" id="job-value">全职</span>
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="finance-item compact-stat">
+                            <div class="finance-card-header">
+                                <span class="status-icon">🥬</span>
+                                <span class="status-label" data-i18n="ui_static.finance.ingredients">食材</span>
+                            </div>
+                            <span class="status-value" id="ingredients-count">5</span>
+                        </div>
+                        <div class="finance-item compact-stat">
+                            <div class="finance-card-header">
+                                <span class="status-icon">🥡</span>
+                                <span class="status-label" data-i18n="ui_static.finance.meal">便当</span>
+                            </div>
+                            <span class="status-value" id="meal-status">未备</span>
+                        </div>
+
+                        <!-- Row 3 -->
+                        <div class="finance-item compact-stat clickable" id="monthly-bill-container">
+                            <div class="finance-card-header">
+                                <span class="status-icon">📅</span>
+                                <span class="status-label" data-i18n="ui_static.finance.monthly_bill">账单</span>
+                            </div>
+                            <span class="status-value" id="monthly-bill-total">...</span>
+                            <span class="finance-sub" id="monthly-bill-sub">...</span>
+                        </div>
+                        <div class="finance-item compact-stat" id="payday-container">
+                            <div class="finance-card-header">
+                                <span class="status-icon">💰</span>
+                                <span class="status-label" data-i18n="ui_static.finance.income">月薪</span>
+                            </div>
+                            <span class="status-value positive" id="monthly-income">$8,000</span>
+                            <span class="finance-sub" id="payday-countdown">...</span>
+                        </div>
+
+                        <!-- Row 4: Money (Full Width) -->
+                        <div class="finance-item finance-item-full">
+                            <div class="finance-card-header" style="margin-bottom: 0;">
+                                <span class="status-icon">💰</span>
+                                <span class="status-label" data-i18n="ui_static.game_header.money">存款</span>
+                            </div>
+                            <div class="finance-value-container">
+                                <span class="status-value money" id="money-value">$15,000</span>
+                                <span id="investment-value" class="finance-sub-value">...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Task Bar -->
+                <div id="dashboard-task" class="hidden">
+                    <div class="task-bar-content">
+                        <span class="finance-label" data-i18n="ui_static.finance.task">📋 工作任务</span>
+                        <div class="finance-value-group">
+                            <span class="finance-value" id="task-progress">0%</span>
+                            <span class="finance-sub" id="task-deadline">...</span>
+                        </div>
+                    </div>
+                    <div class="progress-container task-progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="task-progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Dashboard Layout -->
+            </div>
+
+            <!-- Scrollable Main Content -->
+            <div id="main-scroll-container">
+                <!-- Event Area -->
+                <div id="event-area">
+                    <div id="event-card" class="event-card">
+                        <div class="event-header">
+                            <span class="event-type" id="event-type">📋 日常</span>
+                            <span class="event-energy-cost" id="event-energy-cost"></span>
+                        </div>
+                        <h2 class="event-title" id="event-title">新的一天</h2>
+                        <p class="event-description" id="event-description">
+                            阳光透过百叶窗洒进你的公寓。新的一天开始了，你需要做出选择。
+                        </p>
+
+                        <!-- Selectors -->
+                        <div id="commute-selector" class="lunch-selector hidden">
+                            <div class="lunch-selector-label">🚗 选择通勤方式：</div>
+                            <div id="commute-options" class="lunch-options"></div>
+                        </div>
+
+                        <div id="lunch-selector" class="lunch-selector hidden">
+                            <div class="lunch-selector-label">🍱 选择今日午餐策略：</div>
+                            <div id="lunch-options" class="lunch-options"></div>
+                        </div>
+
+                        <div id="daily-action-selector" class="lunch-selector hidden">
+                            <div class="lunch-selector-label">✨ 顺带做点别的：</div>
+                            <div id="daily-action-options" class="lunch-options"></div>
+                        </div>
+
+                        <div id="incident-selector" class="lunch-selector hidden">
+                            <div class="lunch-selector-label">⚠️ 突发状况：</div>
+                            <div id="incident-options" class="lunch-options"></div>
+                        </div>
+
+                        <div id="choice-validation-hint" class="choice-validation-hint hidden">
+                            <span class="hint-icon">⚠️</span>
+                            <span class="hint-text">请先完成上方选择</span>
+                        </div>
+
+                        <div id="event-choices" class="event-choices">
+                            <!-- Dynamic Choices -->
+                        </div>
+
+                        <button id="advance-stage-button" class="action-btn" data-i18n="ui_static.event.advance_btn"
+                            disabled>
+                            开始时间流逝
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Toast Messages -->
+                <div id="message-toast" class="toast hidden">
+                    <span id="toast-text"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: INSURANCE SCREEN -->
+        <div id="insurance-screen" class="screen">
+            <div class="screen-header">
+                <h2 data-i18n="ui_static.insurance_page.title">保险管理中心</h2>
+                <div class="money-badge" id="ins-money-display">$15,000</div>
+            </div>
+
+            <div class="insurance-scroll-container">
+                <div class="insurance-card health-overview">
+                    <div class="card-header">
+                        <h3 data-i18n="ui_static.insurance_page.health_title">🏥 健康保险</h3>
+                        <span class="plan-badge" id="health-plan-badge">雇主险</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-row">
+                            <span data-i18n="ui_static.insurance_page.current_plan">当前计划</span>
+                            <span class="stat-val" id="health-plan-name">...</span>
+                        </div>
+                        <div class="stat-row">
+                            <span data-i18n="ui_static.insurance_page.monthly_premium">月保费</span>
+                            <span class="stat-val" id="health-premium">...</span>
+                        </div>
+
+                        <div class="deductible-section">
+                            <div class="progress-label">
+                                <span data-i18n="ui_static.insurance_page.deductible_label">免赔额
+                                    (Deductible)</span>
+                                <span id="deductible-progress-text">$0 / $2,000</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill warning" id="deductible-bar" style="width: 0%"></div>
+                            </div>
+                            <p class="small-hint" data-i18n="ui_static.insurance_page.deductible_hint">
+                                未达到免赔额前，需全额自付医疗费。
+                            </p>
+                        </div>
+
+                        <div id="pending-plan-alert" class="info-box hidden">
+                            下月将自动变更为: <span id="pending-plan-name">...</span>
+                        </div>
+
+                        <button class="action-btn" id="btn-change-health"
+                            data-i18n="ui_static.insurance_page.change_plan_btn">更换计划</button>
+                    </div>
+                </div>
+
+                <div class="insurance-card other-ins">
+                    <h3 data-i18n="ui_static.insurance_page.car_title">🚗 汽车保险</h3>
+                    <div class="card-body">
+                        <div class="stat-row">
+                            <span data-i18n="ui_static.insurance_page.current_plan">当前方案</span>
+                            <span class="stat-val" id="car-plan-name">...</span>
+                        </div>
+                        <div class="stat-row">
+                            <span data-i18n="ui_static.insurance_page.monthly_premium">月保费</span>
+                            <span class="stat-val" id="car-premium">...</span>
+                        </div>
+                        <button class="action-btn" id="btn-change-car"
+                            data-i18n="ui_static.insurance_page.adjust_plan_btn">调整方案</button>
+                    </div>
+                </div>
+
+                <div class="insurance-card other-ins">
+                    <h3 data-i18n="ui_static.insurance_page.renters_title">🏠 租客保险</h3>
+                    <div class="card-body">
+                        <div class="stat-row">
+                            <span data-i18n="ui_static.insurance_page.status_label">状态</span>
+                            <span class="stat-val" id="renters-status">未投保</span>
+                        </div>
+                        <div class="stat-row">
+                            <span data-i18n="ui_static.insurance_page.monthly_premium">月保费</span>
+                            <span class="stat-val">$15</span>
+                        </div>
+                        <button class="action-btn outline" id="btn-toggle-renters"
+                            data-i18n="ui_static.insurance_page.buy_ins_btn">购买保险</button>
+                    </div>
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+        </div>
+
+        <!-- SECTION: ASSETS SCREEN -->
+        <div id="assets-screen" class="screen">
+            <div class="assets-container">
+                <h2 class="screen-title" data-i18n="ui_static.assets_page.title">💰 投资管理</h2>
+
+                <div id="news-banner" class="news-banner hidden">
+                    <span class="news-icon">📰</span>
+                    <span class="news-title" id="news-title"
+                        data-i18n="ui_static.assets_page.news_loading">加载中...</span>
+                    <span class="news-desc" id="news-desc"></span>
+                </div>
+
+                <div class="market-sentiment">
+                    <span class="sentiment-label" data-i18n="ui_static.assets_page.sentiment_label">市场情绪:</span>
+                    <span class="sentiment-value" id="sentiment-value">中性</span>
+                    <div class="sentiment-bar">
+                        <div class="sentiment-fill" id="sentiment-fill"></div>
+                    </div>
+                </div>
+
+                <div class="assets-summary">
+                    <div class="summary-item">
+                        <span class="summary-label" data-i18n="ui_static.assets_page.cash_label">现金</span>
+                        <span class="summary-value" id="assets-cash">$15,000</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label" data-i18n="ui_static.assets_page.portfolio_label">投资总值</span>
+                        <span class="summary-value" id="assets-portfolio">$0</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span class="summary-label" data-i18n="ui_static.assets_page.total_assets_label">净资产</span>
+                        <span class="summary-value" id="assets-total">$15,000</span>
+                    </div>
+                </div>
+
+                <div class="asset-tabs">
+                    <div class="asset-tab active" data-category="commodity" data-i18n="ui_static.assets_page.tab_gold">
+                        🥇 黄金</div>
+                    <div class="asset-tab" data-category="stock" data-i18n="ui_static.assets_page.tab_stock">📈
+                        股票
+                    </div>
+                    <div class="asset-tab" data-category="crypto" data-i18n="ui_static.assets_page.tab_crypto">₿
+                        虚拟币
+                    </div>
+                </div>
+
+                <div class="asset-cards" id="asset-cards-container">
+                    <!-- Dynamic Content -->
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+        </div>
+
+        <!-- SECTION: STATUS SCREEN -->
+        <div id="status-screen" class="screen">
+            <div class="status-page-container">
+                <h2 class="screen-title" data-i18n="ui_static.status_page.title">📊 个人状态</h2>
+
+                <div class="status-grid">
+                    <!-- Save Mgmt -->
+                    <div class="status-section save-action-card">
+                        <h3 data-i18n="ui_static.status_page.save_mgmt">💾 存档管理</h3>
+                        <div class="card-body">
+                            <button id="save-game-btn" class="primary-button status-btn-full mb-xs"
+                                data-i18n="ui_static.status_page.save_btn">保存游戏</button>
+                            <button id="return-to-title-btn" class="action-btn outline status-btn-full"
+                                data-i18n="ui_static.status_page.return_btn">返回标题</button>
+                        </div>
+                    </div>
+
+                    <!-- Bio Stats -->
+                    <div class="status-section">
+                        <h3 data-i18n="ui_static.status_page.bio_stats">🧬 生理指标</h3>
+                        <div class="card-body">
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.game_header.energy">⚡ 精力</span>
+                                <span class="stat-val" id="status-energy-val">100/100</span>
+                            </div>
+                            <div class="progress-track mb-xs">
+                                <div class="progress-fill energy-bar" id="status-energy-bar" style="width: 100%">
+                                </div>
+                            </div>
+
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.game_header.mental">🧠 精神</span>
+                                <span class="stat-val" id="status-mental-val">100/100</span>
+                            </div>
+                            <div class="progress-track mb-xs">
+                                <div class="progress-fill mental-bar" id="status-mental-bar" style="width: 100%">
+                                </div>
+                            </div>
+
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.game_header.health">❤️ 健康</span>
+                                <span class="stat-val" id="status-health-val">100/100</span>
+                            </div>
+                            <div class="progress-track mb-xs">
+                                <div class="progress-fill health-bar" id="status-health-bar" style="width: 100%">
+                                </div>
+                            </div>
+
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.work_efficiency">💼 工作效率</span>
+                                <span class="stat-val" id="status-work-efficiency-val">--/--</span>
+                            </div>
+                            <div class="progress-track mb-xs">
+                                <div class="progress-fill" id="status-work-efficiency-bar"
+                                    style="width: 0%; background: linear-gradient(90deg, #0984e3, #74b9ff);">
+                                </div>
+                            </div>
+
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.social_val">🤝 社交</span>
+                                <span class="stat-val" id="status-social-val">50/100</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="status-social-bar"
+                                    style="width: 50%; background: linear-gradient(90deg, #a29bfe, #6c5ce7);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Career -->
+                    <div class="status-section">
+                        <h3 data-i18n="ui_static.status_page.career">💼 职业生涯</h3>
+                        <div class="card-body">
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.job_title">当前职位</span>
+                                <span class="stat-val" id="status-job-title">全职打工人</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.job_income">月薪收入</span>
+                                <span class="stat-val" id="status-job-income">$8,000</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.unemployed_days">失业天数</span>
+                                <span class="stat-val" id="status-unemployed-days">0天</span>
+                            </div>
+                            <div class="stat-row hidden">
+                                <span data-i18n="ui_static.status_page.pto_days">带薪病假</span>
+                                <span class="stat-val" id="status-sick-leave">0天</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Housing & Transport -->
+                    <div class="status-section">
+                        <h3 data-i18n="ui_static.status_page.housing">🏠 居住环境</h3>
+                        <div class="card-body">
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.housing_type">住所类型</span>
+                                <span class="stat-val" id="status-housing-type">公寓</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.monthly_rent">每月房租</span>
+                                <span class="stat-val" id="status-housing-cost">$3,500</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.recovery_effect">恢复效果</span>
+                                <span class="stat-val" id="status-housing-effect">正常</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-section">
+                        <h3 data-i18n="ui_static.status_page.commute">🚗 交通通勤</h3>
+                        <div class="card-body">
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.commute_type">通勤方式</span>
+                                <span class="stat-val" id="status-transport-type">私家车</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.weekly_gas">每周油费</span>
+                                <span class="stat-val" id="status-gas-cost">$25</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.monthly_car_ins">月车险</span>
+                                <span class="stat-val" id="status-car-insurance">$80</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Finances -->
+                    <div class="status-section">
+                        <h3 data-i18n="ui_static.status_page.finance">💰 财务状况</h3>
+                        <div class="card-body">
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.cash_balance">现金余额</span>
+                                <span class="stat-val" id="status-cash">$15,000</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.total_debt">负债总额</span>
+                                <span class="stat-val danger" id="status-debt">$0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.credit_score">信用评分</span>
+                                <span class="stat-val" id="status-credit">720</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="status-section">
+                        <h3 data-i18n="ui_static.status_page.survival">📈 生存统计</h3>
+                        <div class="card-body">
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.days_survived">存活天数</span>
+                                <span class="stat-val" id="status-days-survived">1天</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.max_wealth">最高资产</span>
+                                <span class="stat-val" id="status-max-wealth">$15,000</span>
+                            </div>
+                            <div class="stat-row">
+                                <span data-i18n="ui_static.status_page.world_seed">世界线种子</span>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span class="stat-val" style="font-family:monospace; font-size:0.85em;"
+                                        id="status-seed">-</span>
+                                    <button id="status-copy-seed" class="action-btn outline"
+                                        style="padding:2px 6px; font-size:0.8rem; transform: translateY(-4px);">📋</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dev Tools -->
+                    <div class="status-section dev-tools-card">
+                        <h3 data-i18n="ui_static.status_page.dev_tools">🔧 开发者工具</h3>
+                        <div class="card-body">
+                            <a href="devtools.html" class="action-btn dev-check-btn">
+                                <span data-i18n="ui_static.status_page.dev_check">📋 事件一致性检查</span>
+                            </a>
+                            <p class="dev-tools-desc">
+                                <span data-i18n="ui_static.status_page.dev_desc">分析事件效果与描述是否一致</span>
+                            </p>
+                            <button id="dev-edit-btn" class="action-btn outline" style="margin-top: 8px;">
+                                <span data-i18n="ui_static.modals.dev_editor">🔧 修改属性</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="spacer-bottom"></div>
+            </div>
+        </div>
+
+        <!-- SECTION: ENDING SCREEN -->
+        <div id="ending-screen" class="screen">
+            <div class="ending-content">
+                <h1 class="ending-title" id="ending-title" data-i18n="ui_static.ending_screen.title">游戏结束</h1>
+                <p class="ending-subtitle" id="ending-subtitle" data-i18n="ui_static.ending_screen.subtitle">
+                    你被系统斩杀了
+                </p>
+                <div class="ending-stats" id="ending-stats">
+                    <!-- Stats -->
+                </div>
+                <p class="ending-message" id="ending-message" data-i18n="ui_static.ending_screen.default_message">
+                    在M国，中产阶级与流浪汉之间，只隔着一次裁员、一场大病、或一个意外。
+                </p>
+                <button id="restart-button" class="primary-button"
+                    data-i18n="ui_static.ending_screen.restart_btn">再次挑战</button>
+            </div>
+        </div>
+
+        <!-- SECTION: BOTTOM NAV -->
+        <div id="tab-bar" class="hidden">
+            <div class="tab-item active" data-tab="home">
+                <span class="tab-icon">🏠</span>
+                <span class="tab-label" data-i18n="ui_static.tabs.home">生存</span>
+            </div>
+            <div class="tab-item" data-tab="assets">
+                <span class="tab-icon">💰</span>
+                <span class="tab-label" data-i18n="ui_static.tabs.assets">投资</span>
+            </div>
+            <div class="tab-item" data-tab="insurance">
+                <span class="tab-icon">🛡️</span>
+                <span class="tab-label" data-i18n="ui_static.tabs.insurance">保险</span>
+            </div>
+            <div class="tab-item" data-tab="status">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label" data-i18n="ui_static.tabs.status">状态</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js?v=2.43"></script>
+</body>
+
+</html>

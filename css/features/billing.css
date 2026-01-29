@@ -1,0 +1,93 @@
+/* Bill Detail Modal specific styles */
+.bill-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.bill-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.08);
+  /* Slightly lighter for better contrast */
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.bill-detail-row:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.bill-detail-row .row-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bill-name {
+  font-weight: 600;
+  font-size: 1.1em;
+  display: block;
+  color: var(--text-primary);
+}
+
+.bill-days {
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+.bill-amount {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.2em;
+  color: var(--color-money);
+  /* Use game's money color */
+  text-shadow: 0 0 10px rgba(46, 204, 113, 0.2);
+  /* Subtle glow */
+  white-space: nowrap;
+  /* Prevent wrapping */
+  margin-left: 16px;
+  /* Ensure spacing from left text */
+}
+
+/* Specific styling for utility (which can be 0) */
+.bill-detail-row:has(.bill-name:contains('水电')) .bill-amount {
+  color: var(--text-primary);
+}
+
+.bill-total-row {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.3em;
+  font-weight: 700;
+}
+
+.bill-total-row span:first-child {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.bill-total-row span:last-child {
+  color: var(--color-danger);
+  /* Red for total cost */
+  font-family: var(--font-mono);
+  font-size: 1.2em;
+}
+
+/* Ensure modal is wide enough */
+#bill-detail-modal .modal-content {
+  max-width: 450px;
+  width: 95%;
+  padding: 24px;
+}

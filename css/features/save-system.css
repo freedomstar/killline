@@ -1,0 +1,329 @@
+/* ========================================
+   V2.12 存档系统样式
+   ======================================== */
+
+/* 开始界面存档容器 */
+.save-slot-container {
+    margin-top: var(--spacing-lg);
+    text-align: center;
+}
+
+.save-slot-title {
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.save-slots {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.save-slot-card {
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    text-align: left;
+    transition: all var(--transition-fast);
+}
+
+.save-slot-card.has-save {
+    border-color: var(--color-success);
+    box-shadow: 0 0 8px var(--color-success-glow);
+}
+
+.save-slot-card.empty {
+    border-style: dashed;
+    opacity: 0.7;
+}
+
+.save-slot-card .slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.save-slot-card .slot-number {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.save-slot-card .slot-delete-btn {
+    background: transparent;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.save-slot-card .slot-delete-btn:hover {
+    opacity: 1;
+}
+
+.save-slot-card .slot-info {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.save-slot-card .slot-day {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.save-slot-card .slot-money {
+    font-family: var(--font-mono);
+    color: var(--color-money);
+}
+
+.save-slot-card .slot-job {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+.save-slot-card .slot-date {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.save-slot-card .slot-empty {
+    text-align: center;
+    padding: var(--spacing-md) 0;
+    color: var(--color-text-muted);
+    font-size: 1.2rem;
+}
+
+.save-slot-card .slot-load-btn,
+.save-slot-card .slot-new-btn {
+    width: 100%;
+    min-height: 40px;
+    font-size: 0.9rem;
+}
+
+.save-slot-card .slot-new-btn {
+    background: linear-gradient(135deg, #3742fa 0%, #2f3ae8 100%);
+}
+
+/* 保存模态框槽位 */
+.save-modal-slots {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+}
+
+/* 模态框槽位布局 - V2.13 */
+.save-modal-slot {
+    display: flex;
+    flex-direction: column;
+    /* 垂直排列 */
+    padding: 0;
+    /* 内部 padding 由子元素控制 */
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    overflow: hidden;
+    /* 防止圆角溢出 */
+}
+
+.save-modal-slot.current {
+    border-color: var(--color-info);
+    box-shadow: 0 0 10px rgba(55, 66, 250, 0.15);
+}
+
+.save-modal-slot.has-save {
+    border-color: rgba(46, 213, 115, 0.3);
+}
+
+/* 上半部分：主要信息和操作 */
+.slot-main-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--spacing-md) var(--spacing-lg);
+    gap: 8px;
+}
+
+.slot-info-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* 减小间距 */
+    flex: 1;
+    /* 允许压缩 */
+    min-width: 0;
+    /* 允许 flex item 缩短到小于内容宽度 */
+}
+
+.slot-number {
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    min-width: 45px;
+    /* 稍微减小 */
+    flex-shrink: 0;
+}
+
+.slot-details {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    /* 强制不换行 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slot-details span {
+    display: inline-block;
+}
+
+.slot-details .separator {
+    color: var(--color-border);
+    font-size: 0.8em;
+    margin: 0 2px;
+}
+
+
+.slot-details .highlight {
+    color: var(--color-money);
+}
+
+.slot-empty-text {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* 按钮组 */
+.slot-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    justify-content: space-between;
+    /* 撑满整行 */
+}
+
+.slot-actions button {
+    height: 36px !important;
+    /* 稍微增加高度 */
+    min-height: 36px !important;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.slot-actions .primary-button,
+.slot-actions .save-to-slot-btn,
+.slot-actions .new-slot-btn,
+.slot-actions .load-slot-btn {
+    flex: 1;
+    /* 主按钮撑满剩余空间 */
+    min-height: unset;
+    font-size: 0.9rem;
+    padding: 0 16px;
+}
+
+.slot-actions .delete-slot-btn {
+    width: 48px;
+    /* 固定宽度的删除按钮 */
+    flex: 0 0 48px;
+    height: 36px !important;
+    border-radius: var(--radius-sm);
+}
+
+/* 下半部分：种子信息 */
+.slot-seed-row {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 6px var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+    font-size: 0.75rem;
+}
+
+.seed-label {
+    color: var(--color-text-muted);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.seed-value {
+    font-family: var(--font-mono);
+    color: var(--color-text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1px 6px;
+    border-radius: 4px;
+    flex: 1;
+    /* 撑满剩余空间 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-seed-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+
+.copy-seed-btn:hover {
+    opacity: 1;
+    color: var(--color-info);
+    transform: scale(1.1);
+}
+
+/* 覆盖旧样式 */
+.save-modal-slot .delete-slot-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.save-modal-slot .delete-slot-btn:hover {
+    background: var(--color-danger);
+    color: white;
+}
+
+/* V2.24 Pending 状态标记 */
+.pending-badge {
+    display: inline-block;
+    background: rgba(255, 165, 2, 0.15);
+    color: var(--color-warning);
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    border: 1px solid rgba(255, 165, 2, 0.3);
+    vertical-align: middle;
+    margin-top: 4px;
+}

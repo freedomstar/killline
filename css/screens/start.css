@@ -1,0 +1,183 @@
+/* ========================================
+   开始界面 - 更震撼的视觉
+   ======================================== */
+#start-screen {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-lg);
+    position: relative;
+    /* Ensure absolute positioning works for children */
+}
+
+.title-area {
+    margin-bottom: var(--spacing-xl);
+}
+
+.title {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-shadow:
+        0 0 40px var(--color-danger-glow),
+        0 0 80px var(--color-danger-glow);
+    margin-bottom: var(--spacing-sm);
+    letter-spacing: -0.02em;
+}
+
+.subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-danger);
+    letter-spacing: 0.4em;
+    margin-bottom: var(--spacing-lg);
+    text-transform: uppercase;
+}
+
+.tagline {
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.start-info {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-glow);
+}
+
+.start-info p {
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+}
+
+.start-info p:last-child {
+    margin-bottom: 0;
+}
+
+.danger {
+    color: var(--color-danger);
+    font-weight: 600;
+    text-shadow: 0 0 10px var(--color-danger-glow);
+}
+
+/* Better Help Button Styles */
+/* Help Button Container */
+.help-container {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* Right align items */
+    justify-content: center;
+    z-index: 2000;
+}
+
+.help-button {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 2rem;
+    font-family: var(--font-primary);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    /* Clear gap */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 0;
+    /* Reset padding */
+}
+
+.help-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.help-label {
+    font-size: 0.85rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+    text-align: right;
+    /* Ensure text itself is right aligned if multiline */
+}
+
+.help-container:hover .help-label {
+    opacity: 1;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Custom Start Screen Elements */
+.start-btn-lg {
+    margin-top: 40px;
+    width: 200px;
+    height: 60px;
+    font-size: 1.2rem;
+}
+
+.seed-group {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.seed-label {
+    color: #888;
+    font-size: 0.9em;
+    margin-right: 10px;
+}
+
+.seed-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    width: 150px;
+    text-align: center;
+}
+
+.dev-tools-area {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.dev-tools-link {
+    display: inline-block;
+    color: #666;
+    font-size: 0.8em;
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px dashed #444;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.dev-tools-link:hover {
+    color: #aaa;
+    border-color: #666;
+}

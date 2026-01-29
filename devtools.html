@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Mode - 事件一致性检查</title>
+    <link rel="stylesheet" href="css/debug.css">
+    <!-- Mobile Debugging: Show errors on screen -->
+    <script>
+        window.onerror = function (msg, url, line, col, error) {
+            var extra = !col ? '' : '\ncolumn: ' + col;
+            extra += !error ? '' : '\nerror: ' + error;
+            var errorMsg = "Error: " + msg + "\nurl: " + url + "\nline: " + line + extra;
+
+            // Only create error div if it doesn't exist to avoid spam
+            if (!document.getElementById('errDiv')) {
+                var errDiv = document.createElement('div');
+                errDiv.id = 'errDiv';
+                errDiv.style.position = 'fixed';
+                errDiv.style.top = '0';
+                errDiv.style.left = '0';
+                errDiv.style.width = '100%';
+                errDiv.style.backgroundColor = 'rgba(255,0,0,0.95)';
+                errDiv.style.color = 'white';
+                errDiv.style.padding = '10px';
+                errDiv.style.zIndex = '999999';
+                errDiv.style.fontFamily = 'monospace';
+                errDiv.style.whiteSpace = 'pre-wrap';
+                errDiv.style.fontSize = '12px';
+                errDiv.style.pointerEvents = 'none';
+                errDiv.innerText = errorMsg;
+                document.body.appendChild(errDiv);
+            } else {
+                document.getElementById('errDiv').innerText += "\n\n" + errorMsg;
+            }
+            return false;
+        };
+        console.log("Debug mode: Error handler initialized");
+    </script>
+</head>
+
+<body>
+    <div class="debug-container">
+        <header class="debug-header">
+            <h1>🔧 事件Debug模式</h1>
+            <p class="subtitle">检查事件效果(effect)与描述(hint)的一致性</p>
+            <div class="header-actions">
+                <a href="index.html" class="btn btn-secondary">← 返回游戏</a>
+                <button id="exportJsonBtn" class="btn btn-primary">📥 导出JSON</button>
+                <button id="exportCsvBtn" class="btn btn-primary">📊 导出CSV</button>
+            </div>
+        </header>
+
+        <!-- 统计摘要 -->
+        <div class="stats-summary">
+            <div class="stat-card">
+                <span class="stat-number" id="totalEvents">0</span>
+                <span class="stat-label">事件总数</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="totalChoices">0</span>
+                <span class="stat-label">选择总数</span>
+            </div>
+            <div class="stat-card match">
+                <span class="stat-number" id="matchCount">0</span>
+                <span class="stat-label">✓ 匹配</span>
+            </div>
+            <div class="stat-card mismatch">
+                <span class="stat-number" id="mismatchCount">0</span>
+                <span class="stat-label">✗ 不匹配</span>
+            </div>
+            <div class="stat-card uncertain">
+                <span class="stat-number" id="uncertainCount">0</span>
+                <span class="stat-label">? 待确认</span>
+            </div>
+        </div>
+
+        <!-- 筛选控制 -->
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label>事件类型:</label>
+                <select id="filterType">
+                    <option value="all">全部</option>
+                    <option value="work">💼 工作</option>
+                    <option value="daily">📋 日常</option>
+                    <option value="opportunity">✨ 机会</option>
+                    <option value="health">🏥 健康</option>
+                    <option value="accident">⚠️ 意外</option>
+                    <option value="layoff">💔 裁员</option>
+                    <option value="night">🌙 夜晚</option>
+                    <option value="special">⭐ 特殊</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>一致性状态:</label>
+                <select id="filterStatus">
+                    <option value="all">全部</option>
+                    <option value="match">✓ 匹配</option>
+                    <option value="mismatch">✗ 不匹配</option>
+                    <option value="uncertain">? 待确认</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>搜索:</label>
+                <input type="text" id="searchInput" placeholder="事件ID或标题...">
+            </div>
+            <button id="analyzeBtn" class="btn btn-action">🔍 重新分析</button>
+        </div>
+
+        <!-- 差异报告 -->
+        <div id="diffContainer" class="diff-container" style="display: none;">
+            <div class="diff-header">
+                <h3>📊 变动分析报告</h3>
+                <span class="diff-summary-text" id="diffSummaryText">变更点: 0</span>
+                <button class="btn-close"
+                    onclick="document.getElementById('diffContainer').style.display='none'">×</button>
+            </div>
+            <div class="diff-content" id="diffContent">
+                <!-- 动态生成差异列表 -->
+            </div>
+        </div>
+
+        <!-- 事件列表 -->
+        <div class="events-container">
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th class="col-status">状态</th>
+                        <th class="col-event">事件</th>
+                        <th class="col-choice">选择</th>
+                        <th class="col-hint">描述(hint)</th>
+                        <th class="col-effect">实际效果(effect)</th>
+                        <th class="col-diff">差异</th>
+                        <th class="col-action">处理建议</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTableBody">
+                    <!-- 动态生成 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <p>正在分析事件...</p>
+        </div>
+    </div>
+
+    <!-- 引入依赖 (ES Module) -->
+    <script type="module">
+        import { I18n } from './js/i18n.js?v=20250119a';
+        import { GameData } from './js/data/index.js?v=20250119a';
+        import { EventManager as GameEvents } from './js/events/index.js?v=20250119a';
+        import { SeededRNG } from './js/rng.js';
+        import { nightChoices } from './js/events/nightChoices.js?v=20250119a'; // 单独导入
+
+        // Expose to window for debug.js
+        window.I18n = I18n;
+        window.GameData = GameData;
+        window.GameData.nightChoices = nightChoices; // 挂载到 GameData 上
+        window.GameEvents = GameEvents;
+        window.SeededRNG = SeededRNG;
+
+        // Mock game object for effect execution
+        window.game = {
+            rng: new SeededRNG(12345),
+            assignNewTask: () => { },
+            state: {}
+        };
+
+        // Load debug.js after modules are ready
+        const script = document.createElement('script');
+        script.src = 'js/debug.js?v=20240120';
+        script.onload = function () {
+            // 确保 DebugTools 已定义并初始化
+            if (window.DebugTools) {
+                try {
+                    console.log("Initializing DebugTools...");
+                    window.DebugTools.init();
+                    
+                    // Show success toast
+                    const toast = document.createElement('div');
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '20px';
+                    toast.style.right = '20px';
+                    toast.style.backgroundColor = 'rgba(0, 128, 0, 0.8)';
+                    toast.style.color = 'white';
+                    toast.style.padding = '10px 20px';
+                    toast.style.borderRadius = '4px';
+                    toast.style.zIndex = '1000';
+                    toast.innerText = "Debug Mode Initialized Successfully";
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
+                } catch (e) {
+                    console.error("DebugTools init failed:", e);
+                    throw e; // Trigger onerror
+                }
+            } else {
+                console.error("DebugTools not found on window object!");
+                throw new Error("DebugTools not loaded");
+            }
+        };
+        document.body.appendChild(script);
+    </script>
+</body>
+
+</html>

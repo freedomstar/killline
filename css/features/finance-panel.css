@@ -1,0 +1,236 @@
+/* V2.1 财务信息面板 */
+.finance-panel {
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(10px);
+    margin: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+}
+
+.finance-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.finance-title {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.finance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--color-border);
+}
+
+.finance-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+}
+
+.finance-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+.finance-value {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.finance-value.positive {
+    color: var(--color-success);
+}
+
+.finance-value.warning {
+    color: var(--color-warning);
+}
+
+.finance-value.negative {
+    color: var(--color-danger);
+}
+
+/* V2.1.1 紧凑型财务面板 */
+.finance-panel.compact {
+    margin: 0 6px 4px 6px;
+    background: transparent;
+    /* Transparent container */
+    border: none;
+}
+
+.finance-grid.compact-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    /* Match status bar gap */
+    background: transparent;
+}
+
+#dashboard-info .finance-item {
+    gap: 0;
+    /* Let children handle gap */
+    height: 52px;
+    /* Optimized height for compact view */
+    min-height: 52px;
+    flex-direction: column;
+    /* Enforce column */
+    justify-content: center;
+    align-items: center;
+    /* Center horizontally */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    padding: 2px 2px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+}
+
+#dashboard-info .finance-item:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* New Header Row Style */
+.finance-card-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    /* Space between icon and text */
+    margin-bottom: 1px;
+}
+
+/* Unified Label Style */
+#dashboard-info .status-label,
+#dashboard-info .finance-label {
+    font-size: 0.55rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.0;
+    margin: 0;
+}
+
+/* Unified Value Style */
+#dashboard-info .status-value,
+#dashboard-info .finance-value {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    /* Large and clear */
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    line-height: 1.0;
+    margin: 1px 0;
+}
+
+/* Subtext Style */
+.finance-sub {
+    font-size: 0.5rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    line-height: 1.0;
+    margin-top: 1px;
+    transform: scale(0.95);
+}
+
+/* Money Display - Special Styling */
+#dashboard-info .finance-item-full {
+    grid-column: 1 / -1;
+    flex-direction: row !important;
+    /* Keep Money bar row-based */
+    justify-content: space-between;
+    padding-left: 12px;
+    padding-right: 12px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%) !important;
+    border: 1px solid rgba(255, 215, 0, 0.2) !important;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.1) !important;
+    height: auto !important;
+    /* Let Grid control height */
+    min-height: 48px;
+    /* Slightly taller minimum */
+}
+
+.finance-value-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 0;
+    margin-left: auto;
+    /* Push to right */
+    max-width: 60%;
+    /* Limit width to force shrink if needed, adjust based on icon/label space */
+}
+
+/* Base adjustment for money text to clear space */
+#dashboard-info .finance-item-full .status-value {
+    white-space: nowrap;
+    /* No wrapping */
+    font-size: 0.85rem !important;
+    /* Slightly decrease base size from 0.9rem */
+}
+
+.finance-sub-value {
+    font-size: 0.65rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    /* No wrapping */
+}
+
+#dashboard-info .status-icon {
+    font-size: 0.85rem;
+    /* Further reduced */
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+#dashboard-info .finance-item-full .status-icon {
+    font-size: 1.1rem;
+    /* Full size for money bar */
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4));
+}
+
+/* Adjust compact stats flex behavior */
+
+/* Adjust compact stats flex behavior */
+.compact-stat {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Task Bar Specific Styles */
+.task-bar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.task-progress-container {
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.task-progress-container .progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    width: 0%;
+    transition: width 0.3s ease;
+}
