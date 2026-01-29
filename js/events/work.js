@@ -81,10 +81,13 @@ export const workEvents = [
                         const efficiency = (state.workEfficiency || 100) / 100;
                         const efficiencyFactor = Math.min(conf.raiseEfficiencyMax, Math.max(conf.raiseEfficiencyMin, efficiency));
                         const raisePct = conf.raiseBasePct * efficiencyFactor;
+                        const oldIncome = baseIncome;
                         state.monthlyIncome = Math.round(baseIncome * (1 + raisePct));
+                        const newIncome = state.monthlyIncome;
+
                         state.jobTenure = 0;
                         state.mental += conf.mentalGainSuccess;
-                        return { message: I18n.t('events.pip_warning.messages.quitSuccess'), type: 'positive' };
+                        return { message: I18n.t('events.pip_warning.messages.quitSuccess', oldIncome, newIncome), type: 'positive' };
                     }
                     state.pipActive = true;
                     state.pipDaysRemaining = GameData.eventConfigs.pip_warning.accept.pipDays;
@@ -481,6 +484,7 @@ export const workIncidents = [
 ];
 
 export function getAvailableIncidents(state, context) {
+    if ((state.hospitalDaysLeft || 0) > 0) return [];
     if (state.period !== 'day' || state.job !== 'fulltime') return [];
     // V2.55 修复：工作突发事件仅在工作日触发
     if (state.day % GameData.timeCycle.weekDays === GameData.timeCycle.restDayMod) return [];

@@ -45,9 +45,18 @@ export const EventManager = {
     getAvailableEvents(state, period, rng = null) {
         // 创建 context 对象供 condition 函数使用
         const context = rng ? { rng } : null;
+        const isHospitalized = (state && (state.hospitalDaysLeft || 0) > 0);
+        const hospitalAllowed = new Set([
+            'hospital_stay',
+            'rent_due',
+            'credit_collapse',
+            'medical_debt_collection',
+            'medical_debt_installment'
+        ]);
 
         return this.events.filter(event => {
             try {
+                if (isHospitalized && !hospitalAllowed.has(event.id)) return false;
                 // Check periods
                 if (event.period !== 'any' && event.period !== period) return false;
                 // Check custom condition - 传入 context

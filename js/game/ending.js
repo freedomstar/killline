@@ -99,6 +99,7 @@ export const EndingMixin = {
             console.log(`[Game] 🚑 紧急送医！总费: $${baseCost}`);
             console.log(`[Game] 保险: ${costResult.planName} | 自付: $${costResult.youPay} (${costResult.breakdown})`);
 
+            if (!this.state.dailyFinancialReport) this.state.dailyFinancialReport = [];
             this.state.dailyFinancialReport.push(`🚑 紧急送医自付: -$${costResult.youPay}`);
 
             // 如果医疗费导致严重负债，才触发结局

@@ -79,6 +79,7 @@ export const healthEvents = [
         title: I18n.t('events.medical_emergency.title'),
         description: I18n.t('events.medical_emergency.description'),
         period: 'any',
+        mandatory: true,
         condition: (state) => (state.health < 30 || state.healthStatus === 'critical') && (!state.hospitalDaysLeft || state.hospitalDaysLeft <= 0),
         weight: GameData.eventWeights.medical_emergency,
         choices: [

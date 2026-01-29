@@ -37,6 +37,7 @@ export const initialState = {
     randomEventsToday: [],
     randomEventsTodayCount: 0,
     randomEventLastDay: {},
+    dailyFinancialReport: [],
 
     // V2.17 极速财务系统 (10天/月，4天/周)
     daysUntilPayday: 1,    // 距离发薪日

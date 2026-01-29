@@ -859,7 +859,7 @@ export const UI = {
             if (this.elements.statusSickLeave) {
                 if (state.job === 'fulltime') {
                     const pto = state.sickLeaveDays || 0;
-                    this.elements.statusSickLeave.textContent = `PTO: ${pto}天`;
+                    this.elements.statusSickLeave.textContent = I18n.t('ui_static.status.ptoLabel', pto);
                     this.elements.statusSickLeave.parentElement.style.display = 'flex';
                 } else {
                     this.elements.statusSickLeave.parentElement.style.display = 'none';
@@ -1863,26 +1863,11 @@ export const UI = {
         if (this.elements.taskContainer) {
             const label = this.elements.taskContainer.querySelector('.finance-label');
 
-            if (isHospitalized) {
-                // 住院状态显示
-                this.elements.taskContainer.style.display = 'flex';
-                if (label) label.textContent = '🏥 住院修养';
-
-                if (this.elements.taskProgress) {
-                    const pto = game.state.sickLeaveDays || 0;
-                    this.elements.taskProgress.textContent = `PTO: ${pto}天`;
-                    this.elements.taskProgress.className = 'finance-value' + (pto > 0 ? ' positive' : ' danger');
-                }
-
-                if (this.elements.taskDeadline) {
-                    this.elements.taskDeadline.textContent = `剩${state.hospitalDaysLeft}天`;
-                    this.elements.taskDeadline.className = 'finance-sub';
-                }
-            } else {
+            if (true) { // Modified: Always show normal task logic, remove hospitalization override
                 // 正常工作任务显示
                 if (this.elements.taskContainer) {
                     // 隐藏条件: 失业 或 被裁
-                    const shouldHide = status.jobId === 'unemployed' || status.jobId === 'fired';
+                    const shouldHide = status.jobId === 'unemployed' || status.jobId === 'fired' || isHospitalized;
 
                     if (shouldHide) {
                         this.elements.taskContainer.classList.add('hidden');
@@ -1904,8 +1889,6 @@ export const UI = {
                             // 更新进度条宽度
                             if (this.elements.taskProgressBar) {
                                 this.elements.taskProgressBar.style.width = `${status.workTask.progress}%`;
-                                // 可选：根据进度或状态变色
-                                // this.elements.taskProgressBar.style.background = ...
                             }
 
                             // 进度颜色

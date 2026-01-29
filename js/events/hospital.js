@@ -4,6 +4,17 @@
 import { I18n } from '../i18n.js';
 import { GameData } from '../data/index.js';
 
+const finalizeHospitalDischarge = (state) => {
+    if ((state.hospitalDaysLeft || 0) > 0) return;
+    const bill = state.hospitalBill || 0;
+    if (bill > 0) {
+        state.medicalDebt = (state.medicalDebt || 0) + bill;
+    }
+    state.hospitalBill = 0;
+    state.hospitalDailyCost = 0;
+    state.consecutiveUnpaidDays = 0;
+};
+
 export const hospitalEvents = [
     {
         id: 'hospital_stay',
@@ -49,6 +60,7 @@ export const hospitalEvents = [
                     state.health = Math.min(GameData.initialState.maxHealth, state.health + hospConfig.healthRecoveryPerDay);
                     state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + hospConfig.energyRecoveryPerDay);
 
+                    finalizeHospitalDischarge(state);
                     return { message: I18n.t('events.hospital_stay_choices.paid_leave.message'), type: 'positive', ignoreLunch: true };
                 }
             },
@@ -68,6 +80,7 @@ export const hospitalEvents = [
                     state.health = Math.min(GameData.initialState.maxHealth, state.health + hospConfig.healthRecoveryPerDay);
                     state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + hospConfig.energyRecoveryRestDay); // Rest day recovers more energy
 
+                    finalizeHospitalDischarge(state);
                     return { message: I18n.t('events.hospital_stay_choices.rest_day.message'), type: 'neutral', ignoreLunch: true };
                 }
             },
@@ -105,11 +118,14 @@ export const hospitalEvents = [
                         state.monthlyIncome = 0;
                         state.unemployedDays = 0;
                         if (state.insurance.healthPlanId === 'employer_basic' || state.insurance.healthPlanId === 'employer_premium') {
+                            finalizeHospitalDischarge(state);
                             return { message: I18n.t('events.hospital_stay_choices.unpaid_leave.fired_no_ins'), type: 'danger', ignoreLunch: true };
                         }
+                        finalizeHospitalDischarge(state);
                         return { message: I18n.t('events.hospital_stay_choices.unpaid_leave.fired'), type: 'danger', ignoreLunch: true };
                     }
 
+                    finalizeHospitalDischarge(state);
                     return { message: I18n.t('events.hospital_stay_choices.unpaid_leave.message', Math.round(fireChance * 100)), type: 'negative', ignoreLunch: true };
                 }
             },
@@ -126,6 +142,7 @@ export const hospitalEvents = [
                     state.hospitalDaysLeft--;
                     state.hospitalBill = (state.hospitalBill || 0) + (state.hospitalDailyCost || 0);
                     state.health = Math.min(GameData.initialState.maxHealth, state.health + hospConfig.outOfPocketHealthGain);
+                    finalizeHospitalDischarge(state);
                     return { message: I18n.t('events.hospital_stay_choices.out_of_pocket.message'), type: 'neutral', ignoreLunch: true };
                 }
             },
@@ -140,7 +157,7 @@ export const hospitalEvents = [
                     state.health = Math.max(state.health, hospConfig.amaHealthMin);
                     state.mental -= hospConfig.amaMentalPenalty;
                     state.hospitalBill = (state.hospitalBill || 0) + hospConfig.amaExtraCost;
-                    state.consecutiveUnpaidDays = 0;
+                    finalizeHospitalDischarge(state);
                     return { message: I18n.t('events.hospital_stay_choices.ama.message'), type: 'negative', ignoreLunch: true };
                 }
             }

@@ -727,14 +727,20 @@ export function getNightChoiceEvent(state) {
         return null;
     }
 
+    const isHospitalized = (state.hospitalDaysLeft || 0) > 0;
+    const allowedNightActions = isHospitalized ? new Set(['sleep', 'phone']) : null;
     const choices = [];
     console.log('[Night] Generating choices from:', Object.keys(nightChoices));
     for (const [key, option] of Object.entries(nightChoices)) {
+        if (allowedNightActions && !allowedNightActions.has(key)) continue;
         // Pass both housing and state to condition, as nightChoices expects (housing, state)
         if (!option.condition || option.condition(state.housing, state)) {
+            const text = isHospitalized && key === 'sleep'
+                ? I18n.t('events.hospital_stay.title')
+                : I18n.t(`data.night_choices.${key}.text`);
             choices.push({
                 id: option.id,
-                text: I18n.t(`data.night_choices.${key}.text`),
+                text,
                 hint: option.hint, // Use the hint function defined in nightChoices.js
                 hintType: 'neutral',
                 nightAction: key

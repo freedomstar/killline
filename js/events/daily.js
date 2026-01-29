@@ -652,7 +652,9 @@ export function getAvailableLunchOptions(state, context) {
             state.surgeryApprovalPending);
 
     if (isMedicalRestricted) {
-        const allowed = ['hospital_cafeteria', 'skip'];
+        const allowed = (state.hospitalDaysLeft || 0) > 0
+            ? ['hospital_cafeteria', 'skip']
+            : ['skip'];
         for (const key of allowed) {
             if (base[key]) {
                 const opt = { ...base[key], key: key };

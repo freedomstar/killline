@@ -269,7 +269,7 @@ export const eventConfigs = {
             decline: { mentalGain: 5, socialGain: 5 }
         },
         sell_car_emergency: {
-            sell: { moneyGain: 5000, mentalLoss: 15 },
+            sell: { moneyGain: 500, mentalLoss: 15 },
             keep: { mentalLoss: 20 }
         },
     },

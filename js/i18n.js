@@ -1040,7 +1040,7 @@ export const I18n = {
                     },
                     messages: {
                         start: 'PIP观察期开始，接下来5天要好好表现！',
-                        quitSuccess: '成功找到新工作，薪资也更高了！',
+                        quitSuccess: (oldIncome, newIncome) => `成功找到新工作！\n薪资涨幅: $${oldIncome} -> $${newIncome}`,
                         quitFail: '暂时没找到合适的，只能硬着头皮接受PIP',
                     },
                 },
