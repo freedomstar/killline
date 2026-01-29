@@ -375,7 +375,7 @@ export const housingTypes = {
 };
 
 export const jobTypes = {
-    fulltime: { name: () => I18n.t('data.jobs.fulltime.name'), income: 1350, hasInsurance: true, energyCost: 30 },
+    fulltime: { name: () => I18n.t('data.jobs.fulltime.name'), income: 1400, hasInsurance: true, energyCost: 30 },
     parttime: { name: () => I18n.t('data.jobs.parttime.name'), income: 800, hasInsurance: false, energyCost: 20 },
     gig: { name: () => I18n.t('data.jobs.gig.name'), income: 500, hasInsurance: false, energyCost: 25 },
     unemployed: { name: () => I18n.t('data.jobs.unemployed.name'), income: 0, hasInsurance: false, energyCost: 0 },
