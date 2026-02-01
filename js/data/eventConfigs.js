@@ -133,6 +133,15 @@ export const eventConfigs = {
         unlucky: { cost: 800, mentalLoss: 20 }
     },
 
+    // 交通意外配置
+    traffic_accident: {
+        chance: 0.05, // 5% 概率
+        moneyCost: 500, // 维修费
+        healthLoss: 10, // 轻伤
+        mentalLoss: 20, // 惊吓/压力
+        carBroken: true // 车辆损坏
+    },
+
     // 医疗事件配置
     worsening_symptoms: {
         urgentCare: { healthGain: 25, oonMentalLoss: 20 },
@@ -271,6 +280,14 @@ export const eventConfigs = {
         sell_car_emergency: {
             sell: { moneyGain: 500, mentalLoss: 15 },
             keep: { mentalLoss: 20 }
+        },
+        buy_used_car: {
+            deal: { cost: 800, mentalGain: 10 },
+            ignore: { mentalGain: 0 }
+        },
+        mysterious_trader: {
+            swap: { mentalGain: 5 },
+            refuse: { mentalGain: 0 }
         },
     },
     financial_crisis: {

@@ -93,6 +93,7 @@ export const initialState = {
     selectedDailyAction: null, // V2.10 选定的日常额外行动 (null=不选)
     selectedIncident: null,    // V2.10 选定的突发事件处理方案 (null=不选)
     selectedCommute: null,     // V2.21 选定的通勤方式: car, bus, walk (null=必须选)
+    sideActionsLocked: false,   // V2.55 侧边行动锁定 (防止同一时段内重复显示)
 
     // V2.6 保险系统状态
     insurance: {
@@ -157,8 +158,15 @@ export const initialState = {
     },
     // 当前新闻
     currentNews: null,
+    // 市场传闻与确认
+    marketRumorId: null,
+    marketRumorConfirmDay: 0,
+    lastMarketRumorDay: 0,
     // 市场情绪 (-100 恐慌 ~ +100 贪婪)
     marketSentiment: 0,
+
+    // 预见未来 - 小道消息冷却
+    lastRumorDay: 0,
 
     // V2.13 统计数据
     stats: {
@@ -224,6 +232,23 @@ export const investmentMoodConfig = {
     minPortfolioValue: 200,    // 触发情绪的最低持仓价值
     mentalBonus: 5,             // 暴涨时的精神奖励
     mentalPenalty: 5,           // 暴跌时的精神惩罚
+};
+
+// 预见未来机制配置
+export const foreseeingConfig = {
+    marketRumorChance: 0.35,
+    marketRumorConfirmMultiplier: 1.4,
+    marketRumorSentimentScale: 0.3,
+    marketRumorCooldownDays: 2,
+    rumorChance: 0.35,
+    billReminderDays: 2,
+    utilityNewsImpact: {
+        oil_surge: 20,
+        oil_discovery: -10,
+        trade_war: 10,
+        geopolitical_tension: 10,
+        inflation_spike: 8
+    }
 };
 
 export const sarcasmQuotes = {

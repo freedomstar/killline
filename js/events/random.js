@@ -103,6 +103,45 @@ export const randomEvents = [
         ]
     },
     {
+        id: 'buy_used_car',
+        type: 'opportunity',
+        title: I18n.t('events.buy_used_car.title'),
+        description: I18n.t('events.buy_used_car.description'),
+        period: 'any',
+        isRandom: true,
+        condition: (state) => !state.hasCar && state.money >= 800,
+        weight: GameData.eventWeights.buy_used_car,
+        choices: [
+            {
+                text: I18n.t('events.buy_used_car.choices.deal.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.buy_used_car.deal;
+                    return I18n.t('events.buy_used_car.choices.deal.hint', conf.cost, conf.mentalGain);
+                },
+                hintType: 'positive',
+                effect: (state, context) => {
+                    const conf = GameData.eventConfigs.buy_used_car.deal;
+                    state.money -= conf.cost;
+                    state.hasCar = true;
+                    state.carBroken = false;
+                    state.mental += conf.mentalGain;
+                    // Reset fuel if bought? Usually default fuel.
+                    state.fuelRemaining = GameData.initialState.fuelCapacity || 4;
+
+                    return { message: I18n.t('events.buy_used_car.messages.deal'), type: 'positive' };
+                }
+            },
+            {
+                text: I18n.t('events.buy_used_car.choices.ignore.text'),
+                hint: I18n.t('events.buy_used_car.choices.ignore.hint'),
+                hintType: 'neutral',
+                effect: (state, context) => {
+                    return { message: I18n.t('events.buy_used_car.messages.ignore'), type: 'neutral' };
+                }
+            }
+        ]
+    },
+    {
         id: 'morning_coffee',
         type: 'daily',
         title: I18n.t('events.morning_coffee.title'),
@@ -186,6 +225,56 @@ export const randomEvents = [
                 hintType: 'neutral',
                 effect: (state, context) => {
                     return { message: I18n.t('events.afternoon_exercise.messages.skip'), type: 'neutral' };
+                }
+            }
+        ]
+    },
+    {
+        id: 'mysterious_trader',
+        type: 'opportunity',
+        title: () => I18n.t('events.mysterious_trader.title'),
+        description: () => I18n.t('events.mysterious_trader.description'),
+        period: 'any',
+        isRandom: true,
+        condition: (state) => !!state.artifact,
+        weight: 0.05, // Rare event
+        choices: [
+            {
+                text: I18n.t('events.mysterious_trader.choices.swap.text'),
+                hint: I18n.t('events.mysterious_trader.choices.swap.hint'),
+                hintType: 'warning',
+                effect: (state, context) => {
+                    const game = context.game;
+                    const conf = GameData.eventConfigs.random_events_cleanup.mysterious_trader.swap;
+
+                    // Get replacement
+                    // Fetch 5 to ensure we get a different one
+                    const options = game.getArtifactDraftOptions(5);
+                    const currentId = state.artifact;
+                    const newArtifact = options.find(a => a.id !== currentId) || options[0];
+
+                    if (newArtifact) {
+                        state.artifact = newArtifact.id;
+                        state.mental += conf.mentalGain;
+                        // Trigger init hook for new artifact?
+                        // Yes, artifacts should initialize when equipped.
+                        game.triggerArtifact('onInit', state);
+
+                        return {
+                            message: I18n.t('events.mysterious_trader.choices.swap.message', newArtifact.name()),
+                            type: 'positive'
+                        };
+                    } else {
+                        return { message: I18n.t('events.mysterious_trader.choices.swap.error'), type: 'neutral' };
+                    }
+                }
+            },
+            {
+                text: I18n.t('events.mysterious_trader.choices.refuse.text'),
+                hint: I18n.t('events.mysterious_trader.choices.refuse.hint'),
+                hintType: 'neutral',
+                effect: (state, context) => {
+                    return { message: I18n.t('events.mysterious_trader.choices.refuse.message'), type: 'neutral' };
                 }
             }
         ]

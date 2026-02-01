@@ -71,3 +71,8 @@
 .spacer-bottom {
     height: 80px;
 }
+
+.clickable {
+    cursor: pointer;
+    user-select: none;
+}

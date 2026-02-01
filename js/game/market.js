@@ -9,6 +9,91 @@ import { I18n } from '../i18n.js';
  */
 export const MarketMixin = {
     /**
+     * 获取新闻配置
+     */
+    getMarketNewsById(id) {
+        return GameData.marketNews.find(item => item.id === id) || null;
+    },
+
+    /**
+     * 生成带阶段的新闻对象 (传闻/实锤)
+     */
+    createStagedNews(news, stage) {
+        if (!news) return null;
+        const title = news.title;
+        const desc = news.description || '';
+        if (stage === 'rumor') {
+            return {
+                id: news.id,
+                title: I18n.t('game.foreseeing.marketRumorTitle', title),
+                description: I18n.t('game.foreseeing.marketRumorDesc', desc),
+                effect: news.effect,
+                sentiment: news.sentiment,
+                stage: 'rumor'
+            };
+        }
+        if (stage === 'confirmed') {
+            return {
+                id: news.id,
+                title: I18n.t('game.foreseeing.marketConfirmTitle', title),
+                description: I18n.t('game.foreseeing.marketConfirmDesc', desc),
+                effect: news.effect,
+                sentiment: news.sentiment,
+                stage: 'confirmed'
+            };
+        }
+        return {
+            id: news.id,
+            title,
+            description: desc,
+            effect: news.effect,
+            sentiment: news.sentiment
+        };
+    },
+
+    /**
+     * 放大/缩小新闻影响
+     */
+    scaleNewsEffect(effect, multiplier) {
+        const scaled = {};
+        if (!effect) return scaled;
+        for (const key in effect) {
+            if (typeof effect[key] === 'number') {
+                scaled[key] = effect[key] * multiplier;
+            }
+        }
+        return scaled;
+    },
+
+    /**
+     * 生成市场传闻 (夜晚触发)
+     */
+    prepareMarketRumor() {
+        const cfg = GameData.foreseeingConfig || {};
+        if (this.state.marketRumorId) return;
+
+        const lastDay = this.state.lastMarketRumorDay || 0;
+        if (this.state.day - lastDay < (cfg.marketRumorCooldownDays || 0)) return;
+        if (this.rng.random() >= (cfg.marketRumorChance || 0)) return;
+
+        const newsList = GameData.marketNews;
+        if (!newsList || newsList.length === 0) return;
+
+        const news = newsList[Math.floor(this.rng.random() * newsList.length)];
+        this.state.marketRumorId = news.id;
+        this.state.marketRumorConfirmDay = this.state.day + 1;
+        this.state.lastMarketRumorDay = this.state.day;
+
+        // 传闻当天只影响情绪，不影响价格
+        const sentimentDelta = Math.round((news.sentiment || 0) * (cfg.marketRumorSentimentScale || 0));
+        if (sentimentDelta !== 0) {
+            this.state.marketSentiment = Math.max(-100, Math.min(100, this.state.marketSentiment + sentimentDelta));
+        }
+
+        // 显示为传闻新闻
+        this.state.currentNews = this.createStagedNews(news, 'rumor');
+    },
+    /**
      * V2.9 获取资产配置
      */
     getAssetConfig(assetId) {
@@ -39,17 +124,42 @@ export const MarketMixin = {
     updateMarket() {
         if (!this.state.marketPrices) return;
 
-        // 1. 60% 几率触发新闻 (使用 RNG)
-        if (this.rng.random() < 0.60) {
-            this.triggerMarketNews();
-        }
+        const foreseeing = GameData.foreseeingConfig || {};
+        let newsEffect = {};
+        let isRumorStage = false;
 
-        // 2. 获取新闻效果
-        let newsEffect = this.state.currentNews?.effect || {};
+        // 1. 传闻转实锤 (次日生效)
+        if (this.state.marketRumorId && this.state.marketRumorConfirmDay <= this.state.day) {
+            const rumorNews = this.getMarketNewsById(this.state.marketRumorId);
+            if (rumorNews) {
+                this.state.currentNews = this.createStagedNews(rumorNews, 'confirmed');
+                newsEffect = this.scaleNewsEffect(rumorNews.effect, foreseeing.marketRumorConfirmMultiplier || 1);
+
+                // 行业连锁影响：油价/通胀传导到生活成本
+                const utilityImpact = foreseeing.utilityNewsImpact && foreseeing.utilityNewsImpact[rumorNews.id];
+                if (utilityImpact) {
+                    this.state.utilityBill = Math.max(0, (this.state.utilityBill || 0) + utilityImpact);
+                    if (this.state.dailyFinancialReport) {
+                        this.state.dailyFinancialReport.push(I18n.t('game.foreseeing.utilityShock', utilityImpact));
+                    }
+                }
+            }
+            this.state.marketRumorId = null;
+            this.state.marketRumorConfirmDay = 0;
+        } else {
+            // 2. 60% 几率触发新闻 (使用 RNG)
+            if (!this.state.marketRumorId && this.rng.random() < 0.60) {
+                this.triggerMarketNews();
+            }
+
+            // 3. 获取新闻效果
+            isRumorStage = this.state.currentNews && this.state.currentNews.stage === 'rumor';
+            newsEffect = isRumorStage ? {} : (this.state.currentNews?.effect || {});
+        }
 
         // V2.35 市场反常机制：20% 几率市场走势与新闻相反
         let isDefiant = false;
-        if (this.state.currentNews && this.rng.random() < 0.20) {
+        if (this.state.currentNews && !isRumorStage && this.rng.random() < 0.20) {
             isDefiant = true;
             // 反转所有效果
             const invertedEffect = {};

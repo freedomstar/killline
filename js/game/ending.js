@@ -12,37 +12,8 @@ export const EndingMixin = {
      * V2.14 检查游戏结束条件
      */
     checkGameOver() {
-        // 1. 深度破产 (连锁斩杀结局)
-        if (this.state.money < GameData.endingRules.debtSpiralThreshold) {
-            console.log('[Game] 触发结局: 深度破产 (债务螺旋)');
-            return this.triggerEnding('debtSpiral');
-        }
-
-        // 2. 健康崩溃
-        if (this.state.health <= GameData.endingRules.criticalHealth) {
-            console.log('[Game] 触发结局: 健康崩溃');
-            return this.triggerEnding('healthCollapse');
-        }
-
-        // 3. 精神崩溃
-        if (this.state.mental <= GameData.endingRules.criticalMental) {
-            console.log('[Game] 触发结局: 精神崩溃');
-            return this.triggerEnding('mentalBreakdown');
-        }
-
-        // 4. 生存胜利 (365天)
-        if (this.state.day > GameData.endingRules.survivalDays) {
-            console.log('[Game] 触发结局: 幸存者');
-            return this.triggerEnding('survived');
-        }
-
-        // 5. 财务自由
-        if (this.state.money >= GameData.endingRules.wealthThreshold) {
-            console.log('[Game] 触发结局: 财务自由');
-            return this.triggerEnding('financialFreedom');
-        }
-
-        return null;
+        // 统一使用 checkEnding 的逻辑
+        return this.checkEnding();
     },
 
     /**
@@ -66,6 +37,13 @@ export const EndingMixin = {
      * 检查结局 (Modified to call triggerEnding which returns object)
      */
     checkEnding() {
+        // 1. 深度破产 (连锁斩杀结局)
+        if (this.state.money < GameData.endingRules.debtSpiralThreshold) {
+            console.log('[Game] 触发结局: 深度破产 (债务螺旋)');
+            this.isRunning = false;
+            return this.triggerEnding('debtSpiral');
+        }
+
         // 胜利：存活365天
         if (this.state.day >= GameData.endingRules.survivalDays) {
             this.isRunning = false;
@@ -85,7 +63,7 @@ export const EndingMixin = {
             const baseCost = medCosts.ambulance + medCosts.emergencyRoom;
 
             // V2.6 使用新的保险计算逻辑
-            const costResult = this.calculateMedicalCost(baseCost);
+            const costResult = this.calculateMedicalCost ? this.calculateMedicalCost(baseCost) : { youPay: baseCost, planName: 'None', breakdown: 'Basic' };
 
             // 产生医疗债务/扣款
             this.state.money -= costResult.youPay;

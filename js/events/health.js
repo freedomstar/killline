@@ -173,7 +173,11 @@ export const healthEvents = [
         period: 'any',
         weight: GameData.eventWeights.emergency_oon,
         energyCost: 0,
-        condition: (state) => state.health < 40 && state.insurance.healthPlanId !== 'none',
+        condition: (state) => state.health < 40 &&
+            state.health >= 30 &&
+            state.healthStatus !== 'critical' &&
+            (state.hospitalDaysLeft || 0) <= 0 &&
+            state.insurance.healthPlanId !== 'none',
         choices: [
             {
                 text: I18n.t('events.emergency_oon.choices.nearest.text'),
@@ -235,7 +239,9 @@ export const healthEvents = [
                 text: I18n.t('events.surgery_required.choices.urgent.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.surgery_required.urgent;
-                    const cost = window.game?.calculateMedicalCost ? window.game.calculateMedicalCost(conf.baseCost).youPay : conf.baseCost;
+                    // Urgent = Denied (No Prior Auth)
+                    const risk = { isDenied: true, note: '未获审批' };
+                    const cost = window.game?.calculateMedicalCost ? window.game.calculateMedicalCost(conf.baseCost, false, risk).youPay : conf.baseCost;
                     return I18n.t('events.surgery_required.choices.urgent.hint', cost, conf.healthGain, conf.mentalLoss);
                 },
                 hintType: 'negative',
@@ -243,7 +249,9 @@ export const healthEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.surgery_required.urgent;
                     state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
-                    const result = context.game.calculateMedicalCost(conf.baseCost);
+                    // Urgent = Denied
+                    const risk = { isDenied: true, note: '未获审批' };
+                    const result = context.game.calculateMedicalCost(conf.baseCost, false, risk);
                     state.money -= result.youPay;
                     state.mental -= conf.mentalLoss;
                     return { message: I18n.t('events.surgery_required.messages.denied', result.youPay), type: 'negative' };
@@ -271,8 +279,11 @@ export const healthEvents = [
                 hint: (state) => {
                     const conf = GameData.eventConfigs.surgery_required.fight;
                     const urgentConf = GameData.eventConfigs.surgery_required.urgent;
+                    // Success: Approved (Standard Insurance)
                     const successCost = window.game?.calculateMedicalCost ? window.game.calculateMedicalCost(urgentConf.baseCost).youPay : urgentConf.baseCost;
-                    const failCost = window.game?.calculateMedicalCost ? window.game.calculateMedicalCost(conf.failCost).youPay : conf.failCost;
+                    // Fail: Denied (Full Cost)
+                    const failRisk = { isDenied: true, note: '申诉失败' };
+                    const failCost = window.game?.calculateMedicalCost ? window.game.calculateMedicalCost(conf.failCost, false, failRisk).youPay : conf.failCost;
                     return I18n.t('events.surgery_required.choices.fight.hint', conf.cost, conf.healthLoss, conf.successChance, successCost, failCost);
                 },
                 hintType: 'neutral',
@@ -284,11 +295,14 @@ export const healthEvents = [
 
                     if (context.rng.random() < (conf.successChance / 100)) {
                         const urgentConf = GameData.eventConfigs.surgery_required.urgent;
+                        // Success: Approved!
                         const result = context.game.calculateMedicalCost(urgentConf.baseCost);
                         state.money -= result.youPay;
                         return { message: I18n.t('events.surgery_required.messages.fightSuccess', result.youPay), type: 'positive' };
                     } else {
-                        const result = context.game.calculateMedicalCost(conf.failCost);
+                        // Fail: Denied
+                        const risk = { isDenied: true, note: '申诉失败' };
+                        const result = context.game.calculateMedicalCost(conf.failCost, false, risk);
                         state.money -= result.youPay;
                         return { message: I18n.t('events.surgery_required.messages.fightFail', result.youPay), type: 'negative' };
                     }
@@ -312,9 +326,15 @@ export const healthEvents = [
                 text: I18n.t('events.surgery_approval.choices.check.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.surgery_required.approval;
+                    const urgentConf = GameData.eventConfigs.surgery_required.urgent;
+
+                    // Success: Approved (Standard Insurance Calculation)
+                    const successCost = window.game?.calculateMedicalCost ? window.game.calculateMedicalCost(urgentConf.baseCost).youPay : urgentConf.baseCost;
+
                     return I18n.t(
                         'events.surgery_approval.choices.check.hint',
                         Math.round(conf.successChance * 100),
+                        successCost,
                         conf.successHealthGain,
                         conf.failHealthGain,
                         conf.failMentalLoss
@@ -328,14 +348,18 @@ export const healthEvents = [
                     state.surgeryApprovalDaysLeft = 0;
 
                     if (context.rng.random() < conf.successChance) {
+                        // Success: Approved!
                         const result = context.game.calculateMedicalCost(urgentConf.baseCost);
                         state.money -= result.youPay;
                         state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.successHealthGain);
                         return { message: I18n.t('events.surgery_approval.messages.approved', result.youPay, conf.successHealthGain), type: 'positive' };
                     }
 
+                    // Fail: Denied
                     const failCost = Math.round(urgentConf.baseCost * conf.failCostMultiplier);
-                    const failResult = context.game.calculateMedicalCost(failCost);
+                    const risk = { isDenied: true, note: '审批拒绝' };
+                    const failResult = context.game.calculateMedicalCost(failCost, false, risk);
+
                     state.money -= failResult.youPay;
                     state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.failHealthGain);
                     state.mental = Math.max(0, state.mental - conf.failMentalLoss);

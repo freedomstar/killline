@@ -4,6 +4,7 @@
 import { GameData } from '../data/index.js';
 import { SeededRNG } from '../rng.js';
 import { I18n } from '../i18n.js';
+import { getArtifact, getRandomArtifacts } from '../data/artifacts.js';
 
 /**
  * Game 基础类
@@ -20,13 +21,19 @@ export class Game {
     /**
      * 初始化新游戏
      */
-    init(seed) {
+    init(seed, artifactId = null) {
         // V2.11 初始化 RNG
         this.rng = new SeededRNG(seed);
         console.log(`[Game] 初始化, 种子: ${this.rng.initialSeed}`);
 
         this.state = JSON.parse(JSON.stringify(GameData.initialState));
         this.state.seed = this.rng.initialSeed; // 保存种子
+        this.state.artifact = artifactId; // V2.40 保存选择的神器
+
+        if (artifactId) {
+            console.log(`[Game] Artifact Equip: ${artifactId}`);
+            this.triggerArtifact('onInit', this.state); // 触发初始化效果
+        }
 
         this.isRunning = true;
         this.currentEvent = null;
@@ -121,5 +128,32 @@ export class Game {
             workTask: state.workTask, // V2.7 工作任务
             daysUntilInsurance: state.daysUntilInsurance // 保险账单倒计时
         };
+    }
+
+
+    /**
+     * 获取神器抽取候选项
+     * @param {number} count - 数量
+     * @returns {Array} - 神器对象数组
+     */
+    getArtifactDraftOptions(count = 3) {
+        return getRandomArtifacts(count, this.rng);
+    }
+
+    /**
+     * 触发神器效果钩子
+     * @param {string} hookName - 钩子名称 (onDaily, onInit 等)
+     * @param  {...any} args - 传递给钩子的参数
+     * @returns {object|null} - 返回效果结果，如果没有触发或没有钩子则返回 null
+     */
+    triggerArtifact(hookName, ...args) {
+        if (!this.state || !this.state.artifact) return null;
+
+        const artifact = getArtifact(this.state.artifact);
+        if (artifact && typeof artifact[hookName] === 'function') {
+            console.log(`[Artifact] Trigger ${hookName} on ${artifact.id}`);
+            return artifact[hookName](...args);
+        }
+        return null;
     }
 }

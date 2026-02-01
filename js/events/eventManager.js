@@ -94,6 +94,13 @@ export const EventManager = {
         if (state.energy < config.lowEnergyThreshold) {
             rate -= config.lowEnergyPenalty;
         }
+
+        // V2.XX Artifact: Lucky Ring
+        if (state.artifact === 'lucky_ring') {
+            const bonus = GameData.artifactConfig?.lucky_ring?.successRateBonus || 0.25;
+            rate += bonus;
+        }
+
         return Math.max(0.1, rate);
     },
 

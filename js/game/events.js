@@ -4,6 +4,7 @@
 import { GameData } from '../data/index.js';
 import { EventManager as GameEvents } from '../events/index.js';
 import { nightChoices } from '../events/nightChoices.js';
+import { I18n } from '../i18n.js';
 
 /**
  * 事件相关方法的 Mixin
@@ -21,13 +22,18 @@ export const EventsMixin = {
         }
         this.state.randomEventLastDay[event.id] = this.state.day;
     },
+
     /**
      * V2.7 分配新工作任务
      */
     assignNewTask() {
         const taskNames = ['项目开发', '报告撰写', '数据分析', '客户方案', '系统维护', '代码审查'];
         // 使用配置中的任务参数
-        const taskConfig = GameData.workTaskConfig;
+        const taskConfig = GameData.workTaskConfig || {
+            // Fallback default if config missing
+            difficultyMin: 30, difficultyMax: 60,
+            deadlineMin: 3, deadlineMax: 7
+        };
         const difficulty = this.rng.range(taskConfig.difficultyMin, taskConfig.difficultyMax);
         const deadline = this.rng.range(taskConfig.deadlineMin, taskConfig.deadlineMax);
 
@@ -39,6 +45,31 @@ export const EventsMixin = {
             name: taskNames[Math.floor(this.rng.random() * taskNames.length)]
         };
         console.log(`[Game] 新任务: ${this.state.workTask.name}, 难度${difficulty}, 期限${deadline}天`);
+    },
+
+    // Helper: Create a state proxy to intercept artifact effects (e.g. Mom Credit Card)
+    _getReactiveState(baseState) {
+        if (!baseState || baseState.artifact !== 'mom_credit_card') return baseState;
+
+        const discount = GameData.artifactConfig?.mom_credit_card?.debtDiscount || 0.5;
+
+        return new Proxy(baseState, {
+            set(target, prop, value) {
+                if (prop === 'money') {
+                    const oldVal = target[prop];
+                    const diff = value - oldVal;
+                    // Intercept Spending (diff < 0) when in Debt (money < 0)
+                    if (diff < 0 && target.money < 0 && typeof diff === 'number') {
+                        const discountedDiff = diff * (1 - discount);
+                        console.log(`[Artifact] Mom Credit Card triggered: ${diff} -> ${discountedDiff}`);
+                        target[prop] = oldVal + discountedDiff;
+                        return true;
+                    }
+                }
+                target[prop] = value;
+                return true;
+            }
+        });
     },
 
     /**
@@ -140,6 +171,15 @@ export const EventsMixin = {
             return null;
         }
 
+        // 强制事件优先（如医疗紧急情况）
+        const mandatoryEvents = GameEvents.getMandatoryEvents(this.state, period, this.rng);
+        if (mandatoryEvents && mandatoryEvents.length > 0) {
+            const mandatoryEvent = GameEvents.selectRandomEvent(mandatoryEvents, this.rng);
+            this.currentEvent = mandatoryEvent;
+            this.recordRandomEvent(this.currentEvent);
+            return this.currentEvent;
+        }
+
         // 随机选择事件
         const availableEvents = GameEvents.getAvailableEvents(this.state, period, this.rng);
         let selectedEvent = GameEvents.selectRandomEvent(availableEvents, this.rng);
@@ -165,6 +205,10 @@ export const EventsMixin = {
         // 特殊处理：如果是工作事件，需要动态生成选项
         if (selectedEvent && selectedEvent.id === 'day_work') {
             this.currentEvent = { ...selectedEvent };
+            if (this.state.pendingPipWarning) {
+                this.currentEvent.description = I18n.t('game.foreseeing.workMoodWarning', this.currentEvent.description);
+                this.state.pendingPipWarning = false;
+            }
             this.currentEvent.choices = GameEvents.generateDailyWorkEvent(this.state, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
             return this.currentEvent;
         }
@@ -177,7 +221,16 @@ export const EventsMixin = {
     /**
      * 处理玩家选择
      */
-    _applyDaytimeSideSettlements(state, context, result) {
+    _applyDaytimeSideSettlements(baseState, context, result) {
+        // V2.XX Wrap state with proxy for side settlements too
+        // Note: baseState here might be this.state or a simulation copy.
+        // If it is a simulation copy, _getReactiveState will wrap the copy.
+        const state = this._getReactiveState(baseState);
+
+        // V2.55 Fix: 如果侧边行动已锁定（已在同一时段的前一个事件中结算），不再重复执行
+        if (state.sideActionsLocked) return;
+
+        state.sideActionsLocked = true; // 结算开始，锁定选择器
         // V2.46 Fix: 如果是随机事件 (isRandom / isRandomEncounter)，忽略侧边行动 (DailyAction/Commute)
         // 防止用户在主界面选择了动作后，弹出随机事件时，后台依然扣除了该动作的资源
         if (this.currentEvent && (this.currentEvent.isRandom || this.currentEvent.isRandomEncounter)) {
@@ -186,6 +239,10 @@ export const EventsMixin = {
             // 为安全起见，且根据 bug 报告 (afternoon_exercise)，我们主要想阻止 DailyAction。
             // 简单策略：随机事件不结算侧边栏。
             // (注意：如果随机事件本身就是 lunch 相关的，它自然会处理饿不饿的问题，这里仅负责 Dashboard Sidebars)
+            return;
+        }
+
+        if (this.currentEvent && this.currentEvent.id === 'medical_emergency') {
             return;
         }
 
@@ -248,6 +305,27 @@ export const EventsMixin = {
 
         // 4. 结算通勤费用（公交、步行等）
         const commuteId = state.selectedCommute;
+
+        // V2.XX 交通意外逻辑 (Car Accident)
+        if (commuteId === 'car') {
+            const accConfig = GameData.eventConfigs.traffic_accident;
+            // 只有未坏的车才可能发生事故（已坏的车根本开不了，或走repair逻辑）
+            if (accConfig && !state.carBroken && context.rng.random() < accConfig.chance) {
+                state.money -= accConfig.moneyCost;
+                state.health = Math.max(0, state.health - accConfig.healthLoss);
+                state.mental = Math.max(0, state.mental - accConfig.mentalLoss);
+                if (accConfig.carBroken) {
+                    state.carBroken = true;
+                }
+                const msg = I18n.t('events.traffic_accident.message', accConfig.moneyCost, accConfig.healthLoss, accConfig.mentalLoss);
+                result.message += `\n${msg}`;
+
+                // 事故发生后，不执行后续的迟到逻辑或正常通勤结算（视为此次通勤以事故告终）
+                // 如果需要，也可以标记 state.pendingLate = true;
+                return;
+            }
+        }
+
         if (commuteId && commuteId !== 'car' && commuteId !== 'car_refuel' && commuteId !== 'car_repair') {
             const commuteConfig = GameData.commuteOptions[commuteId];
             if (commuteConfig) {
@@ -469,11 +547,15 @@ export const EventsMixin = {
         };
 
 
+        // V2.XX Intercept State for Artifacts (Mom Credit Card)
+        const processingState = this._getReactiveState(this.state);
+
         // 处理夜间选择
         if (choice.nightAction) {
             const nightOption = nightChoices[choice.nightAction];
             const housingInfo = GameData.housingTypes[this.state.housing];
-            const effectResult = nightOption.effect(this.state, housingInfo);
+            // Use processingState
+            const effectResult = nightOption.effect(processingState, housingInfo);
             if (typeof effectResult === 'string') {
                 result = { message: effectResult };
             } else {
@@ -490,10 +572,11 @@ export const EventsMixin = {
             // 普通选择
             // Update to pass context
             if (choice.effect.length > 1 || true) { // Always pass context
-                result = choice.effect(this.state, context);
+                // Use processingState
+                result = choice.effect(processingState, context);
             } else {
                 // Fallback? No, new events use context.
-                result = choice.effect(this.state, context);
+                result = choice.effect(processingState, context);
             }
 
             // V2.10 并行结算逻辑 (仅限白天时段)
@@ -516,6 +599,9 @@ export const EventsMixin = {
             console.log(`[Game] handleChoice: period=${this.state.period}, isDaytime=${isDaytime}, triggerEvent=${result.triggerEvent}`);
             if (isDaytime && !result.triggerEvent) {
                 this._applyDaytimeSideSettlements(this.state, context, result);
+            } else if (isDaytime && result.triggerEvent) {
+                // 如果触发了子事件，且由于还在白天，需要防止之后的事件重复显示选择器
+                this.state.sideActionsLocked = true;
             }
 
             // 处理精力恢复

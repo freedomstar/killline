@@ -106,7 +106,7 @@ export const I18n = {
                 },
                 // 车险描述
                 carInsuranceDescriptions: {
-                    liability: '只赔对方。如果你撞树了，修车费自己掏。',
+                    liability: '主要赔付对方。修自己车时可报销40%的维修费。',
                     full_coverage: (ded) => `赔对方也赔自己。出事了只需付$${ded}免赔额。`,
                     none: '省了保费。如果出事或被警察抓到，你就完了。',
                 },
@@ -456,6 +456,33 @@ export const I18n = {
                     sick: '重感冒',
                     critical: '重病',
                 },
+
+                // 神器 (Artifacts)
+                artifacts: {
+                    dropshipping_bot: {
+                        name: '副业机器人',
+                        description: '每日收入+${0}，但因为各种客户投诉，每日精神 -{1}。',
+                        log: (income, mood) => `机器人处理了一些订单。收入+$${income}，精神-${mood}。`
+                    },
+                    mom_credit_card: {
+                        name: '神奇信用卡',
+                        description: '当你的存款为负时，所有消费减少 {0}%。但你被禁止购买任何奢侈品 (>{1})。',
+                        log: (subsidy) => `神奇信用卡。`
+                    },
+                    gopro_camera: {
+                        name: '运动相机',
+                        description: '记录你的每一次受伤。每次损失健康时获得 ${0}。医疗费用 x{1}倍。',
+                    },
+                    lucky_ring: {
+                        name: '幸运戒指',
+                        description: '任何概率事件的成功率提升 {0}%。精力消耗不变。',
+                    },
+                    coffee_iv_drip: {
+                        name: '咖啡因剂',
+                        description: '每天早上精力恢复至 {0}。代价是每天健康 -{1}。',
+                        log: '咖啡滴注生效。精力回满，健康 -2。'
+                    }
+                },
             },
 
             // ========== game.js 文本 ==========
@@ -512,6 +539,38 @@ export const I18n = {
                     medicaidApproved: '✅ 白卡申请通过！医疗费用现已全免。',
                     medicaidDenied: '❌ 白卡申请被拒：资产或收入不符合条件。',
                     emergencyMedical: (amount) => `🚑 紧急送医自付: -$${amount}`,
+                },
+
+                // 预见未来提示 (仅提示)
+                foreseeing: {
+                    rentWarning: (amount) => `⚠️ 预警：余额不足以支付明日房租 ($${amount})`,
+                    rentReminder: (days, amount) => `📌 房租 ${days} 天后到期：$${amount}`,
+                    utilityWarning: (amount) => `⚠️ 预警：余额不足以覆盖明日水电费 ($${amount})`,
+                    utilityReminder: (days, amount) => `📌 水电费 ${days} 天后到期：约 $${amount}`,
+                    insuranceWarning: (amount) => `⚠️ 预警：余额不足以支付明日保险费 ($${amount})`,
+                    insuranceReminder: (days, amount) => `📌 保险费 ${days} 天后到期：约 $${amount}`,
+                    insuranceChangeWindow: '📌 今天是本期保险变更的最后一天',
+                    pipOmen: '😶 老板今天脸色不太好，似乎在翻进度表',
+                    workMoodWarning: (base) => `${base}\n😶 老板今天的气压很低，最好把进度交代清楚。`,
+                    rumorLine: (text) => `💬 小道消息：${text}`,
+                    rumors: [
+                        '听说医疗系统要严查报销，近期最好别冒险。',
+                        '朋友说油价可能要涨，通勤成本会变高。',
+                        '圈内传闻科技板块要出大新闻，波动会加剧。',
+                        '听人说这周裁员风声紧，别惹领导。'
+                    ],
+                    eveningOmenUtility: (amount) => `今晚空气闷热，水电费可能要超支了 (当前约 $${amount})。`,
+                    eveningOmenMarket: (title) => `风声鹤唳：${title} 的传闻正在扩散。`,
+                    eveningOmenNoise: '小区附近有可疑的人影，今晚多留意门窗。',
+                    eveningOmenHot: '空气闷热得不正常，今晚可能难熬。',
+                    eveningOmenCold: '冷风异常刺骨，今晚恐怕要加大取暖。',
+                    eveningOmenWork: '工作群里安静得反常，老板可能在看进度表。',
+                    eveningOmenSocial: '朋友群里提到一点风声，明天可能不太平。',
+                    utilityShock: (delta) => `⛽ 油价冲击传导到生活成本：水电费 +$${delta}`,
+                    marketRumorTitle: (title) => `【传闻】${title}`,
+                    marketRumorDesc: (desc) => `${desc}\n(消息未证实，留意风险)`,
+                    marketConfirmTitle: (title) => `【实锤】${title}`,
+                    marketConfirmDesc: (desc) => `${desc}\n(市场开始兑现预期)`
                 },
 
                 // 医疗费用说明
@@ -601,6 +660,7 @@ export const I18n = {
                 finance: {
                     housing: '🏠 居住',
                     insurance: '🛡️ 保险',
+                    artifact: '神器',
                     ingredients: '食材',
                     monthly_bill: '月度账单',
                     next_bill_days: (days) => `下个账单: ${days}天`,
@@ -643,6 +703,7 @@ export const I18n = {
                     social: '社交 (0-100)',
                     efficiency: '工作能力 (0-100)',
                     ingredients: '食材 (个)',
+                    job: '工作状态',
                     save_btn: '保存修改',
                 },
                 event: {
@@ -723,6 +784,7 @@ export const I18n = {
                     total_label: '预计金额:',
                     cash_label: '可用现金:',
                     confirm_btn: '确认交易',
+                    max_btn: '最大',
                 },
                 ending_stats: {
                     days: '存活天数',
@@ -755,6 +817,7 @@ export const I18n = {
                     assetLoadError: '资产数据加载失败',
                     tradeInfoError: '交易信息错误',
                     invalidQuantity: '请输入有效数量',
+                    gmSaved: 'GM数据已保存',
                     socialLow: '⚠️ 社交值过低！如果不去社交，精神将会崩溃。',
                 },
 
@@ -786,6 +849,7 @@ export const I18n = {
                     social: '社交 (0-100)',
                     efficiency: '工作能力 (0-100)',
                     ingredients: '食材 (个)',
+                    job: '工作状态',
                     save_btn: '保存修改',
                 },
 
@@ -1092,6 +1156,26 @@ export const I18n = {
                     }
                 },
 
+                // 购买二手车
+                buy_used_car: {
+                    title: '二手车机会',
+                    description: '你在路边看到一辆待售的二手车。虽然旧了点，但价格还算公道。如果你现在没有车，这可能是一个不错的代步工具。',
+                    choices: {
+                        deal: {
+                            text: '买下它',
+                            hint: (cost, mentalGain) => `-$${cost}，获得汽车，精神+${mentalGain}`
+                        },
+                        ignore: {
+                            text: '算了',
+                            hint: '不需要或买不起'
+                        }
+                    },
+                    messages: {
+                        deal: '你重新拥有了一辆车！虽然不是新车，但至少不用在公交车上挤了。',
+                        ignore: '你摇了摇头，离开了。现在的财务状况也许不适合这笔支出。'
+                    }
+                },
+
                 // 车辆故障
                 car_breakdown: {
                     title: '🚗 车辆故障',
@@ -1113,6 +1197,11 @@ export const I18n = {
                         creditRepair: '不得不透支信用卡修车，债务压力增加了',
                         skipRepair: '你决定暂时不修车。在修好之前，开车通勤需要额外支付修理费并会迟到。',
                     },
+                },
+
+                // 交通意外 (Car Accident during Commute)
+                traffic_accident: {
+                    message: "🚗 发生交通事故！车辆受损，需要维修。维修费 -${0}, 健康 -{1}, 精神 -{2}"
                 },
 
                 // 入室盗窃
@@ -1319,6 +1408,25 @@ export const I18n = {
                     }
                 },
 
+                // 神秘商人
+                mysterious_trader: {
+                    title: '神秘商人',
+                    description: '一个穿着风衣的阴影走近了你。"嘿，小子。想用你手里的那个遗物换点...更有趣的东西吗？"',
+                    choices: {
+                        swap: {
+                            text: '交换神器',
+                            hint: '获得一个新的随机神器，失去当前的神器',
+                            message: (name) => `交易成功！你获得了：${name}。`,
+                            error: '他没货了...'
+                        },
+                        refuse: {
+                            text: '拒绝',
+                            hint: '保持当前的配置',
+                            message: '你转身走开了。'
+                        }
+                    }
+                },
+
                 // 邻居噪音
                 neighbor_noise: {
                     title: '🔊 邻居噪音',
@@ -1426,14 +1534,14 @@ export const I18n = {
                     description: '医生说你需要做个小手术，不是急诊但很紧急。',
                     choices: {
                         urgent: { text: '💉 立即手术', hint: (cost, health, mental) => `-$${cost}，健康+${health}，精神-${mental}` },
-                        wait: { text: '📝 等待审批', hint: (health, mental, minDays, maxDays) => `健康-${health}，精神-${mental}，等待${minDays}-${maxDays}天审批` },
-                        fight: { text: '⚔️ 与保险公司抗争', hint: (mental, health, chance, successCost, failCost) => `-${mental}精神，健康-${health}，${chance}%成功(成功自付-$${successCost}，失败自付-$${failCost})` }
+                        wait: { text: '📝 等待审批 (常规流程)', hint: (health, mental, minDays, maxDays) => `健康-${health}，精神-${mental}，需等待${minDays}-${maxDays}天` },
+                        fight: { text: '⚔️ 紧急申诉 (要求立即手术)', hint: (mental, health, chance, successCost, failCost) => `-${mental}精神，健康-${health}，${chance}%成功(成功自付$${successCost}，失败自付$${failCost})` }
                     },
                     messages: {
-                        denied: (cost) => `手术完成，自付 $${cost}`,
+                        denied: (cost) => `未获事前审批(Prior Authorization)，保险拒赔。自付 $${cost}`,
                         wait: (days) => `进入审批等待期（预计${days}天），期间健康持续下降`,
-                        fightSuccess: (cost) => `申诉成功！但精疲力尽。自付 $${cost}`,
-                        fightFail: (cost) => `申诉失败，还是要自付 $${cost}`
+                        fightSuccess: (cost) => `申诉成功！获得了紧急手术批准(Emergency Approval)。按医保报销后自付 $${cost}`,
+                        fightFail: (cost) => `申诉失败，保险公司坚持拒赔。自付 $${cost}`
                     }
                 },
 
@@ -1441,7 +1549,7 @@ export const I18n = {
                     title: '🏥 手术审批结果',
                     description: '医院通知你，手术审批结果出来了。',
                     choices: {
-                        check: { text: '📨 查看结果', hint: (chance, successHealth, failHealth, failMental) => `审批通过率 ${chance}%（通过健康+${successHealth}；失败健康+${failHealth}，精神-${failMental}）` }
+                        check: { text: '📨 查看结果', hint: (chance, successCost, successHealth, failHealth, failMental) => `审批通过率 ${chance}%（通过自付$${successCost}，健康+${successHealth}；失败健康+${failHealth}，精神-${failMental}）` }
                     },
                     messages: {
                         approved: (cost, health) => `审批通过，安排手术。自付 $${cost}，健康+${health}`,
@@ -1874,6 +1982,13 @@ export const I18n = {
         // 如果是函数，调用它
         if (typeof value === 'function') {
             return value(...args);
+        }
+
+        // 如果是字符串且有参数，尝试替换 {0}, {1} 等占位符
+        if (typeof value === 'string' && args.length > 0) {
+            return value.replace(/\{(\d+)\}/g, (match, index) => {
+                return typeof args[index] !== 'undefined' ? args[index] : match;
+            });
         }
 
         return value;

@@ -292,6 +292,19 @@
             </div>
         </div>
 
+        <div id="modal-artifact-selection" class="modal-overlay hidden">
+            <div class="modal-content glass-panel" style="max-width: 900px;">
+                <h2 class="modal-title">📦 选择你的初始神器</h2>
+                <p class="modal-subtitle"
+                    style="text-align: center; color: var(--color-text-secondary); margin-bottom: 20px;">
+                    这就好比投胎技术活，选一个吧，它将决定你这次人生的画风。
+                </p>
+                <div id="artifact-cards-container" class="artifact-cards-container">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
         <div id="save-modal" class="modal-overlay hidden">
             <div class="modal-content glass-panel">
                 <button id="close-save-modal" class="close-button">×</button>
@@ -338,8 +351,13 @@
                     </div>
                     <div class="trade-input-group">
                         <label for="trade-quantity-input" data-i18n="ui_static.trade_modal.quantity_label">交易数量:</label>
-                        <input type="number" id="trade-quantity-input" min="0" step="0.01"
-                            data-i18n="ui_static.trade_modal.quantity_placeholder" placeholder="输入数量">
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="trade-quantity-input" min="0" step="0.01" style="flex: 1;"
+                                data-i18n="ui_static.trade_modal.quantity_placeholder" placeholder="输入数量">
+                            <button id="trade-max-btn" class="action-btn outline"
+                                style="width: auto; padding: 4px 12px; font-size: 0.9rem;"
+                                data-i18n="ui_static.trade_modal.max_btn">最大</button>
+                        </div>
                     </div>
                     <div class="trade-total-info">
                         <span class="trade-total-label" data-i18n="ui_static.trade_modal.total_label">预计金额:</span>
@@ -404,50 +422,25 @@
                         <label data-i18n="ui_static.dev_editor.ingredients">食材 (个)</label>
                         <input type="number" id="dev-input-ingredients" min="0">
                     </div>
+                    <div class="form-group">
+                        <label data-i18n="ui_static.dev_editor.job">工作状态</label>
+                        <select id="dev-input-job"
+                            style="width: 100%; padding: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
+                            <option value="fulltime">在职 (Employed)</option>
+                            <option value="unemployed">失业 (Unemployed)</option>
+                        </select>
+                    </div>
+                    <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="dev-input-pip" style="width: auto;">
+                        <label for="dev-input-pip" style="margin-bottom: 0;">PIP状态 (PIP Active)</label>
+                    </div>
                     <button id="dev-save-btn" class="primary-button" style="margin-top: 16px;"
                         data-i18n="ui_static.dev_editor.save_btn">保存修改</button>
                 </div>
             </div>
         </div>
 
-        <div id="dev-editor-modal" class="modal-overlay hidden">
-            <div class="modal-content glass-panel">
-                <button id="close-dev-editor" class="close-button">×</button>
-                <h2 class="modal-title" data-i18n="ui_static.modals.dev_editor">🔧 修改属性</h2>
-                <div class="dev-editor-form">
-                    <div class="form-group">
-                        <label data-i18n="ui_static.dev_editor.money">存款 ($)</label>
-                        <input type="number" id="dev-input-money" step="100">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="ui_static.dev_editor.energy">精力 (0-100)</label>
-                        <input type="number" id="dev-input-energy" min="0" max="100">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="ui_static.dev_editor.mental">精神 (0-100)</label>
-                        <input type="number" id="dev-input-mental" min="0" max="100">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="ui_static.dev_editor.health">健康 (0-100)</label>
-                        <input type="number" id="dev-input-health" min="0" max="100">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="ui_static.dev_editor.social">社交 (0-100)</label>
-                        <input type="number" id="dev-input-social" min="0" max="100">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="ui_static.dev_editor.efficiency">工作能力 (0-100)</label>
-                        <input type="number" id="dev-input-efficiency" min="0" max="100">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="ui_static.dev_editor.ingredients">食材 (个)</label>
-                        <input type="number" id="dev-input-ingredients" min="0">
-                    </div>
-                    <button id="dev-save-btn" class="primary-button" style="margin-top: 16px;"
-                        data-i18n="ui_static.dev_editor.save_btn">保存修改</button>
-                </div>
-            </div>
-        </div>
+
 
         <!-- SECTION: START SCREEN -->
         <div id="start-screen" class="screen active">
@@ -578,7 +571,7 @@
                     <!-- Right Column: Info Grid -->
                     <div id="dashboard-info">
                         <!-- Row 1 -->
-                        <div class="finance-item compact-stat">
+                        <div class="finance-item compact-stat clickable" id="housing-card-container">
                             <div class="finance-card-header">
                                 <span class="status-icon">🏠</span>
                                 <span class="status-label" data-i18n="ui_static.game_header.housing">住所</span>
@@ -594,19 +587,23 @@
                         </div>
 
                         <!-- Row 2 -->
-                        <div class="finance-item compact-stat">
+                        <div class="finance-item compact-stat clickable" id="artifact-display-container">
                             <div class="finance-card-header">
-                                <span class="status-icon">🥬</span>
-                                <span class="status-label" data-i18n="ui_static.finance.ingredients">食材</span>
+                                <span class="status-icon">🔮</span>
+                                <span class="status-label" data-i18n="ui_static.finance.artifact">神器</span>
                             </div>
-                            <span class="status-value" id="ingredients-count">5</span>
+                            <span class="status-value" id="artifact-value" style="font-size: 0.5em;">-</span>
                         </div>
                         <div class="finance-item compact-stat">
                             <div class="finance-card-header">
-                                <span class="status-icon">🥡</span>
+                                <span class="status-icon">🍱</span>
                                 <span class="status-label" data-i18n="ui_static.finance.meal">便当</span>
                             </div>
-                            <span class="status-value" id="meal-status">未备</span>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <span class="status-value" id="meal-status">未备</span>
+                                <span class="finance-sub-value" id="ingredients-count"
+                                    style="font-size: 0.5em; opacity: 0.8; margin-top: 2px;">食材: 0</span>
+                            </div>
                         </div>
 
                         <!-- Row 3 -->
@@ -1061,6 +1058,23 @@
                 </p>
                 <button id="restart-button" class="primary-button"
                     data-i18n="ui_static.ending_screen.restart_btn">再次挑战</button>
+            </div>
+        </div>
+
+        <!-- V2.XX Artifact Detail Modal -->
+        <div id="modal-artifact-detail" class="modal-overlay hidden" style="z-index: 2000;">
+            <div class="modal-content glass-panel" style="max-width: 320px; text-align: center; padding: 30px;">
+                <!-- Close Button -->
+                <button id="close-artifact-detail"
+                    style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">&times;</button>
+
+                <div id="artifact-detail-icon" style="font-size: 4rem; margin-bottom: 20px;"></div>
+                <h3 id="artifact-detail-name" style="margin-bottom: 5px; font-size: 1.4rem;"></h3>
+                <div id="artifact-detail-rarity"
+                    style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; width: fit-content; margin: 0 auto 15px auto; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3);">
+                </div>
+                <p id="artifact-detail-desc"
+                    style="color: var(--color-text-secondary); line-height: 1.6; font-size: 0.95rem;"></p>
             </div>
         </div>
 

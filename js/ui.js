@@ -7,6 +7,7 @@ import { GameData } from './data/index.js';
 import { GameEvents } from './events/index.js';
 import { game } from './game.js';
 import { AudioManager } from './audio.js';
+import { getArtifact } from './data/artifacts.js';
 
 export const UI = {
     elements: {},
@@ -42,6 +43,7 @@ export const UI = {
         this.elements.moneyValue = document.getElementById('money-value');
         this.elements.investmentValue = document.getElementById('investment-value');
         this.elements.housingValue = document.getElementById('housing-value');
+        this.elements.housingCard = document.getElementById('housing-card-container');
         this.elements.jobValue = document.getElementById('job-value');
         this.elements.energyBar = document.getElementById('energy-bar');
         this.elements.mentalBar = document.getElementById('mental-bar');
@@ -148,12 +150,10 @@ export const UI = {
         this.elements.statusHousingEffect = document.getElementById('status-housing-effect');
 
         // V2.XX Housing Popup Listener
-        if (this.elements.housingValue) {
-            this.elements.housingValue.style.cursor = 'pointer';
-            this.elements.housingValue.title = "点击查看详情";
-            this.elements.housingValue.onclick = () => {
+        if (this.elements.housingCard) {
+            this.elements.housingCard.addEventListener('click', () => {
                 this.showHousingDetailModal();
-            };
+            });
         }
 
         // 交通通勤
@@ -216,6 +216,7 @@ export const UI = {
         this.elements.tradePriceValue = document.getElementById('trade-price-value');
         this.elements.tradeHoldingValue = document.getElementById('trade-holding-value');
         this.elements.tradeQuantityInput = document.getElementById('trade-quantity-input');
+        this.elements.tradeMaxBtn = document.getElementById('trade-max-btn');
         this.elements.tradeTotalValue = document.getElementById('trade-total-value');
         this.elements.tradeCashValue = document.getElementById('trade-cash-value');
         this.elements.tradeConfirmBtn = document.getElementById('trade-confirm-btn');
@@ -236,6 +237,37 @@ export const UI = {
         this.elements.loadModal = document.getElementById('load-modal');
         this.elements.loadModalSlots = document.getElementById('load-modal-slots');
         this.elements.closeLoadModal = document.getElementById('close-load-modal');
+
+        // V2.XX Artifact Detail Modal
+        this.elements.artifactDetailModal = document.getElementById('modal-artifact-detail');
+        this.elements.closeArtifactDetail = document.getElementById('close-artifact-detail');
+        this.elements.artifactDetailIcon = document.getElementById('artifact-detail-icon');
+        this.elements.artifactDetailName = document.getElementById('artifact-detail-name');
+        this.elements.artifactDetailRarity = document.getElementById('artifact-detail-rarity');
+        this.elements.artifactDetailDesc = document.getElementById('artifact-detail-desc');
+        this.elements.artifactDisplayContainer = document.getElementById('artifact-display-container');
+
+        // Global Event Delegation for dynamic elements
+        document.body.addEventListener('click', (e) => {
+            const artifactContainer = e.target.closest('#artifact-display-container');
+            if (artifactContainer) {
+                console.log("UI: Artifact Card Clicked (Delegated)");
+                this.showArtifactDetailModal();
+            }
+        });
+        if (this.elements.closeArtifactDetail) {
+            this.elements.closeArtifactDetail.addEventListener('click', () => {
+                this.elements.artifactDetailModal.classList.add('hidden');
+            });
+        }
+        // Click outside to close
+        if (this.elements.artifactDetailModal) {
+            this.elements.artifactDetailModal.addEventListener('click', (e) => {
+                if (e.target === this.elements.artifactDetailModal) {
+                    this.elements.artifactDetailModal.classList.add('hidden');
+                }
+            });
+        }
 
         // 交易状态
         this.currentTradeAction = null; // 'buy' or 'sell'
@@ -313,6 +345,9 @@ export const UI = {
             }
             if (this.elements.tradeConfirmBtn) {
                 this.elements.tradeConfirmBtn.addEventListener('click', () => this.executeAssetTrade());
+            }
+            if (this.elements.tradeMaxBtn) {
+                this.elements.tradeMaxBtn.addEventListener('click', () => this.fillMaxTradeQuantity());
             }
 
             // V2.12 绑定存档系统事件
@@ -1134,8 +1169,41 @@ export const UI = {
      * 开始新游戏并关联到槽位 (但不立即保存)
      */
     startNewGame(slotId) {
+        // V2.40 Roguelike Artifact Selection
+        // Get 3 random artifacts to choose from
+        // We need to dynamic import or use the imported getRandomArtifacts helper if available via game instance
+        // But UI shouldn't depend on internal data structure directly if possible.
+        // Assuming game.getArtifactDraftOptions exists or we act via game.
+
+        // Since we don't have game.getArtifactDraftOptions, let's try to trust the data module import we added in core logic? 
+        // No, UI imports Artifacts directly? No.
+        // Let's rely on game helper which we should add, OR import artifacts here.
+        // For simplicity, let's assume we can import it.
+        // Actually, let's add `getArtifactDraftOptions` to Game class or import it.
+        // Let's import { getRandomArtifacts } from './data/artifacts.js' at the top of ui.js?
+        // UI.js already has imports.
+
+        // Wait, I can't easily add import to top of file with replace_content in middle.
+        // I will add a helper in game.js or just assume we can fetch it.
+        // Let's add `game.getArtifactDraftOptions()` in game.js later? 
+        // No, I'll use `import` by checking the file start, but for now let's assume I can add it to game.js easily.
+        // Actually, best way is to let game handle logic.
+
+        const options = game.getArtifactDraftOptions ? game.getArtifactDraftOptions(3) : [];
+
+        if (options.length > 0) {
+            this.showArtifactSelectionModal(options, (selectedArtifactId) => {
+                this._finishStartNewGame(slotId, selectedArtifactId);
+            });
+        } else {
+            // Fallback if no artifacts logic
+            this._finishStartNewGame(slotId, null);
+        }
+    },
+
+    _finishStartNewGame(slotId, artifactId) {
         const seed = this.elements.seedInput ? this.elements.seedInput.value.trim() : null;
-        game.init(seed || null);
+        game.init(seed || null, artifactId);
 
         // 记住当前使用的槽位
         game.getState().currentSlotId = slotId;
@@ -1152,6 +1220,121 @@ export const UI = {
         this.showEvent(event, state);
 
         this.showToast(I18n.t('ui.toast.newGameStarted', slotId));
+    },
+
+    /**
+     * 显示神器选择模态框
+     */
+    showArtifactSelectionModal(artifacts, onSelect) {
+        let modal = document.getElementById('modal-artifact-selection');
+        if (!modal) return;
+
+        // V2.XX Fix: Inject CSS dynamically to ensure it loads even if style.css is cached
+        if (!document.getElementById('artifact-selection-css')) {
+            const style = document.createElement('style');
+            style.id = 'artifact-selection-css';
+            style.textContent = `
+                #modal-artifact-selection .modal-content { max-width: 1000px; width: 90%; }
+                #artifact-cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px; overflow-y: auto; }
+                .artifact-card { display: flex; flex-direction: column; align-items: center; padding: 25px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; background: rgba(255, 255, 255, 0.08); position: relative; overflow: hidden; }
+                .artifact-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.4); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+                .artifact-card:active { transform: scale(0.98); }
+                .artifact-card-icon { font-size: 3.5rem; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+                .artifact-card-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
+                .artifact-card-title { margin: 0 0 10px 0; font-size: 1.3rem; font-weight: 700; text-align: center; }
+                .artifact-card-rarity { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; padding: 2px 10px; border: 1px solid currentColor; border-radius: 20px; margin-bottom: 15px; opacity: 0.8; }
+                .artifact-card-desc { text-align: center; color: var(--color-text-secondary); line-height: 1.6; font-size: 0.95rem; flex-grow: 1; }
+                .artifact-card-action { margin-top: 20px; font-size: 0.85rem; color: var(--color-text-muted); opacity: 0.7; transition: opacity 0.2s; }
+                .artifact-card:hover .artifact-card-action { opacity: 1; color: var(--color-text-primary); }
+
+                @media (max-width: 600px) {
+                    #modal-artifact-selection .modal-content { width: 95%; max-width: 100%; height: 90vh; border-radius: 12px 12px 0 0; bottom: 0; top: auto; }
+                    #artifact-cards-container { grid-template-columns: 1fr; gap: 15px; padding: 15px; }
+                    .artifact-card { flex-direction: row; align-items: center; padding: 15px; text-align: left; min-height: auto; }
+                    .artifact-card-icon { font-size: 2.5rem; margin-bottom: 0; margin-right: 20px; flex-shrink: 0; }
+                    .artifact-card-content { align-items: flex-start; }
+                    .artifact-card-title { font-size: 1.1rem; margin-bottom: 5px; text-align: left; }
+                    .artifact-card-rarity { margin-bottom: 8px; font-size: 0.65rem; padding: 1px 8px; }
+                    .artifact-card-desc { text-align: left; font-size: 0.85rem; line-height: 1.4; }
+                    .artifact-card-action { display: none; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const container = document.getElementById('artifact-cards-container');
+        container.innerHTML = '';
+        container.removeAttribute('style'); // Clear inline styles
+
+        artifacts.forEach(art => {
+            const card = document.createElement('div');
+            card.className = 'artifact-card glass-panel interactive';
+
+            const rarityColor = {
+                common: '#b2bec3',
+                uncommon: '#2ecc71',
+                rare: '#3498db',
+                epic: '#9b59b6',
+                legendary: '#f1c40f'
+            }[art.rarity] || '#ffffff';
+
+            // New structure for responsive layout (Horizontal on mobile, Vertical on desktop)
+            card.innerHTML = `
+                <div class="artifact-card-icon">${art.icon}</div>
+                <div class="artifact-card-content">
+                    <h3 class="artifact-card-title" style="color: ${rarityColor}">${art.name()}</h3>
+                    <div class="artifact-card-rarity" style="color: ${rarityColor}; border-color: ${rarityColor}">${art.rarity}</div>
+                    <p class="artifact-card-desc">${art.description()}</p>
+                </div>
+                <div class="artifact-card-action">点击选择</div>
+            `;
+
+            card.onclick = () => {
+                modal.classList.add('hidden');
+                onSelect(art.id);
+            };
+
+            container.appendChild(card);
+        });
+
+        modal.classList.remove('hidden');
+    },
+
+    showArtifactDetailModal() {
+        const state = game.getState();
+        let art = state.artifact ? getArtifact(state.artifact) : null;
+        if (!this.elements.artifactDetailModal) return;
+
+        if (!art) {
+            art = {
+                icon: '❓',
+                name: () => '无神器',
+                description: () => '你还没有获得任何神器。',
+                rarity: 'common'
+            };
+        }
+
+        const artName = typeof art.name === 'function' ? art.name() : art.name;
+        const artDesc = typeof art.description === 'function' ? art.description() : art.description;
+
+        this.elements.artifactDetailIcon.textContent = art.icon;
+        this.elements.artifactDetailName.textContent = artName;
+        this.elements.artifactDetailDesc.textContent = artDesc;
+        this.elements.artifactDetailRarity.textContent = art.rarity;
+
+        const rarityColor = {
+            common: '#b2bec3',
+            uncommon: '#2ecc71',
+            rare: '#3498db',
+            epic: '#9b59b6',
+            legendary: '#f1c40f'
+        }[art.rarity] || '#ffffff';
+
+        this.elements.artifactDetailName.style.color = rarityColor;
+        this.elements.artifactDetailRarity.style.color = rarityColor;
+        this.elements.artifactDetailRarity.style.borderColor = rarityColor;
+
+        this.elements.artifactDetailModal.classList.remove('hidden');
     },
 
     /**
@@ -1847,13 +2030,35 @@ export const UI = {
         }
 
         // 更新储备信息
+        // 更新储备信息: Merged Ingredients into Meal card logic
         if (this.elements.ingredientsCount) {
-            this.elements.ingredientsCount.textContent = status.ingredients;
-            this.elements.ingredientsCount.className = 'finance-value' + (status.ingredients <= 1 ? ' danger' : (status.ingredients <= 3 ? ' warning' : ''));
+            const ingCount = status.ingredients !== undefined ? status.ingredients : 0;
+            this.elements.ingredientsCount.textContent = `食材: ${ingCount}`;
+            // Optional: Color coding if low ingredients?
+            // this.elements.ingredientsCount.className = 'finance-sub-value' + (ingCount <= 1 ? ' danger' : '');
         }
         if (this.elements.mealStatus) {
             this.elements.mealStatus.textContent = status.hasPreparedMeal ? '✅ 已备' : '❌ 未备';
-            this.elements.mealStatus.className = 'finance-value' + (status.hasPreparedMeal ? ' positive' : ' warning');
+            this.elements.mealStatus.className = 'status-value' + (status.hasPreparedMeal ? ' positive' : ' warning');
+        }
+
+        // Render Artifact (New Slot)
+        const artifactEl = document.getElementById('artifact-value');
+        if (artifactEl) {
+            if (state.artifact) {
+                const art = getArtifact(state.artifact);
+                if (art) {
+                    const artName = typeof art.name === 'function' ? art.name() : art.name;
+                    // V2.XX Fix: Only show name, no icon as per user request
+                    artifactEl.innerHTML = `<span title="${this.resolveText(art.description)}">${artName}</span>`;
+                    // Dynamic font size: <=4 chars -> 0.9em, >4 chars -> 0.7em
+                    artifactEl.style.fontSize = artName.length <= 4 ? '0.9em' : '0.7em';
+                } else {
+                    artifactEl.textContent = '未知';
+                }
+            } else {
+                artifactEl.textContent = '-';
+            }
         }
 
         // V2.7 任务进度
@@ -2251,7 +2456,7 @@ export const UI = {
     renderLunchSelector(state) {
         if (!this.elements.lunchSelector) return;
 
-        if (state.period !== 'day') {
+        if (state.period !== 'day' || state.sideActionsLocked) {
             this.elements.lunchSelector.classList.add('hidden');
             return;
         }
@@ -2310,7 +2515,7 @@ export const UI = {
 
         // 仅工作日白天显示
         const isWorkDay = state.job === 'fulltime' && state.day % GameData.timeCycle.weekDays !== GameData.timeCycle.restDayMod;
-        if (!isWorkDay || state.period !== 'day') {
+        if (!isWorkDay || state.period !== 'day' || state.sideActionsLocked) {
             this.elements.commuteSelector.classList.add('hidden');
             return;
         }
@@ -2362,7 +2567,7 @@ export const UI = {
         }
         const actions = state.currentDailyActions;
         // 如果只有 "无" 或者不是白天，则隐藏
-        if (actions.length <= 1 || state.period !== 'day') {
+        if (actions.length <= 1 || state.period !== 'day' || state.sideActionsLocked) {
             this.elements.dailyActionSelector.classList.add('hidden');
             return;
         }
@@ -2405,7 +2610,7 @@ export const UI = {
             state.activeIncidents = GameEvents.getAvailableIncidents(state, { game, rng: game.rng });
         }
 
-        if (!state.activeIncidents || state.activeIncidents.length === 0 || state.period !== 'day') {
+        if (!state.activeIncidents || state.activeIncidents.length === 0 || state.period !== 'day' || state.sideActionsLocked) {
             this.elements.incidentSelector.classList.add('hidden');
             return;
         }
@@ -2540,7 +2745,10 @@ export const UI = {
         this.autoAdvanceOnChoice = false;
         this.setAdvanceStageVisible(true);
 
-        if (isRandomEncounter) {
+        const isMedicalEmergency = event && event.id === 'medical_emergency';
+        const isSideActionsLocked = !!state.sideActionsLocked;
+
+        if (isRandomEncounter || isMedicalEmergency || isSideActionsLocked) {
             // V2.42: 随机事件/队列插队事件不显示日常侧边栏
             if (this.elements.commuteSelector) this.elements.commuteSelector.classList.add('hidden');
             if (this.elements.lunchSelector) this.elements.lunchSelector.classList.add('hidden');
@@ -2578,9 +2786,13 @@ export const UI = {
             ? event.title(state)
             : event.title;
 
-        this.elements.eventDescription.textContent = typeof event.description === 'function'
+        let description = typeof event.description === 'function'
             ? event.description(state)
             : event.description;
+        if (event.id === 'night_choice' && state.eveningOmen) {
+            description = `${description || ''}\n${state.eveningOmen}`;
+        }
+        this.elements.eventDescription.textContent = description || '';
 
         // 生成选项
         this.elements.eventChoices.innerHTML = '';
@@ -2638,18 +2850,54 @@ export const UI = {
     },
 
     /**
-     * 显示Toast
+     * 显示Toast (队列机制)
      */
     showToast(message, type = 'neutral') {
         // 支持换行符和HTML格式
         if (message === undefined || message === null) return;
-        const msgStr = String(message);
-        this.elements.toastText.innerHTML = msgStr.replace(/\n/g, '<br>');
-        this.elements.messageToast.className = `toast ${type}`;
 
+        // 初始化队列
+        if (!this.toastQueue) {
+            this.toastQueue = [];
+            this.isToastProcessing = false;
+        }
+
+        // 加入队列
+        this.toastQueue.push({ message, type });
+
+        // 尝试处理队列
+        this.processToastQueue();
+    },
+
+    /**
+     * 处理 Toast 队列
+     */
+    processToastQueue() {
+        // 如果正在处理或队列为空，停止
+        if (this.isToastProcessing || !this.toastQueue || this.toastQueue.length === 0) {
+            return;
+        }
+
+        this.isToastProcessing = true;
+        const nextToast = this.toastQueue.shift();
+
+        // 显示 Toast
+        const msgStr = String(nextToast.message);
+        this.elements.toastText.innerHTML = msgStr.replace(/\n/g, '<br>');
+        this.elements.messageToast.className = `toast ${nextToast.type}`;
+        this.elements.messageToast.classList.remove('hidden');
+
+        // 3秒后隐藏
         setTimeout(() => {
             this.elements.messageToast.classList.add('hidden');
-        }, 4500);
+
+            // 等待淡出动画结束 (500ms) 后处理下一条
+            setTimeout(() => {
+                this.isToastProcessing = false;
+                this.processToastQueue();
+            }, 500);
+
+        }, 3000);
     },
 
     /**
@@ -3036,6 +3284,34 @@ export const UI = {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+    },
+
+    /**
+     * V2.XX 填充最大交易数量
+     */
+    fillMaxTradeQuantity() {
+        if (!this.currentTradeAssetId || !this.currentTradeAction) return;
+
+        const state = game.getState();
+        const assetId = this.currentTradeAssetId;
+        const marketData = state.marketPrices[assetId];
+        const holding = state.holdings[assetId];
+
+        if (!marketData) return;
+
+        let maxQty = 0;
+
+        if (this.currentTradeAction === 'buy') {
+            if (marketData.price > 0) {
+                // 向下取整保留2位小数
+                maxQty = Math.floor((state.money / marketData.price) * 100) / 100;
+            }
+        } else {
+            maxQty = holding.quantity;
+        }
+
+        this.elements.tradeQuantityInput.value = maxQty;
+        this.updateTradeTotal();
     },
 
     /**

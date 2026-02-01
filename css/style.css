@@ -25,6 +25,7 @@
 @import url('features/billing.css');
 @import url('features/save-system.css');
 @import url('features/investment.css');
+@import url('features/artifact-selection.css');
 
 /* Screens */
 @import url('screens/start.css');

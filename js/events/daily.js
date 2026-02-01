@@ -4,6 +4,20 @@
 import { I18n } from '../i18n.js';
 import { GameData } from '../data/index.js';
 
+const getRumorLine = (state, context) => {
+    if (!context || !context.rng) return '';
+    const foreseeing = GameData.foreseeingConfig || {};
+    if ((state.lastRumorDay || 0) === state.day) return '';
+    const social = state.socialValue || 50;
+    if (social < 60) return '';
+    if (context.rng.random() >= (foreseeing.rumorChance || 0.35)) return '';
+    const rumors = I18n.t('game.foreseeing.rumors');
+    if (!Array.isArray(rumors) || rumors.length === 0) return '';
+    const rumor = rumors[Math.floor(context.rng.random() * rumors.length)];
+    state.lastRumorDay = state.day;
+    return I18n.t('game.foreseeing.rumorLine', rumor);
+};
+
 export const dailyEvents = [
     // ============ V2.3 白天工作事件（非休息日）============
     {
@@ -457,7 +471,9 @@ export const randomDailyActions = [
             const conf = GameData.eventConfigs.daily_actions.gossip;
             state.energy = Math.max(0, state.energy - conf.energyCost);
             state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.socialGain);
-            return { message: I18n.t('events.daily_actions.gossip.message'), type: 'neutral' };
+            const rumor = getRumorLine(state, context);
+            const baseMsg = I18n.t('events.daily_actions.gossip.message');
+            return { message: rumor ? `${baseMsg}\n${rumor}` : baseMsg, type: 'neutral' };
         }
     },
     {
@@ -651,7 +667,8 @@ export function getAvailableLunchOptions(state, context) {
             state.surgeryApprovalDaysLeft > 0 ||
             state.surgeryApprovalPending);
 
-    if (isMedicalRestricted) {
+    // Mod: Only restrict if hospitalized. Unblocks lunch for sick-but-free players.
+    if ((state.hospitalDaysLeft || 0) > 0) {
         const allowed = (state.hospitalDaysLeft || 0) > 0
             ? ['hospital_cafeteria', 'skip']
             : ['skip'];
@@ -719,15 +736,7 @@ export function getAvailableCommuteOptions(state, context) {
     const options = [];
     const base = GameData.commuteOptions;
 
-    // V2.XX 统一的重病/住院/手术限制条件
-    const isMedicalRestricted =
-        state.hospitalDaysLeft > 0 ||
-        state.health < 30 ||
-        ((state.health < 50 && state.insurance.healthPlanId !== 'none') || // 需手术
-            state.surgeryApprovalDaysLeft > 0 ||
-            state.surgeryApprovalPending);
-
-    if (isMedicalRestricted) {
+    if ((state.hospitalDaysLeft || 0) > 0) {
         if (base.hospital_stay) {
             const opt = { ...base.hospital_stay, key: 'hospital_stay' };
             opt.name = I18n.t('data.commuteOptions.hospital_stay.name');
@@ -735,6 +744,11 @@ export function getAvailableCommuteOptions(state, context) {
             options.push(opt);
         }
         return options;
+    }
+
+    // 修复：失业或被裁后不需要通勤
+    if (state.job === 'unemployed' || state.job === 'fired') {
+        return [];
     }
 
     for (const [key, config] of Object.entries(base)) {

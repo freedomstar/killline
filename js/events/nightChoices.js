@@ -4,6 +4,20 @@
 import { I18n } from '../i18n.js';
 import { GameData } from '../data/index.js'; // Use GameData as eventConfigs is now aggregated there
 
+const getRumorLine = (state, context) => {
+    if (!context || !context.rng) return '';
+    const foreseeing = GameData.foreseeingConfig || {};
+    if ((state.lastRumorDay || 0) === state.day) return '';
+    const social = state.socialValue || 50;
+    if (social < 60) return '';
+    if (context.rng.random() >= (foreseeing.rumorChance || 0.35)) return '';
+    const rumors = I18n.t('game.foreseeing.rumors');
+    if (!Array.isArray(rumors) || rumors.length === 0) return '';
+    const rumor = rumors[Math.floor(context.rng.random() * rumors.length)];
+    state.lastRumorDay = state.day;
+    return I18n.t('game.foreseeing.rumorLine', rumor);
+};
+
 export const nightChoices = {
     sleep: {
         id: 'sleep',
@@ -49,9 +63,10 @@ export const nightChoices = {
             state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + cfg.socialGain);
             state.mental = Math.min(state.maxMental, (state.mental || 0) + cfg.mentalGain);
             state.sleptWell = true; // 打电话算休息，不影响睡眠质量？或者算轻微影响？这里暂设为 true (没说熬夜)
-
+            const rumor = getRumorLine(state, context);
+            const baseMsg = I18n.t('game.nightResults.phone_social');
             return {
-                message: I18n.t('game.nightResults.phone_social'),
+                message: rumor ? `${baseMsg}\n${rumor}` : baseMsg,
                 energyRecoveryTomorrow: cfg.energyRecoveryTomorrow
             };
         }

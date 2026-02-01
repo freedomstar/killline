@@ -25,6 +25,7 @@ export const eventWeights = {
     phone_bill_due: 50,
     friend_help: 10,
     sell_car_emergency: 100,
+    buy_used_car: 50,
 
     // Night
     night_choice: 50,

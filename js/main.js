@@ -8,6 +8,7 @@ import { game } from './game.js';
 import { GameEvents } from './events/index.js';
 import { GameData } from './data/index.js';
 import { AudioManager } from './audio.js';
+import { initGMPanel } from './gm_panel.js';
 
 const GameController = {
     pendingSelection: null,
@@ -23,6 +24,7 @@ const GameController = {
 
     setup() {
         UI.init();
+        initGMPanel();
         this.bindEvents();
         UI.switchScreen('start');
         console.log('斩杀线生存 V2 - 已加载');
@@ -470,6 +472,14 @@ const GameController = {
 
             // 推进时段
             game.advancePeriod();
+
+            // V2.14 Fix: Check for Game Over (e.g. Bankruptcy detected during day update)
+            if (game.state.pendingEnding) {
+                UI.updateStatusBar(game.getStatusDescription());
+                UI.showEnding(game.state.pendingEnding, game.getStatusDescription());
+                this.clearPendingSelection();
+                return;
+            }
 
             const energyDelta = game.state.energy - beforeAdvance.energy;
 

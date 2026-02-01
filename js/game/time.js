@@ -35,6 +35,7 @@ export const TimeMixin = {
         this.state.lunchType = null;           // 默认不选午餐
         this.state.selectedDailyAction = null; // 默认不选
         this.state.selectedIncident = null;    // 默认不选
+        this.state.sideActionsLocked = false; // 重置锁定状态
 
         // V2.30 通勤系统重构：
         // 1. 先保存上一时段选择的通勤方式
@@ -46,6 +47,9 @@ export const TimeMixin = {
 
         // V2.23 油箱系统: 处理汽车相关通勤选择（油箱逻辑）
         // 使用保存的 previousCommute 来判断
+        // V2.XX Intercept state for artifact effects (Mom Credit Card)
+        const processingState = this._getReactiveState(this.state);
+
         if (previousCommute === 'car') {
             // 有油，消耗1次
             this.state.fuelRemaining = Math.max(0, (this.state.fuelRemaining || 0) - 1);
@@ -53,13 +57,15 @@ export const TimeMixin = {
         } else if (previousCommute === 'car_refuel') {
             // 加油并开车: 先扣费加满油，再消耗1次
             const cost = this.state.refuelCost || 20;
-            this.state.money -= cost;
+            // Use processingState for money deduction
+            processingState.money -= cost;
             this.state.fuelRemaining = (this.state.fuelCapacity || 4) - 1; // 加满后用掉1次
             console.log(`[Game] 加油 -$${cost}，剩余油量 ${this.state.fuelRemaining}/${this.state.fuelCapacity}`);
         } else if (previousCommute === 'car_repair') {
             // V2.24 修车并开车: 扣费、修复故障、消耗油量、必定迟到
             const repairCost = this.state.insurance.carPlanId === 'full_coverage' ? 500 : 1200;
-            this.state.money -= repairCost;
+            // Use processingState for money deduction
+            processingState.money -= repairCost;
             this.state.carBroken = false; // 修复故障
             this.state.fuelRemaining = Math.max(0, (this.state.fuelRemaining || 0) - 1);
             // 迟到惩罚由 applyCommuteEffects 或手动处理
@@ -71,21 +77,75 @@ export const TimeMixin = {
         // V2.4 便当过午不食机制
         // 如果是从白天结束（进入夜晚），且还没有吃便当，便当过期
         if (this.state.period === 'day') {
-            if (this.state.hasPreparedMeal) {
-                console.log('[Game] 便当未食用，已过期');
-                this.state.hasPreparedMeal = false;
-            }
-            // 重置咖啡状态
-            this.state.coffeeToday = false;
+            console.log('[Game] 便当未食用，已过期');
+            this.state.hasPreparedMeal = false;
         }
-
+        // 重置咖啡状态
+        this.state.coffeeToday = false;
         // 切换到下一个时段
         this.state.period = currentPeriod.next;
 
-        // V2.35 傍晚事件判定 (进入夜晚时)
+        // V2.XX 傍晚预兆提示 (进入夜晚时)
         if (this.state.period === 'night') {
+            if (this.prepareMarketRumor) {
+                this.prepareMarketRumor();
+            }
+            this.prepareEveningOmen();
+            // V2.35 傍晚事件判定
             this.prepareEveningEvents();
         }
+    },
+
+    /**
+     * V2.XX 生成傍晚预兆 (仅提示，不改变玩法)
+     */
+    prepareEveningOmen() {
+        this.state.eveningOmen = null;
+
+        const omens = [];
+        const utilityBill = Math.round(this.state.utilityBill || 0);
+        const social = this.state.socialValue || 50;
+        const foreseeing = GameData.foreseeingConfig || {};
+
+        // 水电预兆：临近结算且账单偏高
+        if (this.state.daysUntilUtility <= (foreseeing.billReminderDays || 2) && utilityBill > 0) {
+            omens.push(I18n.t('game.foreseeing.eveningOmenUtility', utilityBill));
+        }
+
+        // 市场传闻预兆
+        if (this.state.marketRumorId) {
+            const rumorNews = this.getMarketNewsById ? this.getMarketNewsById(this.state.marketRumorId) : null;
+            if (rumorNews) {
+                omens.push(I18n.t('game.foreseeing.eveningOmenMarket', rumorNews.title));
+            }
+        }
+
+        // 工作预兆：任务临近截止
+        if (this.state.workTask && this.state.workTask.deadline <= 2 && this.state.workTask.progress < 100) {
+            omens.push(I18n.t('game.foreseeing.eveningOmenWork'));
+        }
+
+        // 社区噪音/不安预兆：仅在住处稳定时出现
+        if ((this.state.housing === 'apartment' || this.state.housing === 'cheapRoom') && this.rng.random() < GameData.eventConfigs.probabilities.neighbor_noise) {
+            omens.push(I18n.t('game.foreseeing.eveningOmenNoise'));
+        }
+
+        // 天气预兆
+        if (this.rng.random() < GameData.eventConfigs.probabilities.hot_weather) {
+            omens.push(I18n.t('game.foreseeing.eveningOmenHot'));
+        } else if (this.rng.random() < GameData.eventConfigs.probabilities.cold_weather) {
+            omens.push(I18n.t('game.foreseeing.eveningOmenCold'));
+        }
+
+        // 社交值高时更容易得到风向
+        if (social >= 60 && this.rng.random() < 0.2) {
+            omens.push(I18n.t('game.foreseeing.eveningOmenSocial'));
+        }
+
+        if (omens.length === 0) return;
+
+        const pick = omens[Math.floor(this.rng.random() * omens.length)];
+        this.state.eveningOmen = pick;
     },
 
     /**
@@ -94,7 +154,10 @@ export const TimeMixin = {
     prepareEveningEvents() {
         this.state.eventQueue = [];
 
-        // 1. 获取强制事件
+        // 重置侧边行动锁定状态
+        this.state.sideActionsLocked = false;
+
+        // 1. 清理动态选项状态
         const mandatoryParams = this.rng ? this.rng : null;
         const mandatoryEvents = GameEvents.getMandatoryEvents(this.state, 'night', mandatoryParams);
 
@@ -166,6 +229,13 @@ export const TimeMixin = {
 
         this.state.dailyFinancialReport = []; // 重置每日财务报告
 
+        // V2.41 Artifact Daily Effects
+        const artifactEffect = this.triggerArtifact('onDaily', this.state);
+        if (artifactEffect && artifactEffect.log) {
+            this.state.dailyFinancialReport.push(artifactEffect.log);
+            console.log(`[Game] Artifact Daily: ${artifactEffect.log}`);
+        }
+
         // V2.XX 投资情绪系统：计算市场更新前后的净值变化
         const getPortfolioValue = () => {
             const prices = this.state.marketPrices || {};
@@ -234,6 +304,63 @@ export const TimeMixin = {
 
         this.state.daysUntilInsurance--;
 
+        // V2.XX 预见未来：账单红线预警（仅提示）
+        const report = this.state.dailyFinancialReport;
+        if (report) {
+            const foreseeing = GameData.foreseeingConfig || {};
+            const reminderDays = foreseeing.billReminderDays || 2;
+            const rentCost = this.state.housingCost || 0;
+            if (rentCost > 0 && this.state.daysUntilRent > 0 && this.state.daysUntilRent <= reminderDays) {
+                if (this.state.daysUntilRent === 1 && this.state.money < rentCost) {
+                    report.push(I18n.t('game.foreseeing.rentWarning', rentCost));
+                } else {
+                    report.push(I18n.t('game.foreseeing.rentReminder', this.state.daysUntilRent, rentCost));
+                }
+            }
+
+            const utilityCost = Math.round(this.state.utilityBill || 0);
+            if (utilityCost > 0 && this.state.daysUntilUtility > 0 && this.state.daysUntilUtility <= reminderDays) {
+                if (this.state.daysUntilUtility === 1 && this.state.money < utilityCost) {
+                    report.push(I18n.t('game.foreseeing.utilityWarning', utilityCost));
+                } else {
+                    report.push(I18n.t('game.foreseeing.utilityReminder', this.state.daysUntilUtility, utilityCost));
+                }
+            }
+
+            const insuranceCost = this.calculateMonthlyInsuranceCostForState
+                ? this.calculateMonthlyInsuranceCostForState(this.state)
+                : (this.calculateMonthlyInsuranceCost ? this.calculateMonthlyInsuranceCost() : 0);
+            if (insuranceCost > 0 && this.state.daysUntilInsurance > 0 && this.state.daysUntilInsurance <= reminderDays) {
+                if (this.state.daysUntilInsurance === 1 && this.state.money < insuranceCost) {
+                    report.push(I18n.t('game.foreseeing.insuranceWarning', insuranceCost));
+                } else {
+                    report.push(I18n.t('game.foreseeing.insuranceReminder', this.state.daysUntilInsurance, insuranceCost));
+                }
+            }
+
+            const rentersPending = this.state.insurance
+                && this.state.insurance.pendingRentersStatus !== null
+                && this.state.insurance.pendingRentersStatus !== undefined;
+            const pendingInsChange = this.state.insurance
+                && (this.state.insurance.pendingHealthPlanId || this.state.insurance.pendingCarPlanId || rentersPending);
+            if (this.state.daysUntilInsurance === 1 && pendingInsChange) {
+                report.push(I18n.t('game.foreseeing.insuranceChangeWindow'));
+            }
+
+            if (this.state.pendingPipWarning) {
+                report.push(I18n.t('game.foreseeing.pipOmen'));
+            }
+
+            const social = this.state.socialValue || 50;
+            if (social >= 60 && this.rng.random() < 0.25) {
+                const rumors = I18n.t('game.foreseeing.rumors');
+                if (Array.isArray(rumors) && rumors.length > 0) {
+                    const rumor = rumors[Math.floor(this.rng.random() * rumors.length)];
+                    report.push(I18n.t('game.foreseeing.rumorLine', rumor));
+                }
+            }
+        }
+
         // V2.7 工作任务系统 - 检查截止日期
         if (this.state.job === 'fulltime' && this.state.workTask) {
             // V2.28 优化：住院期间或休息日，任务截止日期不减少
@@ -284,16 +411,21 @@ export const TimeMixin = {
         }
 
         // V2.5 房租结算（每10天）- 带信用分惩罚
+        // V2.XX Intercept state for artifact effects
+        const processingState = this._getReactiveState(this.state);
+
         if (this.state.daysUntilRent <= 0) {
             const rentCost = this.state.housingCost;
             if (this.state.money >= rentCost) {
-                this.state.money -= rentCost;
+                // Use processingState
+                processingState.money -= rentCost;
                 this.state.unpaidRentMonths = 0;
                 const msg = I18n.t('game.finance.rentPaid', rentCost);
                 this.state.dailyFinancialReport.push(msg);
                 console.log(`[Game] ${msg}`);
             } else {
-                this.state.money -= rentCost;
+                // Use processingState
+                processingState.money -= rentCost;
                 this.state.unpaidRentMonths = (this.state.unpaidRentMonths || 0) + 1;
                 const creditDrop = GameData.usaFeatures.latePenalty.creditScoreDrop;
                 this.state.creditScore = Math.max(300, this.state.creditScore - creditDrop);
@@ -307,7 +439,8 @@ export const TimeMixin = {
         // V2.3 水电结算（每5天）
         if (this.state.daysUntilUtility <= 0) {
             const utilityCost = this.state.utilityBill;
-            this.state.money -= utilityCost;
+            // Use processingState
+            processingState.money -= utilityCost;
             const msg = I18n.t('game.finance.utilityPaid', utilityCost);
             this.state.dailyFinancialReport.push(msg);
             console.log(`[Game] ${msg}`);
@@ -429,6 +562,10 @@ export const TimeMixin = {
         }
 
         // V2.14 检查游戏结束与连锁斩杀判定
-        this.checkGameOver();
+        const ending = this.checkGameOver();
+        if (ending) {
+            this.state.pendingEnding = ending;
+            this.isRunning = false;
+        }
     }
 };
