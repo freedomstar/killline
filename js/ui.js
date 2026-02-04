@@ -3969,31 +3969,22 @@ export const UI = {
             const containerWidth = this.elements.newsTickerContainer.offsetWidth;
             const textWidth = el.offsetWidth;
 
-            let displayDuration = 5000; // Default 5s for short text
+            el.style.left = '0';
 
-            if (textWidth > containerWidth - 40) { // padding
-                el.style.left = '0';
+            // Calculate start position: containerWidth as percentage of textWidth
+            // Even if text is short, this ensures it starts from the right edge of the container
+            const startPercent = (containerWidth / textWidth) * 100;
+            el.style.setProperty('--scroll-start', `${startPercent}%`);
 
-                // Calculate start position: containerWidth as percentage of textWidth
-                const startPercent = (containerWidth / textWidth) * 100;
-                el.style.setProperty('--scroll-start', `${startPercent}%`);
+            el.classList.add('ticker-scroll');
 
-                el.classList.add('ticker-scroll');
+            // Speed: 60 pixels per second
+            const durationSeconds = (textWidth + containerWidth) / 60;
+            const animationDuration = Math.max(8, durationSeconds);
+            el.style.animationDuration = `${animationDuration}s`;
 
-                // Speed: 60 pixels per second
-                const durationSeconds = (textWidth + containerWidth) / 60;
-                const animationDuration = Math.max(8, durationSeconds);
-                el.style.animationDuration = `${animationDuration}s`;
-
-                // Switch when animation ends + small buffer
-                displayDuration = animationDuration * 1000 + 200;
-            } else {
-                // If short, center it
-                el.style.left = '50%';
-                el.style.transform = 'translate(-50%, 0)';
-                el.style.animationDuration = '';
-                displayDuration = 5000;
-            }
+            // Switch when animation ends + small buffer
+            let displayDuration = animationDuration * 1000 + 200;
 
             el.style.opacity = 1;
 
