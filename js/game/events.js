@@ -5,11 +5,18 @@ import { GameData } from '../data/index.js';
 import { EventManager as GameEvents } from '../events/index.js';
 import { nightChoices } from '../events/nightChoices.js';
 import { I18n } from '../i18n.js';
+import { getArtifact, processArtifactReactions } from '../data/artifacts.js';
 
 /**
  * 事件相关方法的 Mixin
  */
 export const EventsMixin = {
+    _applyDynamicChoices(event, context) {
+        if (!event) return event;
+        if (typeof event.generateChoices !== 'function') return event;
+        const choices = event.generateChoices(this.state, context) || [];
+        return { ...event, choices };
+    },
     recordRandomEvent(event) {
         if (!event || !event.isRandom) return;
         if (!this.state.randomEventsToday) this.state.randomEventsToday = [];
@@ -49,20 +56,36 @@ export const EventsMixin = {
 
     // Helper: Create a state proxy to intercept artifact effects (e.g. Mom Credit Card)
     _getReactiveState(baseState) {
-        if (!baseState || baseState.artifact !== 'mom_credit_card') return baseState;
+        if (this.isPreview) return baseState;
+        if (!baseState || !Array.isArray(baseState.artifacts) || !baseState.artifacts.includes('mom_credit_card')) return baseState;
+
+        // V2.8 Change: Condition - Only active when money < 500
+        if ((baseState.money || 0) >= 500) return baseState;
 
         const discount = GameData.artifactConfig?.mom_credit_card?.debtDiscount || 0.5;
+
+        // Capture 'this' for proxy handler
+        const self = this;
 
         return new Proxy(baseState, {
             set(target, prop, value) {
                 if (prop === 'money') {
                     const oldVal = target[prop];
                     const diff = value - oldVal;
-                    // Intercept Spending (diff < 0) when in Debt (money < 0)
-                    if (diff < 0 && target.money < 0 && typeof diff === 'number') {
-                        const discountedDiff = diff * (1 - discount);
-                        console.log(`[Artifact] Mom Credit Card triggered: ${diff} -> ${discountedDiff}`);
+                    // Intercept Spending (diff < 0)
+                    if (diff < 0 && typeof diff === 'number') {
+                        const discountedDiff = diff * discount;
                         target[prop] = oldVal + discountedDiff;
+
+                        // V2.XX: Record trigger for UI feedback
+                        if (self._tempArtifactTriggers) {
+                            const savedAmount = Math.round(Math.abs(diff - discountedDiff));
+                            self._tempArtifactTriggers.push({
+                                id: 'mom_credit_card',
+                                amount: savedAmount, // Store usage amount for aggregation
+                                message: I18n.t('game.artifactTriggers.mom_credit_card', savedAmount)
+                            });
+                        }
                         return true;
                     }
                 }
@@ -71,6 +94,173 @@ export const EventsMixin = {
             }
         });
     },
+
+    _getArtifactSnapshot(state) {
+        return {
+            money: state.money || 0,
+            energy: state.energy || 0,
+            mental: state.mental || 0,
+            health: state.health || 0,
+            workProgress: state.workTask ? state.workTask.progress : 0,
+            maxWorkProgress: state.workTask ? state.workTask.maxProgress : GameData.initialState.workTask.maxProgress,
+            investment: this._calculatePortfolioValue(state)
+        };
+    },
+
+    _calculatePortfolioValue(state) {
+        const prices = state.marketPrices || {};
+        const holdings = state.holdings || {};
+        let portfolioValue = 0;
+        Object.keys(holdings).forEach(id => {
+            const holding = holdings[id];
+            if (holding && prices[id]) {
+                portfolioValue += holding.quantity * prices[id].price;
+            }
+        });
+        return portfolioValue;
+    },
+
+    _computeArtifactDelta(before, after) {
+        const workProgress = after.workTask ? after.workTask.progress : 0;
+        return {
+            money: (after.money || 0) - (before.money || 0),
+            energy: (after.energy || 0) - (before.energy || 0),
+            mental: (after.mental || 0) - (before.mental || 0),
+            health: (after.health || 0) - (before.health || 0),
+            workProgress: workProgress - (before.workProgress || 0),
+            investment: (after.investment || 0) - (before.investment || 0)
+        };
+    },
+
+    _applyArtifactActionEffects(baseDelta, actionInfo, context) {
+        if (!Array.isArray(this.state.artifacts) || this.state.artifacts.length === 0) {
+            return { triggers: [], layers: [] };
+        }
+
+        const artifacts = this.state.artifacts;
+        const actionDelta = { ...baseDelta };
+        const triggers = [];
+        const isWork = actionInfo.type === 'work' || actionInfo.id === 'day_work';
+
+        const addTrigger = (id, message) => {
+            if (!message) return;
+            triggers.push({ id, message });
+        };
+
+        // 使用临时 state 副本进行 processArtifactReactions 计算
+        // 这样可以获取增量而不直接修改真实 state
+        const tempState = {
+            ...this.state,
+            health: 0,
+            mental: 0,
+            energy: 0,
+            money: 0
+        };
+
+        // 调用 processArtifactReactions 处理 onModifyBase 循环
+        const { logs, triggeredIds, layers, totalDelta } = processArtifactReactions(
+            tempState,
+            actionDelta,
+            null // 无初始触发源，允许所有神器参与
+        );
+
+        // 将 logs 转换为 triggers 格式
+        logs.forEach((msg, idx) => {
+            if (msg && triggeredIds[idx]) {
+                addTrigger(triggeredIds[idx], msg);
+            }
+        });
+
+        // 从 totalDelta 计算神器产生的调整量
+        const artifactAdjustments = {
+            money: (totalDelta.money || 0) - (actionDelta.money || 0),
+            energy: (totalDelta.energy || 0) - (actionDelta.energy || 0),
+            mental: (totalDelta.mental || 0) - (actionDelta.mental || 0),
+            health: (totalDelta.health || 0) - (actionDelta.health || 0),
+            workProgress: (totalDelta.workProgress || 0) - (actionDelta.workProgress || 0)
+        };
+
+        // 更新 actionDelta 为 totalDelta
+        Object.keys(totalDelta).forEach(key => {
+            actionDelta[key] = totalDelta[key];
+        });
+
+        // 临时应用 onModifyBase 产生的金钱变化到 state，
+        // 以便 onModifyMult（如 bull_plushie）可以基于正确的存款金额计算乘数
+        const baseMoneyChange = actionDelta.money - baseDelta.money;
+        this.state.money += baseMoneyChange;
+
+        // Apply multiplicative modifiers
+        if (actionDelta.money !== 0) {
+            let positiveMult = 1;
+            let negativeMult = 1;
+
+            artifacts.forEach((id) => {
+                const artifact = getArtifact(id);
+                if (!artifact || typeof artifact.onModifyMult !== 'function') return;
+                const res = artifact.onModifyMult(this.state, actionInfo, actionDelta, context);
+                if (!res || !res.multiplier) return;
+
+                // V2.XX: Check for significant impact (>= 0.1)
+                const currentMult = (actionDelta.money > 0) ? positiveMult : negativeMult;
+                const projectedImpact = Math.abs(actionDelta.money * currentMult * (res.multiplier - 1));
+                if (projectedImpact < 0.1) return;
+
+                const appliesTo = res.appliesTo || 'positive';
+                if (appliesTo === 'all') {
+                    positiveMult *= res.multiplier;
+                    negativeMult *= res.multiplier;
+                } else if (appliesTo === 'negative') {
+                    negativeMult *= res.multiplier;
+                } else {
+                    positiveMult *= res.multiplier;
+                }
+
+                if (res.message) addTrigger(id, res.message);
+            });
+
+            if (actionDelta.money > 0) {
+                actionDelta.money = Math.round(actionDelta.money * positiveMult * 10) / 10;
+            } else if (actionDelta.money < 0) {
+                actionDelta.money = Math.round(actionDelta.money * negativeMult * 10) / 10;
+            }
+        }
+
+        // 恢复临时应用的金钱变化（最终调整会在下面统一应用）
+        this.state.money -= baseMoneyChange;
+
+        // Apply adjustments
+        const adjustments = {
+            money: actionDelta.money - baseDelta.money,
+            energy: actionDelta.energy - baseDelta.energy,
+            mental: actionDelta.mental - baseDelta.mental,
+            health: actionDelta.health - baseDelta.health,
+            workProgress: actionDelta.workProgress - baseDelta.workProgress
+        };
+
+        if (adjustments.money) this.state.money += adjustments.money;
+        if (adjustments.energy) this.state.energy += adjustments.energy;
+        if (adjustments.mental) this.state.mental += adjustments.mental;
+        if (adjustments.health) this.state.health += adjustments.health;
+        if (adjustments.workProgress && this.state.workTask) {
+            const maxProgress = this.state.workTask.maxProgress || GameData.initialState.workTask.maxProgress;
+            this.state.workTask.progress = Math.min(maxProgress, this.state.workTask.progress + adjustments.workProgress);
+        }
+
+        // Track daily spend
+        if (baseDelta.money < 0) {
+            this.state.spentMoneyToday = true;
+        }
+
+        // Update work history
+        if (isWork && actionInfo.choiceId && baseDelta.workProgress > 0) {
+            this.state.lastWorkChoiceId = actionInfo.choiceId;
+            this.state.lastWorkProgressGain = baseDelta.workProgress;
+        }
+
+        return { triggers, layers };
+    },
+
 
     /**
      * Get event by ID (Wrapper to support synthetic events and standard lookup)
@@ -81,7 +271,7 @@ export const EventsMixin = {
         }
         const event = GameEvents.events.find(e => e.id === id);
         this.recordRandomEvent(event);
-        return event;
+        return this._applyDynamicChoices(event, { game: this, rng: this.rng });
     },
 
     /**
@@ -89,7 +279,6 @@ export const EventsMixin = {
      */
     getNextEvent() {
         const period = this.state.period;
-        console.log(`[Game] 请求事件, 当前时段: ${period}`);
 
 
         // V2.35 检查事件队列 (傍晚事件) - 优先于所有夜间/日常事件
@@ -100,9 +289,9 @@ export const EventsMixin = {
                 const evt = this.state.eventQueue[0];
                 // 从队列移除
                 this.state.eventQueue.shift();
-                this.currentEvent = evt;
+                this.currentEvent = this._applyDynamicChoices(evt, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
                 this.recordRandomEvent(evt);
-                return evt;
+                return this.currentEvent;
             }
 
             // 如果有多个事件，生成 Dashboard
@@ -144,8 +333,8 @@ export const EventsMixin = {
                 e.condition && e.condition(this.state, context)
             );
             if (forcedEvent) {
-                this.currentEvent = forcedEvent;
-                return forcedEvent;
+                this.currentEvent = this._applyDynamicChoices(forcedEvent, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
+                return this.currentEvent;
             }
 
             this.currentEvent = GameEvents.getNightChoiceEvent(this.state);
@@ -175,7 +364,7 @@ export const EventsMixin = {
         const mandatoryEvents = GameEvents.getMandatoryEvents(this.state, period, this.rng);
         if (mandatoryEvents && mandatoryEvents.length > 0) {
             const mandatoryEvent = GameEvents.selectRandomEvent(mandatoryEvents, this.rng);
-            this.currentEvent = mandatoryEvent;
+            this.currentEvent = this._applyDynamicChoices(mandatoryEvent, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
             this.recordRandomEvent(this.currentEvent);
             return this.currentEvent;
         }
@@ -213,7 +402,7 @@ export const EventsMixin = {
             return this.currentEvent;
         }
 
-        this.currentEvent = selectedEvent;
+        this.currentEvent = this._applyDynamicChoices(selectedEvent, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
         this.recordRandomEvent(this.currentEvent);
         return this.currentEvent;
     },
@@ -259,9 +448,9 @@ export const EventsMixin = {
                 state.money -= totalCost;
 
                 // Apply all effects
-                if (lunchOpt.healthEffect) state.health = Math.max(0, Math.min(100, state.health + lunchOpt.healthEffect));
-                if (lunchOpt.energyEffect) state.energy = Math.min(100, state.energy + lunchOpt.energyEffect); // V2.55 Fix
-                if (lunchOpt.mentalEffect) state.mental = Math.min(100, state.mental + lunchOpt.mentalEffect);
+                if (lunchOpt.healthEffect) state.health = Math.max(0, Math.min(state.maxHealth || 100, state.health + lunchOpt.healthEffect));
+                if (lunchOpt.energyEffect) state.energy = Math.min(state.maxEnergy || 100, state.energy + lunchOpt.energyEffect); // V2.55 Fix
+                if (lunchOpt.mentalEffect) state.mental = Math.min(state.maxMental || 100, state.mental + lunchOpt.mentalEffect);
                 if (lunchOpt.socialEffect) state.socialValue = Math.min(100, (state.socialValue || 50) + lunchOpt.socialEffect);
 
                 if (state.lunchType === 'bento') state.hasPreparedMeal = false;
@@ -310,7 +499,8 @@ export const EventsMixin = {
         if (commuteId === 'car') {
             const accConfig = GameData.eventConfigs.traffic_accident;
             // 只有未坏的车才可能发生事故（已坏的车根本开不了，或走repair逻辑）
-            if (accConfig && !state.carBroken && context.rng.random() < accConfig.chance) {
+            // V2.XX Fix: 预览模式下不触发随机事故，避免 masking 导致数值预览消失
+            if (accConfig && !state.carBroken && !(context && context.isPreview) && context.rng.random() < accConfig.chance) {
                 state.money -= accConfig.moneyCost;
                 state.health = Math.max(0, state.health - accConfig.healthLoss);
                 state.mental = Math.max(0, state.mental - accConfig.mentalLoss);
@@ -532,6 +722,10 @@ export const EventsMixin = {
 
         const choice = this.currentEvent.choices[choiceIndex];
 
+        const beforeSnapshot = this._getArtifactSnapshot(this.state);
+        const beforeJob = this.state.job;
+        const beforeIncome = this.state.monthlyIncome;
+
         // 计算成功率（受精力影响）
         const successRate = GameEvents.calculateSuccessRate(this.state);
 
@@ -570,44 +764,128 @@ export const EventsMixin = {
             }
         } else {
             // 普通选择
-            // Update to pass context
-            if (choice.effect.length > 1 || true) { // Always pass context
-                // Use processingState
-                result = choice.effect(processingState, context);
-            } else {
-                // Fallback? No, new events use context.
-                result = choice.effect(processingState, context);
-            }
-
-            // V2.10 并行结算逻辑 (仅限白天时段)
+            // V2.XX 修改：先结算侧边选项，再执行主选项
+            // 这样精力预览更准确地反映实际消耗差异
             const isDaytime = (this.state.period === 'day' && !choice.nightAction);
 
+            // 初始化 result 对象用于收集侧边选项消息
+            result = { message: '' };
+
+            // V2.XX Initialize temp triggers for reactive state
+            this._tempArtifactTriggers = [];
+
             // V2.35 修复: 傍晚事件 (Rent, Friend Help) 不应直接推进到下一天
-            // 识别方法: period=night, 但不是 nightAction, 且不是 homeless/car_night
-            // 如果是这种情况，强制续接 -> getNextEvent (它会检查队列或进入 Night Choice)
             if (this.state.period === 'night' &&
                 !choice.nightAction &&
                 this.currentEvent.id !== 'homeless_night' &&
                 this.currentEvent.id !== 'car_night') {
-
-                if (!result.triggerEvent) {
-                    console.log(`[Game] Evening event ${this.currentEvent.id} finished. Continuing to Night Routine.`);
-                    result.triggerEvent = 'FORCE_NEXT';
-                }
+                result.triggerEvent = 'FORCE_NEXT';
             }
 
-            console.log(`[Game] handleChoice: period=${this.state.period}, isDaytime=${isDaytime}, triggerEvent=${result.triggerEvent}`);
+            // V2.XX 先结算侧边选项（仅限白天且无触发事件时）
             if (isDaytime && !result.triggerEvent) {
                 this._applyDaytimeSideSettlements(this.state, context, result);
             } else if (isDaytime && result.triggerEvent) {
-                // 如果触发了子事件，且由于还在白天，需要防止之后的事件重复显示选择器
+                // 如果触发了子事件，防止之后的事件重复显示选择器
                 this.state.sideActionsLocked = true;
             }
+
+            // V2.XX修复: 防御性恢复丢失的 effect 函数 (读档后可能发生)
+            if (typeof choice.effect !== 'function') {
+                console.warn(`[Event] Choice effect missing for event ${this.currentEvent.id}, choice ${choiceIndex}. Attempting restore.`);
+                const baseEvent = GameEvents.events.find(e => e.id === this.currentEvent.id);
+                if (baseEvent && baseEvent.choices && baseEvent.choices[choiceIndex]) {
+                    choice.effect = baseEvent.choices[choiceIndex].effect;
+                    // Also restore other props if needed
+                    if (!choice.hint && baseEvent.choices[choiceIndex].hint) choice.hint = baseEvent.choices[choiceIndex].hint;
+                }
+            }
+
+            if (typeof choice.effect !== 'function') {
+                console.error(`[Event] Critical: Cannot restore effect for ${this.currentEvent.id}`);
+                return { message: "系统错误: 事件数据丢失，请尝试刷新或重新读档。" };
+            }
+
+            // 再执行主选项的 effect
+            const mainResult = choice.effect(processingState, context);
+
+            // 合并结果：主选项结果优先，消息追加
+            if (mainResult) {
+                const sideMessage = result.message;
+                result = { ...mainResult };
+                // 侧边消息追加到主消息后面
+                if (sideMessage) {
+                    result.message = (result.message || '') + sideMessage;
+                }
+            }
+
+
 
             // 处理精力恢复
             if (result.energyRecoveryTomorrow !== undefined) {
                 this.pendingEnergyChange = result.energyRecoveryTomorrow;
             }
+        }
+
+        // Artifact action effects (skip preview)
+        if (!context.isPreview) {
+            const actionInfo = {
+                id: this.currentEvent ? this.currentEvent.id : '',
+                type: this.currentEvent ? this.currentEvent.type : '',
+                choiceId: choice.id || choice.nightAction || null
+            };
+            const baseDelta = this._computeArtifactDelta(beforeSnapshot, this.state);
+            const artifactResult = this._applyArtifactActionEffects(baseDelta, actionInfo, context);
+            if (artifactResult && artifactResult.triggers && artifactResult.triggers.length > 0) {
+                result.artifactTriggers = artifactResult.triggers;
+            }
+            // 传递 layers 供 UI 逐层显示
+            if (artifactResult && artifactResult.layers && artifactResult.layers.length > 0) {
+                result.artifactLayers = artifactResult.layers;
+            }
+
+            // Intern badge rescue from layoff
+            if (this.hasArtifact && this.hasArtifact('intern_badge')) {
+                const isLayoffEvent = this.currentEvent && this.currentEvent.type === 'layoff';
+                if (isLayoffEvent && this.state.job === 'fired' && beforeJob !== 'fired' && !result.triggerEvent && this.currentEvent.id !== 'intern_badge_decision') {
+                    this.state.pendingInternBadge = {
+                        previousJob: beforeJob,
+                        previousIncome: beforeIncome
+                    };
+                    result.triggerEvent = 'intern_badge_decision';
+                }
+            }
+        }
+
+        // V2.XX: Append reactive triggers (mom_credit_card)
+        // V2.XX: Append reactive triggers (mom_credit_card) with aggregation
+        if (this._tempArtifactTriggers && this._tempArtifactTriggers.length > 0) {
+            if (!result.artifactTriggers) result.artifactTriggers = [];
+
+            // Aggregate mom_credit_card triggers
+            let momCardTotal = 0;
+            const otherTriggers = [];
+
+            this._tempArtifactTriggers.forEach(t => {
+                if (t.id === 'mom_credit_card' && typeof t.amount === 'number') {
+                    momCardTotal += t.amount;
+                } else {
+                    otherTriggers.push(t);
+                }
+            });
+
+            if (momCardTotal > 0) {
+                result.artifactTriggers.push({
+                    id: 'mom_credit_card',
+                    message: I18n.t('game.artifactTriggers.mom_credit_card', momCardTotal)
+                });
+            }
+
+            if (otherTriggers.length > 0) {
+                result.artifactTriggers = result.artifactTriggers.concat(otherTriggers);
+            }
+
+            this._tempArtifactTriggers = []; // Clear after consuming
         }
 
         // V2.35 队列接续处理

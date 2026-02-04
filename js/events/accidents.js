@@ -8,7 +8,15 @@ const getCarRepairCost = (state) => {
     const conf = GameData.eventConfigs.random_events_cleanup.car_breakdown.repair;
     const planId = state.insurance.carPlanId || 'none';
     const coverageRate = conf.coverageRates[planId] ?? conf.coverageRates.none;
-    return Math.round(conf.baseCost * (1 - coverageRate));
+    let cost = Math.round(conf.baseCost * (1 - coverageRate));
+
+    // Actuary Glasses: 50% discount on repair
+    if (state.artifacts && state.artifacts.includes('actuary_glasses')) {
+        const discount = GameData.artifactConfig.actuary_glasses.carRepairDiscount || 0.5;
+        cost = Math.round(cost * (1 - discount));
+    }
+
+    return cost;
 };
 
 export const accidentEvents = [

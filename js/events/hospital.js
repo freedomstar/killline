@@ -15,15 +15,42 @@ const finalizeHospitalDischarge = (state) => {
     state.consecutiveUnpaidDays = 0;
 };
 
+// 计算随机健康恢复值
+const getRandomHealthRecovery = (context) => {
+    const hospConfig = GameData.healthConstants.hospitalization;
+    const range = hospConfig.healthRecoveryMax - hospConfig.healthRecoveryMin;
+    return hospConfig.healthRecoveryMin + Math.floor(context.rng.random() * (range + 1));
+};
+
+// 应用健康恢复并检查出院条件
+const applyHealthRecoveryAndCheckDischarge = (state, context) => {
+    const hospConfig = GameData.healthConstants.hospitalization;
+    const recoveryAmount = getRandomHealthRecovery(context);
+    state.health = Math.min(GameData.initialState.maxHealth, state.health + recoveryAmount);
+
+    // 检查是否达到出院健康值
+    if (state.health >= hospConfig.dischargeHealthMin) {
+        state.hospitalDaysLeft = 0;
+    } else {
+        // 更新估算剩余天数
+        const averageRecovery = (hospConfig.healthRecoveryMin + hospConfig.healthRecoveryMax) / 2;
+        const healthDeficit = hospConfig.dischargeHealthMin - state.health;
+        state.hospitalDaysLeft = Math.max(1, Math.ceil(healthDeficit / averageRecovery));
+    }
+
+    return recoveryAmount;
+};
+
 export const hospitalEvents = [
     {
         id: 'hospital_stay',
         type: 'special',
         title: I18n.t('events.hospital_stay.title'),
         description: (state) => {
+            const hospConfig = GameData.healthConstants.hospitalization;
             const daysLeft = state.hospitalDaysLeft || 1;
             const cost = state.hospitalDailyCost || 0;
-            let desc = I18n.t('events.hospital_stay.description', daysLeft, cost);
+            let desc = I18n.t('events.hospital_stay.description', state.health, hospConfig.dischargeHealthMin, daysLeft, cost);
 
             if (state.job === 'fulltime') {
                 if (state.day % GameData.timeCycle.weekDays === GameData.timeCycle.restDayMod) {
@@ -36,7 +63,7 @@ export const hospitalEvents = [
             }
             return desc;
         },
-        period: 'day', // Hospital stay is resolved during the day
+        period: 'day',
         condition: (state) => (state.hospitalDaysLeft || 0) > 0,
         weight: GameData.eventWeights.hospital_stay,
         choices: [
@@ -44,44 +71,41 @@ export const hospitalEvents = [
                 text: I18n.t('events.hospital_stay_choices.paid_leave.text'),
                 hint: (state) => {
                     const hospConfig = GameData.healthConstants.hospitalization;
-                    return I18n.t('events.hospital_stay_choices.paid_leave.hint', hospConfig.healthRecoveryPerDay, hospConfig.energyRecoveryPerDay);
+                    return I18n.t('events.hospital_stay_choices.paid_leave.hint', hospConfig.healthRecoveryMin, hospConfig.healthRecoveryMax, hospConfig.energyRecoveryPerDay);
                 },
                 hintType: 'positive',
                 condition: (state) => state.job === 'fulltime' &&
                     state.day % GameData.timeCycle.weekDays !== GameData.timeCycle.restDayMod &&
                     (state.sickLeaveDays || 0) > 0,
                 effect: (state, context) => {
-                    state.hospitalDaysLeft--;
                     state.sickLeaveDays--;
                     state.hospitalBill = (state.hospitalBill || 0) + (state.hospitalDailyCost || 0);
 
-                    // Recovery
                     const hospConfig = GameData.healthConstants.hospitalization;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + hospConfig.healthRecoveryPerDay);
+                    const recoveredHealth = applyHealthRecoveryAndCheckDischarge(state, context);
                     state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + hospConfig.energyRecoveryPerDay);
 
                     finalizeHospitalDischarge(state);
-                    return { message: I18n.t('events.hospital_stay_choices.paid_leave.message'), type: 'positive', ignoreLunch: true };
+                    return { message: I18n.t('events.hospital_stay_choices.paid_leave.message', recoveredHealth), type: 'positive', ignoreLunch: true };
                 }
             },
             {
                 text: I18n.t('events.hospital_stay_choices.rest_day.text'),
                 hint: (state) => {
                     const hospConfig = GameData.healthConstants.hospitalization;
-                    return I18n.t('events.hospital_stay_choices.rest_day.hint', hospConfig.healthRecoveryPerDay, hospConfig.energyRecoveryRestDay);
+                    return I18n.t('events.hospital_stay_choices.rest_day.hint', hospConfig.healthRecoveryMin, hospConfig.healthRecoveryMax, hospConfig.energyRecoveryRestDay);
                 },
                 hintType: 'neutral',
                 condition: (state) => state.day % GameData.timeCycle.weekDays === GameData.timeCycle.restDayMod,
                 effect: (state, context) => {
-                    state.hospitalDaysLeft--;
                     state.hospitalBill = (state.hospitalBill || 0) + (state.hospitalDailyCost || 0);
 
                     const hospConfig = GameData.healthConstants.hospitalization;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + hospConfig.healthRecoveryPerDay);
-                    state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + hospConfig.energyRecoveryRestDay); // Rest day recovers more energy
+                    const recoveredHealth = applyHealthRecoveryAndCheckDischarge(state, context);
+                    state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + hospConfig.energyRecoveryRestDay);
 
                     finalizeHospitalDischarge(state);
-                    return { message: I18n.t('events.hospital_stay_choices.rest_day.message'), type: 'neutral', ignoreLunch: true };
+                    return { message: I18n.t('events.hospital_stay_choices.rest_day.message', recoveredHealth), type: 'neutral', ignoreLunch: true };
                 }
             },
             {
@@ -89,29 +113,25 @@ export const hospitalEvents = [
                 hint: (state) => {
                     const conf = GameData.eventConfigs.routine_events.hospital_stay.unpaid_leave;
                     const hospConfig = GameData.healthConstants.hospitalization;
-                    return I18n.t('events.hospital_stay_choices.unpaid_leave.hint', conf.baseRisk, hospConfig.healthRecoveryPerDay);
+                    return I18n.t('events.hospital_stay_choices.unpaid_leave.hint', conf.baseRisk, hospConfig.healthRecoveryMin, hospConfig.healthRecoveryMax);
                 },
                 hintType: 'danger',
                 condition: (state) => state.job === 'fulltime' &&
                     state.day % GameData.timeCycle.weekDays !== GameData.timeCycle.restDayMod &&
                     (state.sickLeaveDays || 0) <= 0,
                 effect: (state, context) => {
-                    state.hospitalDaysLeft--;
                     state.hospitalBill = (state.hospitalBill || 0) + (state.hospitalDailyCost || 0);
                     state.consecutiveUnpaidDays = (state.consecutiveUnpaidDays || 0) + 1;
 
-                    // Deduct pay (10% of monthly income per day)
+                    // Deduct pay
                     const jobInfo = GameData.jobTypes[state.job];
                     const baseIncome = state.monthlyIncome || (jobInfo ? jobInfo.income : 0);
                     const dailyPay = baseIncome / 10;
                     state.dailyFinancialReport.push(I18n.t('events.hospital_stay_choices.unpaid_leave.report', dailyPay));
 
-                    // Increase fire risk
                     const fireChance = state.consecutiveUnpaidDays * 0.15;
 
-                    // Recovery
-                    const hospConfig = GameData.healthConstants.hospitalization;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + hospConfig.healthRecoveryPerDay);
+                    const recoveredHealth = applyHealthRecoveryAndCheckDischarge(state, context);
 
                     if (context.rng.random() < fireChance) {
                         state.job = 'fired';
@@ -126,35 +146,39 @@ export const hospitalEvents = [
                     }
 
                     finalizeHospitalDischarge(state);
-                    return { message: I18n.t('events.hospital_stay_choices.unpaid_leave.message', Math.round(fireChance * 100)), type: 'negative', ignoreLunch: true };
+                    return { message: I18n.t('events.hospital_stay_choices.unpaid_leave.message', recoveredHealth, Math.round(fireChance * 100)), type: 'negative', ignoreLunch: true };
                 }
             },
             {
                 text: I18n.t('events.hospital_stay_choices.out_of_pocket.text'),
                 hint: (state) => {
                     const hospConfig = GameData.healthConstants.hospitalization;
-                    return I18n.t('events.hospital_stay_choices.out_of_pocket.hint', hospConfig.outOfPocketHealthGain);
+                    return I18n.t('events.hospital_stay_choices.out_of_pocket.hint', hospConfig.healthRecoveryMin, hospConfig.healthRecoveryMax);
                 },
                 hintType: 'neutral',
-                condition: (state) => state.job !== 'fulltime', // Unemployed/Fired/Jobless
+                condition: (state) => state.job !== 'fulltime',
                 effect: (state, context) => {
-                    const hospConfig = GameData.healthConstants.hospitalization;
-                    state.hospitalDaysLeft--;
                     state.hospitalBill = (state.hospitalBill || 0) + (state.hospitalDailyCost || 0);
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + hospConfig.outOfPocketHealthGain);
+                    const recoveredHealth = applyHealthRecoveryAndCheckDischarge(state, context);
                     finalizeHospitalDischarge(state);
-                    return { message: I18n.t('events.hospital_stay_choices.out_of_pocket.message'), type: 'neutral', ignoreLunch: true };
+                    return { message: I18n.t('events.hospital_stay_choices.out_of_pocket.message', recoveredHealth), type: 'neutral', ignoreLunch: true };
                 }
             },
             {
                 text: I18n.t('events.hospital_stay_choices.ama.text'),
-                hint: I18n.t('events.hospital_stay_choices.ama.hint', GameData.healthConstants.hospitalization.amaHealthMin, GameData.healthConstants.hospitalization.amaMentalPenalty),
+                hint: (state) => {
+                    const hospConfig = GameData.healthConstants.hospitalization;
+                    return I18n.t('events.hospital_stay_choices.ama.hint', hospConfig.amaHealthMin, hospConfig.amaMentalPenalty);
+                },
                 hintType: 'danger',
-                condition: (state) => state.health >= GameData.healthConstants.hospitalization.amaHealthMin,
+                // AMA只在健康值介于 amaHealthMin 和 dischargeHealthMin 之间时可用
+                condition: (state) => {
+                    const hospConfig = GameData.healthConstants.hospitalization;
+                    return state.health >= hospConfig.amaHealthMin && state.health < hospConfig.dischargeHealthMin;
+                },
                 effect: (state, context) => {
                     const hospConfig = GameData.healthConstants.hospitalization;
                     state.hospitalDaysLeft = 0;
-                    state.health = Math.max(state.health, hospConfig.amaHealthMin);
                     state.mental -= hospConfig.amaMentalPenalty;
                     state.hospitalBill = (state.hospitalBill || 0) + hospConfig.amaExtraCost;
                     finalizeHospitalDischarge(state);

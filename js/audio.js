@@ -38,6 +38,9 @@ export const AudioManager = {
             case 'bingo':
                 this.playBingo();
                 break;
+            case 'artifact_effect':
+                this.playArtifactEffect();
+                break;
         }
     },
 
@@ -137,6 +140,31 @@ export const AudioManager = {
 
         osc.start(t);
         osc.stop(t + 0.6);
+    },
+    /**
+     * 合成神器触发音效：短促的提示音 (0.2s)
+     */
+    playArtifactEffect() {
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'sine'; // Sine is cleanest
+
+        // 更清脆的高音：1500Hz -> 1000Hz 快速衰减，模拟敲击玻璃/金属的声音
+        osc.frequency.setValueAtTime(1500, t);
+        osc.frequency.exponentialRampToValueAtTime(1500, t + 0.1);
+
+        // 极短的起音 (0.01s) 和自然衰减
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.15, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2); // 0.2s 结束
+
+        osc.start(t);
+        osc.stop(t + 0.2);
     }
 };
 

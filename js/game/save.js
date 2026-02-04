@@ -18,13 +18,18 @@ export const SaveMixin = {
 
         try {
             const parsed = JSON.parse(savedData);
+            // V2.XX: 优先显示原始种子字符串 -> state.seed -> rngInitialSeed (兼容旧存档)
+            let displaySeed = parsed.rngOriginalSeed;
+            if (!displaySeed) displaySeed = parsed.state.seed;
+            if (!displaySeed) displaySeed = parsed.rngInitialSeed;
+
             return {
                 slotId: slotId,
                 day: parsed.state.day,
                 money: parsed.state.money,
                 job: parsed.state.job,
                 savedAt: parsed.savedAt,
-                seed: parsed.rngInitialSeed || parsed.state.seed // V2.13: 优先显示初始种子 (世界线ID)
+                seed: displaySeed
             };
         } catch (e) {
             console.error(`[Game] 读取存档槽 ${slotId} 失败:`, e);
@@ -36,14 +41,14 @@ export const SaveMixin = {
      * 获取所有存档槽位信息
      */
     getAllSlotInfo() {
-        return [1, 2, 3].map(slotId => this.getSlotInfo(slotId));
+        return [0, 1, 2, 3].map(slotId => this.getSlotInfo(slotId));
     },
 
     /**
      * 保存游戏
      */
     saveGame(slotId) {
-        if (slotId < 1 || slotId > 3) {
+        if (slotId < 0 || slotId > 3) {
             console.error('[Game] 无效的存档槽位:', slotId);
             return false;
         }
@@ -53,6 +58,7 @@ export const SaveMixin = {
             state: JSON.parse(JSON.stringify(this.state)),
             rngSeed: this.rng.seed, // 当前 RNG 内部种子
             rngInitialSeed: this.rng.initialSeed,
+            rngOriginalSeed: this.rng.originalSeed, // V2.XX 保存原始种子字符串
             pendingEnergyChange: this.pendingEnergyChange,
             currentEvent: this.currentEvent, // V2.12: 保存当前事件以保证读档后选项一致
             savedAt: new Date().toISOString()
@@ -88,6 +94,16 @@ export const SaveMixin = {
             this.pendingEnergyChange = parsed.pendingEnergyChange || 0;
             this.isRunning = true;
             this.currentEvent = parsed.currentEvent || null; // V2.12: 恢复当前事件
+
+            // V2.XX 多神器存档兼容
+            if (!Array.isArray(this.state.artifacts)) {
+                if (this.state.artifact) {
+                    this.state.artifacts = [this.state.artifact];
+                } else {
+                    this.state.artifacts = [];
+                }
+            }
+            this.state.artifacts = this.state.artifacts.map(id => id === 'coffee_iv_drip' ? 'coffee_drip' : id);
 
             // V2.13: 修复读档后 event.choices 丢失 function 的问题
             if (this.currentEvent) {
@@ -186,6 +202,9 @@ export const SaveMixin = {
                 this.rng = new SeededRNG();
                 this.rng.seed = parsed.rngSeed;
                 this.rng.initialSeed = parsed.rngInitialSeed;
+                if (parsed.rngOriginalSeed) {
+                    this.rng.originalSeed = parsed.rngOriginalSeed;
+                }
             } else {
                 // Fallback for older saves without explicit RNG state
                 this.rng = new SeededRNG(parsed.state.seed);
@@ -203,6 +222,10 @@ export const SaveMixin = {
      * 删除存档
      */
     deleteSlot(slotId) {
+        if (slotId === 0) {
+            console.warn('[Game] 无法删除自动存档');
+            return;
+        }
         const key = `killzone_save_${slotId}`;
         localStorage.removeItem(key);
         console.log(`[Game] 槽位 ${slotId} 存档已删除`);

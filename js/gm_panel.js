@@ -1,6 +1,7 @@
 import { game } from './game.js';
 import { UI } from './ui.js';
 import { I18n } from './i18n.js';
+import { artifacts } from './data/artifacts.js';
 
 /**
  * GM Panel / Dev Tools Logic
@@ -19,6 +20,13 @@ export function initGMPanel() {
     const closeBtn = document.getElementById('close-dev-editor');
     const modal = document.getElementById('dev-editor-modal');
     const saveBtn = document.getElementById('dev-save-btn');
+    const openBtn = document.getElementById('dev-edit-btn'); // Link from Status Page
+
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            openGMPanel();
+        });
+    }
 
     if (closeBtn && modal) {
         closeBtn.addEventListener('click', () => {
@@ -27,6 +35,8 @@ export function initGMPanel() {
     }
 
     if (saveBtn) {
+        // Remove existing listeners if any (to avoid duplicates if re-inited)
+        // clean way is hard without reference, but we assume init runs once.
         saveBtn.addEventListener('click', saveGMChanges);
     }
 }
@@ -69,6 +79,42 @@ function openGMPanel() {
         // Try to set the value directly. 
         // If state.job matches one of the options, it will be selected.
         jobSelect.value = state.job;
+    }
+
+    // Artifacts
+    const artifactContainer = document.getElementById('dev-artifact-container');
+    if (artifactContainer) {
+        artifactContainer.innerHTML = '';
+        const currentArtifacts = state.artifacts || [];
+        const maxSlots = 3;
+        const allArtifacts = Object.values(artifacts);
+
+        for (let i = 0; i < maxSlots; i++) {
+            const select = document.createElement('select');
+            // select.style.cssText = ... REMOVED to use CSS class
+            select.id = `dev-input-artifact-${i}`;
+
+            const emptyOpt = document.createElement('option');
+            emptyOpt.value = "";
+            emptyOpt.textContent = "-- 空 (Empty) --";
+            // emptyOpt.style... REMOVED
+            select.appendChild(emptyOpt);
+
+            allArtifacts.forEach(art => {
+                const opt = document.createElement('option');
+                opt.value = art.id;
+                let name = art.name;
+                if (typeof name === 'function') name = name();
+                opt.textContent = name;
+                // opt.style... REMOVED
+                select.appendChild(opt);
+            });
+
+            if (currentArtifacts[i]) {
+                select.value = currentArtifacts[i];
+            }
+            artifactContainer.appendChild(select);
+        }
     }
 
     // PIP Status
@@ -123,6 +169,17 @@ function saveGMChanges() {
             state.unemployedDays = 0;
         }
     }
+
+
+    // Artifact changes
+    const newArtifacts = [];
+    for (let i = 0; i < 3; i++) {
+        const select = document.getElementById(`dev-input-artifact-${i}`);
+        if (select && select.value) {
+            newArtifacts.push(select.value);
+        }
+    }
+    state.artifacts = newArtifacts;
 
     // PIP changes
     const pipCheckbox = document.getElementById('dev-input-pip');

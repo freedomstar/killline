@@ -90,7 +90,7 @@ export const eventConfigs = {
         support: { energyCost: 10, socialGain: 3, workEfficiencyGain: 2 }
     },
     work_general: {
-        focus_work: { energyCost: 75, pipEnergyCost: 60, pipGain: 15, socialPipBonus: 5 },
+        focus_work: { energyCost: 65, pipEnergyCost: 60, pipGain: 15, socialPipBonus: 5 },
         slack_off: {
             energyCost: 30,
             pipMentalGain: 5,
@@ -152,10 +152,10 @@ export const eventConfigs = {
         stubborn: { healthLoss: 30, mentalGain: 10 }
     },
     surgery_required: {
-        urgent: { baseCost: 5000, healthGain: 30, mentalLoss: 40 },
-        wait: { healthLoss: 10, mentalLoss: 40, waitDaysMin: 2, waitDaysMax: 5, dailyHealthLoss: 4 },
-        approval: { successChance: 0.6, successHealthGain: 30, failHealthGain: 10, failMentalLoss: 30, failCostMultiplier: 1.0 },
-        fight: { cost: 40, healthLoss: 5, successChance: 60, failCost: 5000 }
+        urgent: { baseCost: 1000, healthGain: 30, mentalLoss: 15 },
+        wait: { healthLoss: 10, mentalLoss: 20, waitDaysMin: 2, waitDaysMax: 5, dailyHealthLoss: 4 },
+        approval: { successChance: 0.6, successHealthGain: 30, failHealthGain: 30, failMentalLoss: 25, failCostMultiplier: 1.0 },
+        fight: { cost: 20, healthLoss: 5, successChance: 60, failCost: 1000 }
     },
 
     cold_weather: {
@@ -243,7 +243,7 @@ export const eventConfigs = {
             hangout: { cost: 30, energyCost: 45, socialGain: 5, mentalGain: 5 }
         },
         day_jobless: {
-            apply: { energyCost: 40, mentalLossFail: 20, successMod: 0.3 },
+            apply: { energyCost: 40, mentalLossFail: 20, successMod: 0.45 },
             relax: { mentalGain: 5, energyCost: 15 },
             learn: { energyCost: 50, mentalCost: 5, workEfficiencyGain: 2 },
             medicaid: { threshold: 500, waitMin: 7, waitMax: 14, energyCost: 30 }
@@ -288,6 +288,38 @@ export const eventConfigs = {
         mysterious_trader: {
             swap: { mentalGain: 5 },
             refuse: { mentalGain: 0 }
+        },
+        sell_artifact_crisis: {
+            sell: { moneyGain: 500, mentalLoss: 30 },
+            keep: { mentalGain: 5 }
+        },
+        black_market_artifact: {
+            buy: { cost: 1000 },
+            leave: { mentalGain: 0 }
+        },
+        // Social Events
+        team_lunch: {
+            join: { cost: 25, socialGain: 5, workEfficiencyGain: 1 },
+            brown_bag: { ingredientsCost: 1, energyGain: 5, socialLoss: 2 }
+        },
+        after_work_drinks: {
+            baseSuccessRate: 0.25,
+            socialBonus: 0.003, // 0.3% per point
+            efficiencyBonus: 0.002, // 0.2% per point
+            network: { cost: 40, energyCost: 20, successWorkEfficiencyGain: 5, successMentalGain: 15, successSocialGain: 5, failMentalLoss: 10, failSocialLoss: 5 },
+            go_home: { energyGain: 10, socialLoss: 2 }
+        },
+        industry_mixer: {
+            baseSuccessRate: 0.20,
+            efficiencyBonus: 0.005, // 0.5% per point
+            network: { cost: 50, energyCost: 15, successSocialGain: 10, successMentalGain: 10, failMentalLoss: 5 },
+            skip: {}
+        },
+        alumni_reunion: {
+            baseSuccessRate: 0.20,
+            socialBonus: 0.005, // 0.5% per point
+            attend: { cost: 100, successMentalGain: 20, successSocialGain: 5, failMentalLoss: 10, failSocialLoss: 2 },
+            ignore: { mentalLoss: 5 }
         },
     },
     financial_crisis: {
@@ -342,5 +374,37 @@ export const eventConfigs = {
         prepareMeal: { cost: 1, energyRecoveryTomorrow: 10 },
         grocery: { money: 50, ingredients: 3, energyRecoveryTomorrow: 10 },
         phone_social: { socialGain: 5, mentalGain: 5, energyRecoveryTomorrow: -20 }
+    },
+    // 社交值与工作效率影响裁员机制
+    layoff_social_modifiers: {
+        pip_trigger: {
+            highSocialThreshold: 85,
+            highSocialMod: 0.5,
+            midSocialThreshold: 50,
+            lowSocialThreshold: 30,
+            lowSocialMod: 1.0,
+            veryLowSocialMod: 2.0
+        },
+        pip_result: {
+            efficiencyBonusPerPoint: 0.0075
+        },
+        sudden_layoff: {
+            highSocialThreshold: 85,
+            highSocialMod: 0.5,
+            lowSocialThreshold: 30,
+            lowSocialMod: 2.0,
+            highEfficiencyThreshold: 120,
+            highEfficiencyMod: 0.5,
+            lowEfficiencyThreshold: 80,
+            lowEfficiencyMod: 1.5
+        },
+        fight: {
+            highSocialThreshold: 85,
+            highSocialBonus: 0.15,
+            midSocialThreshold: 50,
+            midSocialBonus: 0.05,
+            lowSocialThreshold: 30,
+            lowSocialPenalty: -0.10
+        }
     }
 };

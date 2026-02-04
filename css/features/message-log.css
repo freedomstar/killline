@@ -1,0 +1,158 @@
+/* Message Log Feature */
+
+#btn-message-history {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(30, 30, 40, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+#btn-message-history:hover {
+    transform: scale(1.1);
+    background: rgba(50, 50, 70, 0.95);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+#btn-message-history:active {
+    transform: scale(0.95);
+}
+
+/* Modal Content */
+.message-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Scrollbar styling */
+.message-history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.message-history-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.message-history-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.message-history-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.log-day-group {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.log-day-header {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.log-day-header .day-badge {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: var(--color-text-primary);
+}
+
+.log-entry {
+    display: flex;
+    flex-direction: column;
+    /* Stack time/source and content vertically or use flex-wrap */
+    gap: 6px;
+    padding: 10px;
+    /* Increased padding */
+    background: rgba(255, 255, 255, 0.05);
+    /* Card background */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Full border */
+    border-radius: 6px;
+    /* Rounded corners */
+    margin-bottom: 8px;
+    /* Spacing between entries */
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.log-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.log-source {
+    color: var(--color-accent);
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.log-entry:last-child {
+    margin-bottom: 0;
+}
+
+.log-time {
+    white-space: nowrap;
+}
+
+.log-content {
+    flex: 1;
+    color: var(--color-text-primary);
+}
+
+/* Log Types - Text Colors */
+.log-entry.type-warning .log-content,
+.log-entry.type-warning .log-source {
+    color: var(--color-warning);
+}
+
+.log-entry.type-positive .log-content,
+.log-entry.type-positive .log-source {
+    color: var(--color-success);
+}
+
+.log-entry.type-negative .log-content,
+.log-entry.type-negative .log-source {
+    color: var(--color-danger);
+}
+
+.log-empty-hint {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: 40px;
+    font-style: italic;
+}

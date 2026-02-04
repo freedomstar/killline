@@ -62,6 +62,8 @@
 .modal-body {
     padding: 15px;
     overflow-y: auto;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Plan Option Card (Insurance) */
@@ -488,4 +490,118 @@
     font-family: var(--font-mono);
     color: var(--color-text-primary);
     font-weight: 600;
+}
+
+/* Artifact Detail Modal */
+.artifact-detail-modal {
+    max-width: 360px;
+    text-align: left;
+    padding: 24px;
+    position: relative;
+}
+
+.artifact-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.artifact-detail-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.artifact-detail-count {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+.artifact-detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.artifact-detail-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.artifact-detail-item.empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.artifact-detail-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.artifact-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.artifact-detail-name {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.artifact-detail-desc {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+}
+
+/* ========================================
+   Dev Editor Modal Styles
+   ======================================== */
+.dev-editor-form .form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dev-editor-form label {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.dev-editor-form input[type="number"],
+.dev-editor-form select,
+.dev-editor-form input[type="text"] {
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    width: 100%;
+}
+
+.dev-editor-form input:focus,
+.dev-editor-form select:focus {
+    outline: none;
+    border-color: var(--color-info);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.dev-editor-form .checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.dev-editor-form .checkbox-group input {
+    width: auto;
+    margin-right: 10px;
 }

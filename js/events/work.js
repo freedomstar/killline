@@ -8,6 +8,48 @@ import { I18n } from '../i18n.js';
 import { GameData } from '../data/index.js';
 
 export const workEvents = [
+    // 实习生工牌 - 裁员救场
+    {
+        id: 'intern_badge_decision',
+        type: 'layoff',
+        title: I18n.t('events.intern_badge_decision.title'),
+        description: I18n.t('events.intern_badge_decision.description'),
+        period: 'any',
+        mandatory: true,
+        condition: (state) => !!state.pendingInternBadge,
+        choices: [
+            {
+                text: I18n.t('events.intern_badge_decision.choices.use.text'),
+                hint: (state) => {
+                    const conf = GameData.artifactConfig.intern_badge;
+                    return I18n.t('events.intern_badge_decision.choices.use.hint', conf.socialLoss);
+                },
+                hintType: 'warning',
+                effect: (state, context) => {
+                    const conf = GameData.artifactConfig.intern_badge;
+                    if (state.pendingInternBadge) {
+                        state.job = state.pendingInternBadge.previousJob || state.job;
+                        state.monthlyIncome = state.pendingInternBadge.previousIncome || state.monthlyIncome;
+                        state.pendingInternBadge = null;
+                    }
+                    state.socialValue = Math.max(0, (state.socialValue || 0) - conf.socialLoss);
+                    if (context.game && context.game.removeArtifact) {
+                        context.game.removeArtifact('intern_badge');
+                    }
+                    return { message: I18n.t('events.intern_badge_decision.messages.use'), type: 'positive' };
+                }
+            },
+            {
+                text: I18n.t('events.intern_badge_decision.choices.accept.text'),
+                hint: I18n.t('events.intern_badge_decision.choices.accept.hint'),
+                hintType: 'negative',
+                effect: (state) => {
+                    state.pendingInternBadge = null;
+                    return { message: I18n.t('events.intern_badge_decision.messages.accept'), type: 'negative' };
+                }
+            }
+        ]
+    },
     // PIP警告 - 进入观察期
     {
         id: 'pip_warning',
@@ -18,7 +60,16 @@ export const workEvents = [
         isRandom: true,
         mandatory: false,
         condition: (state) => state.day > GameData.newbieProtectionDays && state.job === 'fulltime' && !state.pipActive && state.day % GameData.timeCycle.weekDays !== GameData.timeCycle.restDayMod,
-        weight: GameData.eventWeights.pip_warning,
+        weight: (state) => {
+            // 社交值影响 PIP 触发权重
+            const conf = GameData.eventConfigs.layoff_social_modifiers.pip_trigger;
+            const social = state.socialValue || 50;
+            let mod = 1.0;
+            if (social >= conf.highSocialThreshold) mod = conf.highSocialMod;
+            else if (social < conf.lowSocialThreshold) mod = conf.veryLowSocialMod;
+            else if (social < conf.midSocialThreshold) mod = conf.lowSocialMod;
+            return Math.round(GameData.eventWeights.pip_warning * mod);
+        },
         choices: [
             {
                 text: I18n.t('events.pip_warning.choices.accept.text'),
@@ -50,9 +101,9 @@ export const workEvents = [
                     // Keep the hint consistent with the actual effect probability.
                     const energyConf = GameData.energyConfig;
                     let energyRate = 1.0;
-                    if (state.energy < energyConf.lowEnergyThreshold) {
-                        energyRate -= energyConf.lowEnergyPenalty;
-                    }
+                    // if (state.energy < energyConf.lowEnergyThreshold) {
+                    //     energyRate -= energyConf.lowEnergyPenalty;
+                    // }
                     energyRate = Math.max(0.1, energyRate);
                     const chancePct = Math.round(energyRate * conf.successMod * 100);
 
@@ -122,7 +173,13 @@ export const workEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.pip_result;
                     const score = state.pipPerformanceScore || 50;
-                    const passChance = Math.min(conf.passChanceCap, Math.max(conf.passChanceMin, score / 100));
+                    const baseChance = score / 100;
+
+                    // 工作效率影响 PIP 通过率
+                    const effConf = GameData.eventConfigs.layoff_social_modifiers.pip_result;
+                    const efficiency = state.workEfficiency || 100;
+                    const efficiencyBonus = (efficiency - 100) * effConf.efficiencyBonusPerPoint;
+                    const passChance = Math.min(conf.passChanceCap, Math.max(conf.passChanceMin, baseChance + efficiencyBonus));
 
                     state.pipActive = false;
                     state.pipDaysRemaining = 0;
@@ -157,7 +214,20 @@ export const workEvents = [
         period: 'any',
         mandatory: false,
         condition: (state) => state.day > GameData.newbieProtectionDays && state.job === 'fulltime' && !state.pipActive && state.day % GameData.timeCycle.weekDays !== GameData.timeCycle.restDayMod,
-        weight: GameData.eventWeights.sudden_layoff,
+        weight: (state) => {
+            // 社交值和工作效率影响突然裁员权重
+            const conf = GameData.eventConfigs.layoff_social_modifiers.sudden_layoff;
+            const social = state.socialValue || 50;
+            const efficiency = state.workEfficiency || 100;
+
+            let socialMod = 1.0;
+            if (social >= conf.highSocialThreshold) socialMod = conf.highSocialMod;
+            else if (social < conf.lowSocialThreshold) socialMod = conf.lowSocialMod;
+
+            const efficiencyBonus = (efficiency - 100) * effConf.efficiencyBonusPerPoint;
+
+            return Math.round(GameData.eventWeights.sudden_layoff * socialMod + efficiencyBonus);
+        },
         isRandom: true,
         choices: [
             {
@@ -208,7 +278,17 @@ export const workEvents = [
 
                     const successRate = context.successRate || 0.5;
 
-                    if (context.rng.random() < successRate * conf.successMod) {
+                    // 社交值影响据理力争成功率
+                    const fightConf = GameData.eventConfigs.layoff_social_modifiers.fight;
+                    const social = state.socialValue || 50;
+                    let socialBonus = 0;
+                    if (social >= fightConf.highSocialThreshold) socialBonus = fightConf.highSocialBonus;
+                    else if (social >= fightConf.midSocialThreshold) socialBonus = fightConf.midSocialBonus;
+                    else if (social < fightConf.lowSocialThreshold) socialBonus = fightConf.lowSocialPenalty;
+
+                    const adjustedSuccessMod = conf.successMod + socialBonus;
+
+                    if (context.rng.random() < successRate * adjustedSuccessMod) {
                         const bonusPay = Math.round(baseIncome * conf.successSeveranceMonths);
                         if (bonusPay > 0) state.money += bonusPay;
                         state.mental -= conf.mentalLossSuccess;

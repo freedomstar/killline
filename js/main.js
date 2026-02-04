@@ -9,6 +9,8 @@ import { GameEvents } from './events/index.js';
 import { GameData } from './data/index.js';
 import { AudioManager } from './audio.js';
 import { initGMPanel } from './gm_panel.js';
+import { I18n } from './i18n.js';
+import { getArtifact } from './data/artifacts.js';
 
 const GameController = {
     pendingSelection: null,
@@ -27,7 +29,6 @@ const GameController = {
         initGMPanel();
         this.bindEvents();
         UI.switchScreen('start');
-        console.log('斩杀线生存 V2 - 已加载');
     },
 
     bindEvents() {
@@ -128,6 +129,7 @@ const GameController = {
                 // 如果有投资情绪，强制使用对应 Mood 颜色，否则沿用发薪判定
                 const type = moodToastType || (finalMsg.includes('发薪') ? 'positive' : 'neutral');
                 UI.showToast(finalMsg, type);
+                game.addLog(finalMsg, type, I18n.t('ui.messageHistory.dailySummary'));
             }, 500);
             return;
         }
@@ -137,7 +139,9 @@ const GameController = {
             const base = '🎉 休息日！好好享受吧';
             const segs = [base, energyRecoveryText];
             if (housingBonusText) segs.push(housingBonusText);
-            UI.showToast(segs.join(' | '), moodToastType || 'positive');
+            const msg = segs.join(' | ');
+            UI.showToast(msg, moodToastType || 'positive');
+            game.addLog(msg, moodToastType || 'positive', I18n.t('ui.messageHistory.dailySummary'));
             return;
         }
 
@@ -149,7 +153,9 @@ const GameController = {
 
             const segs = [dayTitle, energyRecoveryText];
             if (housingBonusText) segs.push(housingBonusText);
-            UI.showToast(segs.join(' | '), moodToastType || 'neutral');
+            const msg = segs.join(' | ');
+            UI.showToast(msg, moodToastType || 'neutral');
+            game.addLog(msg, moodToastType || 'neutral', '每日总结'); // V2.XX Record Log
             return;
         }
 
@@ -160,7 +166,9 @@ const GameController = {
         const segs = [dayTitle, energyRecoveryText];
         if (housingBonusText) segs.push(housingBonusText);
         segs.push(`距发薪 ${game.state.daysUntilPayday} 天`);
-        UI.showToast(segs.join(' | '), moodToastType || 'neutral');
+        const msg = segs.join(' | ');
+        UI.showToast(msg, moodToastType || 'neutral');
+        game.addLog(msg, moodToastType || 'neutral', '每日总结'); // V2.XX Record Log
     },
 
     showNextEvent() {
@@ -269,7 +277,7 @@ const GameController = {
         this.pendingSelection.previewResult = preview.result;
         this.pendingSelection.previewState = preview.state;
 
-        // 若该选择包含随机性：仅预览稳定不变的数值，避免“剧透”随机结果
+        // 若该选择包含随机性：仅预览稳定不变的数值，避免"剧透"随机结果
         const maskedState = (preview.maskedPreview === true)
             ? (preview.maskedState || game.getState())
             : preview.state;
@@ -333,9 +341,9 @@ const GameController = {
                 simState.money -= totalCost;
 
                 // Apply all effects
-                if (lunchOpt.healthEffect) simState.health = Math.max(0, Math.min(100, simState.health + lunchOpt.healthEffect));
-                if (lunchOpt.energyEffect) simState.energy = Math.min(100, simState.energy + lunchOpt.energyEffect);
-                if (lunchOpt.mentalEffect) simState.mental = Math.min(100, simState.mental + lunchOpt.mentalEffect);
+                if (lunchOpt.healthEffect) simState.health = Math.max(0, Math.min(simState.maxHealth || 100, simState.health + lunchOpt.healthEffect));
+                if (lunchOpt.energyEffect) simState.energy = Math.min(simState.maxEnergy || 100, simState.energy + lunchOpt.energyEffect);
+                if (lunchOpt.mentalEffect) simState.mental = Math.min(simState.maxMental || 100, simState.mental + lunchOpt.mentalEffect);
                 if (lunchOpt.socialEffect) simState.socialValue = Math.min(100, (simState.socialValue || 50) + lunchOpt.socialEffect);
 
                 if (simState.lunchType === 'bento') simState.hasPreparedMeal = false;
@@ -371,7 +379,7 @@ const GameController = {
                     simState.money -= commuteConfig.cost;
                 }
                 if (commuteConfig.healthEffect > 0) {
-                    simState.health = Math.min(100, simState.health + commuteConfig.healthEffect);
+                    simState.health = Math.min(simState.maxHealth || 100, simState.health + commuteConfig.healthEffect);
                 }
                 if (rng && typeof rng.random === 'function') {
                     const isLate = rng.random() < commuteConfig.lateChance;
@@ -390,9 +398,9 @@ const GameController = {
         }
 
         // clamp
-        simState.energy = Math.max(0, Math.min(100, simState.energy));
-        simState.mental = Math.max(0, Math.min(100, simState.mental));
-        simState.health = Math.max(0, Math.min(100, simState.health));
+        simState.energy = Math.max(0, Math.min(simState.maxEnergy || 100, simState.energy));
+        simState.mental = Math.max(0, Math.min(simState.maxMental || 100, simState.mental));
+        simState.health = Math.max(0, Math.min(simState.maxHealth || 100, simState.health));
         simState.money = Math.max(-10000, simState.money);
 
         return { state: simState };
@@ -418,8 +426,25 @@ const GameController = {
         const previewResult = this.pendingSelection.previewResult;
 
         // 显示结果 Toast（使用预览结果，确保与后续实装一致）
+        // 显示结果 Toast（使用预览结果，确保与后续实装一致）
         if (previewResult && previewResult.message) {
             UI.showToast(previewResult.message, previewResult.type);
+
+            // 获取当前事件标题作为来源
+            let eventTitle = null;
+            if (game.currentEvent) {
+                // 尝试获取本地化标题，如果没找到则用 ID 兜底
+                if (game.currentEvent.id && game.currentEvent.type) {
+                    // 简单处理：如果是 standard 事件结构，可能有 title 属性或需要去 I18n 查找
+                    // 假设 I18n 结构 events[eventId].title
+                    const i18nKey = `events.${game.currentEvent.id}.title`;
+                    const localizedTitle = I18n.t(i18nKey);
+                    eventTitle = (localizedTitle !== i18nKey) ? localizedTitle : game.currentEvent.title;
+                } else {
+                    eventTitle = game.currentEvent.title;
+                }
+            }
+            game.addLog(previewResult.message, previewResult.type, eventTitle); // V2.XX Record Log
         }
 
         if (previewResult && previewResult.type === 'negative') {
@@ -456,6 +481,32 @@ const GameController = {
                 return;
             }
 
+            // V2.XX: 处理分层连锁触发效果（递减延迟）
+            // 优先使用 artifactLayers（分层结构，视觉效果更好）
+            const animConfig = GameData.artifactConfig?.animation || {};
+            const initialDelay = animConfig.initialDelay || 200;
+            const legacyInterval = animConfig.legacyTriggerInterval || 250;
+
+            if (result.artifactLayers && result.artifactLayers.length > 0) {
+                UI.showChainedArtifactEffects(result.artifactLayers, initialDelay);
+            }
+            // 如果没有 artifactLayers，回退到旧的 artifactTriggers 逻辑
+            else if (result.artifactTriggers && result.artifactTriggers.length > 0) {
+                result.artifactTriggers.forEach((trigger, index) => {
+                    setTimeout(() => {
+                        if (UI.triggerArtifactGlow) UI.triggerArtifactGlow(trigger.id);
+                        if (trigger.message) {
+                            UI.showToast(trigger.message, 'positive');
+
+                            // V2.XX: 获取神器名称作为来源
+                            const art = getArtifact(trigger.id);
+                            const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '神器');
+                            game.addLog(trigger.message, 'positive', artName); // V2.XX Record Log
+                        }
+                    }, initialDelay + index * legacyInterval);
+                });
+            }
+
             // 如果有后续触发事件，显示它并跳过推进时段
             if (result.triggerEvent) {
                 const event = game.getEventById ? game.getEventById(result.triggerEvent) : GameEvents.events.find(e => e.id === result.triggerEvent);
@@ -487,14 +538,16 @@ const GameController = {
             const status = game.getStatusDescription();
             this.updateUI();
 
-            console.log(`[Game] 时段推进至: ${status.day}天 ${status.periodName}`);
-
             // V2.3 强制睡眠检测（进入夜间但濒死状态）
             if (status.period === 'night' && (status.energy <= GameData.exhaustionConfig.energyThreshold)) {
-                UI.showToast('😵 体力透支，直接昏睡过去...', 'negative');
+                const faintMsg = '😵 体力透支，直接昏睡过去...';
+                UI.showToast(faintMsg, 'negative');
+                game.addLog(faintMsg, 'negative'); // V2.XX Record Log
                 // 强制睡眠，恢复减半
-                game.state.energy = Math.min(100, game.state.energy + 20);
-                game.state.health = Math.min(100, game.state.health + 5);
+                const faintEnergy = GameData.exhaustionConfig.faintEnergyRecovery || 20;
+                const faintHealth = GameData.exhaustionConfig.faintHealthRecovery || 5;
+                game.state.energy = Math.min(100, game.state.energy + faintEnergy);
+                game.state.health = Math.min(100, game.state.health + faintHealth);
                 game.advancePeriod(); // 跳过夜间
                 game.advancePeriod(); // 跳过深夜，直接到下一天
                 this.updateUI();

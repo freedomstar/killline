@@ -109,7 +109,10 @@ export const healthEvents = [
                     state.health = emergConfig.erHealthRecovery;
                     state.mental -= emergConfig.ambulanceMentalLoss;
 
-                    state.hospitalDaysLeft = Math.floor(context.rng.random() * (hospConfig.emergencyDaysMax - hospConfig.emergencyDaysMin + 1)) + hospConfig.emergencyDaysMin;
+                    // 使用平均恢复值估算住院天数
+                    const averageRecovery = (hospConfig.healthRecoveryMin + hospConfig.healthRecoveryMax) / 2;
+                    const healthDeficit = hospConfig.dischargeHealthMin - state.health;
+                    state.hospitalDaysLeft = Math.max(1, Math.ceil(healthDeficit / averageRecovery));
                     const dailyBase = hospConfig.dailyBaseCost;
                     const dailyResult = context.game.calculateMedicalCost(dailyBase, false);
                     state.hospitalDailyCost = dailyResult.youPay;
@@ -144,7 +147,10 @@ export const healthEvents = [
                     state.money -= result.youPay + emergConfig.uberCost;
                     state.health = emergConfig.erHealthRecovery;
 
-                    state.hospitalDaysLeft = Math.floor(context.rng.random() * (hospConfig.emergencyDaysMax - hospConfig.emergencyDaysMin + 1)) + hospConfig.emergencyDaysMin;
+                    // 使用平均恢复值估算住院天数
+                    const averageRecovery = (hospConfig.healthRecoveryMin + hospConfig.healthRecoveryMax) / 2;
+                    const healthDeficit = hospConfig.dischargeHealthMin - state.health;
+                    state.hospitalDaysLeft = Math.max(1, Math.ceil(healthDeficit / averageRecovery));
                     const dailyBase = hospConfig.dailyBaseCost;
                     const dailyResult = context.game.calculateMedicalCost(dailyBase, false);
                     state.hospitalDailyCost = dailyResult.youPay;
@@ -293,8 +299,11 @@ export const healthEvents = [
                     state.mental -= conf.cost;
                     state.health -= conf.healthLoss;
 
+                    // Whether approved or denied, the surgery is performed
+                    const urgentConf = GameData.eventConfigs.surgery_required.urgent;
+                    state.health = Math.min(GameData.initialState.maxHealth, state.health + urgentConf.healthGain);
+
                     if (context.rng.random() < (conf.successChance / 100)) {
-                        const urgentConf = GameData.eventConfigs.surgery_required.urgent;
                         // Success: Approved!
                         const result = context.game.calculateMedicalCost(urgentConf.baseCost);
                         state.money -= result.youPay;

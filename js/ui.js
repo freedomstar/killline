@@ -7,10 +7,20 @@ import { GameData } from './data/index.js';
 import { GameEvents } from './events/index.js';
 import { game } from './game.js';
 import { AudioManager } from './audio.js';
-import { getArtifact } from './data/artifacts.js';
+import { getArtifact, getRandomArtifacts } from './data/artifacts.js';
+import { SeededRNG } from './rng.js';
 
 export const UI = {
     elements: {},
+    visualOffsets: {
+        money: 0,
+        energy: 0,
+        mental: 0,
+        health: 0,
+        socialValue: 0,
+        workEfficiency: 0,
+        investment: 0
+    },
 
     /**
      * Helper to resolve potentially dynamic text
@@ -65,6 +75,24 @@ export const UI = {
         this.elements.dotDay = document.getElementById('dot-day');
         this.elements.dotNight = document.getElementById('dot-night');
 
+        // V2.XX News Ticker
+        this.elements.newsTickerContainer = document.getElementById('news-ticker-container');
+        this.elements.newsTickerContent = document.getElementById('news-ticker-content');
+        this.elements.newsDetailModal = document.getElementById('news-detail-modal');
+        this.elements.newsDetailBody = document.getElementById('news-detail-body');
+        this.elements.closeNewsDetail = document.getElementById('close-news-detail');
+
+        if (this.elements.newsTickerContainer) {
+            this.elements.newsTickerContainer.addEventListener('click', () => {
+                this.showNewsModal();
+            });
+        }
+        if (this.elements.closeNewsDetail) {
+            this.elements.closeNewsDetail.onclick = () => {
+                this.elements.newsDetailModal.classList.add('hidden');
+            };
+        }
+
         // 事件区域
         this.elements.eventCard = document.getElementById('event-card');
         this.elements.eventType = document.getElementById('event-type');
@@ -75,8 +103,7 @@ export const UI = {
         this.elements.advanceStageButton = document.getElementById('advance-stage-button');
 
         // Toast
-        this.elements.messageToast = document.getElementById('message-toast');
-        this.elements.toastText = document.getElementById('toast-text');
+        this.elements.toastContainer = document.getElementById('toast-container');
 
         // 结局
         this.elements.endingTitle = document.getElementById('ending-title');
@@ -238,14 +265,20 @@ export const UI = {
         this.elements.loadModalSlots = document.getElementById('load-modal-slots');
         this.elements.closeLoadModal = document.getElementById('close-load-modal');
 
+        // V2.XX Message History
+        this.elements.btnMessageHistory = document.getElementById('btn-message-history');
+        this.elements.modalMessageHistory = document.getElementById('modal-message-history');
+        this.elements.closeMessageHistory = document.getElementById('close-message-history');
+        this.elements.listMessageHistory = document.getElementById('message-history-list');
+
         // V2.XX Artifact Detail Modal
         this.elements.artifactDetailModal = document.getElementById('modal-artifact-detail');
         this.elements.closeArtifactDetail = document.getElementById('close-artifact-detail');
-        this.elements.artifactDetailIcon = document.getElementById('artifact-detail-icon');
-        this.elements.artifactDetailName = document.getElementById('artifact-detail-name');
-        this.elements.artifactDetailRarity = document.getElementById('artifact-detail-rarity');
-        this.elements.artifactDetailDesc = document.getElementById('artifact-detail-desc');
+        this.elements.artifactDetailTitle = document.getElementById('artifact-detail-title');
+        this.elements.artifactDetailCount = document.getElementById('artifact-detail-count');
+        this.elements.artifactDetailList = document.getElementById('artifact-detail-list');
         this.elements.artifactDisplayContainer = document.getElementById('artifact-display-container');
+        this.elements.artifactSlots = document.getElementById('artifact-slots');
 
         // Global Event Delegation for dynamic elements
         document.body.addEventListener('click', (e) => {
@@ -380,6 +413,23 @@ export const UI = {
             if (this.elements.closeLoadModal) {
                 this.elements.closeLoadModal.addEventListener('click', () => this.hideLoadModal());
             }
+
+            // V2.XX Message History Events
+            if (this.elements.btnMessageHistory) {
+                this.elements.btnMessageHistory.addEventListener('click', () => this.showMessageHistoryModal());
+            }
+            if (this.elements.closeMessageHistory) {
+                this.elements.closeMessageHistory.addEventListener('click', () => {
+                    this.elements.modalMessageHistory.classList.add('hidden');
+                });
+            }
+            if (this.elements.modalMessageHistory) {
+                this.elements.modalMessageHistory.addEventListener('click', (e) => {
+                    if (e.target === this.elements.modalMessageHistory) {
+                        this.elements.modalMessageHistory.classList.add('hidden');
+                    }
+                });
+            }
             if (this.elements.loadModal) {
                 this.elements.loadModal.addEventListener('click', (e) => {
                     if (e.target === this.elements.loadModal) this.hideLoadModal();
@@ -466,7 +516,6 @@ export const UI = {
                 el.innerHTML = text; // 使用 innerHTML 以支持 <b> 等标签
             }
         });
-        console.log(`[UI] Page translated: ${elements.length} items`);
     },
 
     /**
@@ -522,6 +571,15 @@ export const UI = {
                 break;
         }
 
+        // Message History Button Visibility
+        if (this.elements.btnMessageHistory) {
+            if (screenName === 'game' || screenName === 'insurance' || screenName === 'assets' || screenName === 'status') {
+                this.elements.btnMessageHistory.classList.remove('hidden');
+            } else {
+                this.elements.btnMessageHistory.classList.add('hidden');
+            }
+        }
+
         if (target) {
             target.classList.add('active');
             target.style.display = 'flex';
@@ -572,6 +630,71 @@ export const UI = {
             this.switchScreen('status');
             this.renderStatusPage();
         }
+    },
+
+    /**
+     * V2.XX 显示历史消息模态框
+     */
+    showMessageHistoryModal() {
+        const logs = game.state.messageLog || [];
+        const container = this.elements.listMessageHistory;
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (logs.length === 0) {
+            container.innerHTML = `<div class="log-empty-hint">${I18n.t('ui.messageHistory.empty')}</div>`;
+        } else {
+            // Group by Day
+            // Logs are chronologically sorted by push (oldest first). We actally want newest first (bottom to top? or top to bottom)
+            // Usually history is Newest on Top or Newest on Bottom. Let's do Newest on Top for easy access.
+            const sortedLogs = [...logs].reverse();
+
+            let currentDayGroup = -1;
+            let groupContainer = null;
+
+            sortedLogs.forEach(log => {
+                if (log.day !== currentDayGroup) {
+                    currentDayGroup = log.day;
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'log-day-group';
+
+                    const header = document.createElement('div');
+                    header.className = 'log-day-header';
+                    header.innerHTML = `<span class="day-badge">${I18n.t('ui_static.game_header.day', log.day)}</span>`;
+
+                    groupDiv.appendChild(header);
+                    container.appendChild(groupDiv);
+                    groupContainer = groupDiv;
+                }
+                const entryDiv = document.createElement('div');
+                const typeClass = log.type && log.type !== 'normal' ? `type-${log.type}` : '';
+                entryDiv.className = `log-entry ${typeClass}`;
+
+                const period = GameData.periods[log.period];
+                let periodName = log.period;
+                if (period) {
+                    periodName = typeof period.name === 'function' ? period.name() : (period.name || log.period);
+                }
+                const timeStr = periodName;
+
+                const sourceHtml = log.source ? `<div class="log-source">${log.source}</div>` : '';
+
+                entryDiv.innerHTML = `
+                    <div class="log-info">
+                        <div class="log-time">${timeStr}</div>
+                        ${sourceHtml}
+                    </div>
+                    <div class="log-content">${log.message}</div>
+                `;
+
+                if (groupContainer) {
+                    groupContainer.appendChild(entryDiv);
+                }
+            });
+        }
+
+        this.elements.modalMessageHistory.classList.remove('hidden');
     },
 
     /**
@@ -854,22 +977,25 @@ export const UI = {
 
         // 1. 生理指标
         if (this.elements.statusEnergyVal) {
-            this.elements.statusEnergyVal.textContent = `${Math.round(state.energy)}/100`;
-            this.elements.statusEnergyBar.style.width = `${state.energy}%`;
+            const maxEnergy = state.maxEnergy || 100;
+            this.elements.statusEnergyVal.textContent = `${Math.round(state.energy)}/${Math.round(maxEnergy)}`;
+            this.elements.statusEnergyBar.style.width = `${(state.energy / maxEnergy) * 100}%`;
         }
         if (this.elements.statusMentalVal) {
             this.elements.statusMentalVal.textContent = `${Math.round(state.mental)}/${Math.round(state.maxMental || 100)}`;
             this.elements.statusMentalBar.style.width = `${(state.mental / (state.maxMental || 100)) * 100}%`;
         }
         if (this.elements.statusHealthVal) {
-            this.elements.statusHealthVal.textContent = `${Math.round(state.health)}/100`;
-            this.elements.statusHealthBar.style.width = `${state.health}%`;
+            const maxHealth = state.maxHealth || 100;
+            this.elements.statusHealthVal.textContent = `${Math.round(state.health)}/${Math.round(maxHealth)}`;
+            this.elements.statusHealthBar.style.width = `${(state.health / maxHealth) * 100}%`;
         }
         // V2.18 社交值
         if (this.elements.statusSocialVal) {
             const social = state.socialValue || 50;
-            this.elements.statusSocialVal.textContent = `${Math.round(social)}/100`;
-            this.elements.statusSocialBar.style.width = `${social}%`;
+            const maxSocial = state.maxSocialValue || 100;
+            this.elements.statusSocialVal.textContent = `${Math.round(social)}/${Math.round(maxSocial)}`;
+            this.elements.statusSocialBar.style.width = `${(social / maxSocial) * 100}%`;
         }
         if (this.elements.statusWorkEfficiencyVal) {
             const efficiency = state.workEfficiency || 0;
@@ -978,6 +1104,9 @@ export const UI = {
             this.elements.statusMaxWealth.textContent = game.formatMoney(maxWealth);
         }
         if (this.elements.statusSeed) this.elements.statusSeed.textContent = state.seed || '-';
+
+        // Update News Ticker
+        this.updateNewsTicker();
     },
 
     // ========================================
@@ -1011,23 +1140,24 @@ export const UI = {
         const slots = game.getAllSlotInfo();
         this.elements.loadModalSlots.innerHTML = '';
 
-        for (let i = 0; i < 3; i++) {
-            const slotId = i + 1;
+        for (let i = 0; i < 4; i++) {
+            const slotId = i; // 0 is auto-save
             const slotInfo = slots[i];
+            const isAutoSave = slotId === 0;
             const card = document.createElement('div');
             // 复用 save-slot-card 样式，但放在 modal 里
-            // 为了保持一致性，可以用 save-modal-slot 样式，或者稍微调整
-            // 这里我们使用 save-modal-slot 样式，因为它已经适配了模态框宽度
-            card.className = 'save-modal-slot' + (slotInfo ? ' has-save' : ' empty');
+            card.className = 'save-modal-slot' + (slotInfo ? ' has-save' : ' empty') + (isAutoSave ? ' auto-save-slot' : '');
 
             if (slotInfo) {
                 const jobInfo = GameData.jobTypes[slotInfo.job] || { name: '未知' };
                 const seedv = slotInfo.seed || '无';
 
+                const slotTitle = isAutoSave ? I18n.t('ui.save.autoSlot') : I18n.t('ui.save.slot', slotId);
+
                 card.innerHTML = `
                     <div class="slot-main-row">
                         <div class="slot-info-group">
-                            <span class="slot-number">${I18n.t('ui.save.slot', slotId)}</span>
+                            <span class="slot-number">${slotTitle}</span>
                             <div class="slot-details">
                                 <span class="highlight">${I18n.t('ui.save.day', slotInfo.day)}</span>
                                 <span class="separator">|</span>
@@ -1038,7 +1168,7 @@ export const UI = {
                         </div>
                         <div class="slot-actions">
                             <button class="load-slot-btn primary-button" data-slot="${slotId}">${I18n.t('ui.save.continueBtn')}</button>
-                            <button class="delete-slot-btn action-btn" data-slot="${slotId}">🗑️</button>
+                            ${!isAutoSave ? `<button class="delete-slot-btn action-btn" data-slot="${slotId}">🗑️</button>` : ''}
                         </div>
                     </div>
                     <div class="slot-seed-row">
@@ -1048,14 +1178,15 @@ export const UI = {
                     </div>
                 `;
             } else {
+                const slotTitle = isAutoSave ? I18n.t('ui.save.autoSlot') : I18n.t('ui.save.slot', slotId);
                 card.innerHTML = `
                     <div class="slot-main-row">
                          <div class="slot-info-group">
-                            <span class="slot-number">${I18n.t('ui.save.slot', slotId)}</span>
+                            <span class="slot-number">${slotTitle}</span>
                             <span class="slot-empty-text">${I18n.t('ui.save.emptySlot')}</span>
                         </div>
                         <div class="slot-actions">
-                            <button class="new-slot-btn primary-button" data-slot="${slotId}">${I18n.t('ui.save.newGameBtn')}</button>
+                            ${!isAutoSave ? `<button class="new-slot-btn primary-button" data-slot="${slotId}">${I18n.t('ui.save.newGameBtn')}</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1169,40 +1300,34 @@ export const UI = {
      * 开始新游戏并关联到槽位 (但不立即保存)
      */
     startNewGame(slotId) {
-        // V2.40 Roguelike Artifact Selection
-        // Get 3 random artifacts to choose from
-        // We need to dynamic import or use the imported getRandomArtifacts helper if available via game instance
-        // But UI shouldn't depend on internal data structure directly if possible.
-        // Assuming game.getArtifactDraftOptions exists or we act via game.
+        let seed = this.elements.seedInput ? this.elements.seedInput.value.trim() : null;
 
-        // Since we don't have game.getArtifactDraftOptions, let's try to trust the data module import we added in core logic? 
-        // No, UI imports Artifacts directly? No.
-        // Let's rely on game helper which we should add, OR import artifacts here.
-        // For simplicity, let's assume we can import it.
-        // Actually, let's add `getArtifactDraftOptions` to Game class or import it.
-        // Let's import { getRandomArtifacts } from './data/artifacts.js' at the top of ui.js?
-        // UI.js already has imports.
+        // V2.XX: 如果没有提供种子，提前生成并自动填入，确保神器选择和游戏生成一致
+        if (!seed) {
+            seed = Math.floor(Math.random() * 900000 + 100000).toString();
+            if (this.elements.seedInput) {
+                this.elements.seedInput.value = seed;
+            }
+        }
 
-        // Wait, I can't easily add import to top of file with replace_content in middle.
-        // I will add a helper in game.js or just assume we can fetch it.
-        // Let's add `game.getArtifactDraftOptions()` in game.js later? 
-        // No, I'll use `import` by checking the file start, but for now let's assume I can add it to game.js easily.
-        // Actually, best way is to let game handle logic.
-
-        const options = game.getArtifactDraftOptions ? game.getArtifactDraftOptions(3) : [];
+        const rng = new SeededRNG(seed);
+        const options = getRandomArtifacts(3, rng);
 
         if (options.length > 0) {
             this.showArtifactSelectionModal(options, (selectedArtifactId) => {
-                this._finishStartNewGame(slotId, selectedArtifactId);
+                this._finishStartNewGame(slotId, selectedArtifactId, seed);
             });
         } else {
-            // Fallback if no artifacts logic
-            this._finishStartNewGame(slotId, null);
+            this._finishStartNewGame(slotId, null, seed);
         }
     },
 
-    _finishStartNewGame(slotId, artifactId) {
-        const seed = this.elements.seedInput ? this.elements.seedInput.value.trim() : null;
+    _finishStartNewGame(slotId, artifactId, seed) {
+        // 优先使用传入的 seed，确保与 artifact 选择时的 RNG 一致
+        if (!seed && this.elements.seedInput) {
+            seed = this.elements.seedInput.value.trim();
+        }
+
         game.init(seed || null, artifactId);
 
         // 记住当前使用的槽位
@@ -1302,39 +1427,240 @@ export const UI = {
 
     showArtifactDetailModal() {
         const state = game.getState();
-        let art = state.artifact ? getArtifact(state.artifact) : null;
         if (!this.elements.artifactDetailModal) return;
 
-        if (!art) {
-            art = {
-                icon: '❓',
-                name: () => '无神器',
-                description: () => '你还没有获得任何神器。',
-                rarity: 'common'
-            };
+        const artifacts = Array.isArray(state.artifacts) ? state.artifacts : [];
+        const maxSlots = GameData.artifactMaxSlots || 3;
+
+        if (this.elements.artifactDetailTitle) {
+            this.elements.artifactDetailTitle.textContent = I18n.t('ui.artifacts.title');
+        }
+        if (this.elements.artifactDetailCount) {
+            this.elements.artifactDetailCount.textContent = `${artifacts.length}/${maxSlots}`;
         }
 
-        const artName = typeof art.name === 'function' ? art.name() : art.name;
-        const artDesc = typeof art.description === 'function' ? art.description() : art.description;
+        if (this.elements.artifactDetailList) {
+            this.elements.artifactDetailList.innerHTML = '';
 
-        this.elements.artifactDetailIcon.textContent = art.icon;
-        this.elements.artifactDetailName.textContent = artName;
-        this.elements.artifactDetailDesc.textContent = artDesc;
-        this.elements.artifactDetailRarity.textContent = art.rarity;
+            for (let i = 0; i < maxSlots; i++) {
+                const id = artifacts[i];
+                if (id) {
+                    const art = getArtifact(id);
+                    const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '未知');
+                    const artDesc = art && typeof art.description === 'function' ? art.description() : (art?.description || '');
 
-        const rarityColor = {
-            common: '#b2bec3',
-            uncommon: '#2ecc71',
-            rare: '#3498db',
-            epic: '#9b59b6',
-            legendary: '#f1c40f'
-        }[art.rarity] || '#ffffff';
-
-        this.elements.artifactDetailName.style.color = rarityColor;
-        this.elements.artifactDetailRarity.style.color = rarityColor;
-        this.elements.artifactDetailRarity.style.borderColor = rarityColor;
+                    const item = document.createElement('div');
+                    item.className = 'artifact-detail-item';
+                    item.innerHTML = `
+                        <div class="artifact-detail-icon">${art ? art.icon : '❓'}</div>
+                        <div class="artifact-detail-body">
+                            <div class="artifact-detail-name">${artName}</div>
+                            <div class="artifact-detail-desc">${artDesc}</div>
+                        </div>
+                    `;
+                    this.elements.artifactDetailList.appendChild(item);
+                } else {
+                    const empty = document.createElement('div');
+                    empty.className = 'artifact-detail-item empty';
+                    empty.textContent = I18n.t('ui.artifacts.emptySlot');
+                    this.elements.artifactDetailList.appendChild(empty);
+                }
+            }
+        }
 
         this.elements.artifactDetailModal.classList.remove('hidden');
+    },
+
+    triggerArtifactGlow(artifactId, duration = 600) {
+        if (!artifactId || !this.elements.artifactSlots) return;
+        const slots = this.elements.artifactSlots.querySelectorAll('.artifact-slot');
+        slots.forEach(slot => {
+            if (slot.dataset.artifactId === artifactId) {
+                // Reset animation
+                slot.classList.remove('triggered');
+                void slot.offsetWidth; // Force reflow
+
+                // 动态设置动画时长
+                slot.style.transitionDuration = `${duration}ms`;
+                slot.style.animationDuration = `${duration}ms`;
+
+                slot.classList.add('triggered');
+                setTimeout(() => {
+                    slot.classList.remove('triggered');
+                    slot.style.transitionDuration = '';
+                    slot.style.animationDuration = '';
+                }, duration);
+
+                // Play sound
+                if (AudioManager && AudioManager.play) {
+                    AudioManager.play('artifact_effect');
+                }
+            }
+        });
+    },
+
+    /**
+     * V2.XX 触发属性卡片震动
+     * @param {Object} delta - 属性变化量 { money: 100, health: -5, ... }
+     */
+    triggerAttributeShake(delta) {
+        if (!delta) return;
+
+        // V2.XX: Investment changes also trigger money card shake
+        const investmentChanged = delta.investment && Math.abs(delta.investment) > 0.1;
+
+        const attributes = [
+            { key: 'money', elementId: 'money-value', forceTrigger: investmentChanged }, // Force trigger if investment changed
+            { key: 'health', elementId: 'health-bar' },
+            { key: 'energy', elementId: 'energy-bar' },
+            { key: 'mental', elementId: 'mental-bar' },
+            { key: 'workProgress', elementId: 'job-value' },
+            { key: 'investment', elementId: 'investment-value' } // Also shake investment value if visible
+        ];
+
+        attributes.forEach(attr => {
+            if ((delta[attr.key] && delta[attr.key] !== 0) || attr.forceTrigger) {
+                let targetEl = document.getElementById(attr.elementId);
+
+                // Try to find the card container for better visual effect
+                if (targetEl) {
+                    const card = targetEl.closest('.status-item') || targetEl.closest('.finance-item') || targetEl.parentElement;
+                    if (card) {
+                        card.classList.remove('shake');
+                        card.classList.remove('flash-glow');
+                        void card.offsetWidth; // Force reflow
+                        card.classList.add('shake');
+                        card.classList.add('flash-glow');
+
+                        setTimeout(() => {
+                            card.classList.remove('shake');
+                            card.classList.remove('flash-glow');
+                        }, 500);
+                    }
+                }
+            }
+        });
+    },
+
+    /**
+     * 显示分层连锁触发效果（统一处理递减延迟）
+     * @param {Array} layers - 分层触发数据
+     */
+    showChainedArtifactEffects(layers, initialDelay = 200) {
+        if (!layers || !Array.isArray(layers) || layers.length === 0) return;
+
+        // 从配置获取动画参数
+        const animConfig = GameData.artifactConfig?.animation || {};
+        const INITIAL_GAP = animConfig.initialGap || 600;
+        const MIN_GAP = animConfig.minGap || 200;
+        const GAP_DECAY = animConfig.gapDecay || 25;
+        const LAYER_GAP_RATIO = animConfig.layerGapRatio || 0.5;
+        const MAX_TOTAL_TRIGGERS = animConfig.maxTotalTriggers || 50;
+        const SHAKE_THRESHOLD = animConfig.shakeThreshold || 10;
+
+        // 记录整个动画流的当前时间指针
+        let currentTime = initialDelay;
+        let triggerCount = 0;
+
+        let shakeStartTime = -1;
+        let shakeEndTime = -1;
+
+        // Calculate total delta for visual rollback
+        layers.forEach(layer => {
+            if (layer.triggers) {
+                layer.triggers.forEach(trigger => {
+                    if (trigger.delta) {
+                        for (const key in trigger.delta) {
+                            if (this.visualOffsets.hasOwnProperty(key)) {
+                                this.visualOffsets[key] -= trigger.delta[key];
+                            } else if (key === 'workProgress') { // Map workProgress to workEfficiency if needed or handle separately
+                                // Assuming workProgress maps to workEfficiency for UI bars? 
+                                // Actually workProgress usually is task progress, not efficiency.
+                                // Let's check triggerAttributeShake. It maps workProgress to job-value.
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // Initial update to reflect rolled-back state
+        this.updateStatusBar(game.getStatusDescription());
+
+        layers.forEach((layer, layerIndex) => {
+            // 如果已达到最大触发次数，跳过后续
+            if (triggerCount >= MAX_TOTAL_TRIGGERS) return;
+
+            if (layer.triggers && layer.triggers.length > 0) {
+                layer.triggers.forEach((trigger, triggerIndex) => {
+                    // 如果已达到最大触发次数，跳过
+                    if (triggerCount >= MAX_TOTAL_TRIGGERS) return;
+
+                    // 计算本次触发的动画时长（按次数递减，而非按层数）
+                    const animDuration = Math.max(MIN_GAP, INITIAL_GAP - triggerCount * GAP_DECAY);
+
+                    // 如果不是第一个触发，加上层间隙
+                    if (triggerCount > 0) {
+                        const layerGap = Math.max(10, animDuration * LAYER_GAP_RATIO);
+                        currentTime += layerGap;
+                    }
+
+                    triggerCount++;
+                    const triggerTime = currentTime;
+
+                    // 记录震动开始时间
+                    if (triggerCount === SHAKE_THRESHOLD) {
+                        shakeStartTime = triggerTime;
+                    }
+
+                    setTimeout(() => {
+                        this.triggerArtifactGlow(trigger.id, animDuration);
+                        if (trigger.message) {
+                            this.showToast(trigger.message, 'info');
+
+                            // V2.XX: 同时记录到消息历史，并标注来源神器名称
+                            const art = getArtifact(trigger.id);
+                            const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '神器');
+                            game.addLog(trigger.message, 'positive', artName);
+                        }
+                    }, triggerTime);
+
+                    // 核心修改：完全等待动画播完
+                    currentTime += animDuration;
+
+                    // V2.XX: Trigger attribute shake based on delta AND Apply visual update
+                    if (trigger.delta) {
+                        setTimeout(() => {
+                            // Apply delta back to visual offsets (reduce the rollback)
+                            for (const key in trigger.delta) {
+                                if (this.visualOffsets.hasOwnProperty(key)) {
+                                    this.visualOffsets[key] += trigger.delta[key];
+                                }
+                            }
+                            this.updateStatusBar(game.getStatusDescription()); // Update UI with new effective values
+                            this.triggerAttributeShake(trigger.delta);
+                        }, triggerTime);
+                    }
+                });
+            }
+        });
+
+        // 震动结束时间为总动画结束时间
+        shakeEndTime = currentTime;
+
+        // 设置震动定时器
+        if (shakeStartTime > 0 && shakeEndTime > shakeStartTime) {
+            const container = document.getElementById('game-container') || document.body;
+
+            setTimeout(() => {
+                container.classList.add('shake-continuous');
+                // 播放震动音效? 或者是循环音效? 暂时只震动
+            }, shakeStartTime);
+
+            setTimeout(() => {
+                container.classList.remove('shake-continuous');
+            }, shakeEndTime);
+        }
     },
 
     /**
@@ -1367,20 +1693,23 @@ export const UI = {
 
         this.elements.saveModalSlots.innerHTML = '';
 
-        for (let i = 0; i < 3; i++) {
-            const slotId = i + 1;
+        for (let i = 0; i < 4; i++) {
+            const slotId = i; // 0 is auto-save
             const slotInfo = slots[i];
             const isCurrent = slotId === currentSlotId;
+            const isAutoSave = slotId === 0;
 
             const card = document.createElement('div');
-            card.className = 'save-modal-slot' + (slotInfo ? ' has-save' : ' empty') + (isCurrent ? ' current' : '');
+            card.className = 'save-modal-slot' + (slotInfo ? ' has-save' : ' empty') + (isCurrent ? ' current' : '') + (isAutoSave ? ' auto-save-slot' : '');
+
+            const slotTitle = isAutoSave ? I18n.t('ui.save.autoSlot') : I18n.t('ui.save.slot', slotId);
 
             if (slotInfo) {
                 const jobInfo = GameData.jobTypes[slotInfo.job] || { name: '未知' };
                 card.innerHTML = `
                     <div class="slot-main-row">
                         <div class="slot-info-group">
-                            <span class="slot-number">${I18n.t('ui.save.slot', slotId)}${isCurrent ? I18n.t('ui.save.current') : ''}</span>
+                            <span class="slot-number">${slotTitle}${isCurrent ? I18n.t('ui.save.current') : ''}</span>
                             <div class="slot-details">
                                 <span class="highlight">${I18n.t('ui.save.day', slotInfo.day)}</span>
                                 <span class="separator">|</span>
@@ -1388,7 +1717,10 @@ export const UI = {
                             </div>
                         </div>
                         <div class="slot-actions">
-                             <button class="save-to-slot-btn action-btn" data-slot="${slotId}" style="min-width: 80px;">${I18n.t('ui.save.overwrite')}</button>
+                             ${isAutoSave
+                        ? `<button class="save-to-slot-btn action-btn disabled" disabled style="min-width: 80px; opacity: 0.5; cursor: not-allowed;">${I18n.t('ui.save.autoSlot')}</button>`
+                        : `<button class="save-to-slot-btn action-btn" data-slot="${slotId}" style="min-width: 80px;">${I18n.t('ui.save.overwrite')}</button>`
+                    }
                         </div>
                     </div>
                 `;
@@ -1396,11 +1728,14 @@ export const UI = {
                 card.innerHTML = `
                     <div class="slot-main-row">
                         <div class="slot-info-group">
-                            <span class="slot-number">${I18n.t('ui.save.slot', slotId)}${isCurrent ? I18n.t('ui.save.current') : ''}</span>
+                            <span class="slot-number">${slotTitle}${isCurrent ? I18n.t('ui.save.current') : ''}</span>
                             <span class="slot-empty-text" style="flex: 1; text-align: left; padding-left: 10px;">${I18n.t('ui.save.emptySlot')}</span>
                         </div>
                         <div class="slot-actions">
-                             <button class="save-to-slot-btn action-btn" data-slot="${slotId}" style="min-width: 80px;">${I18n.t('ui.save.saveHere')}</button>
+                             ${isAutoSave
+                        ? `<button class="save-to-slot-btn action-btn disabled" disabled style="min-width: 80px; opacity: 0.5; cursor: not-allowed;">${I18n.t('ui.save.autoSlot')}</button>`
+                        : `<button class="save-to-slot-btn action-btn" data-slot="${slotId}" style="min-width: 80px;">${I18n.t('ui.save.saveHere')}</button>`
+                    }
                         </div>
                     </div>
                 `;
@@ -1525,11 +1860,41 @@ export const UI = {
         this.showToast(I18n.t('ui.toast.changeSubmitted', planName));
         this.renderInsurancePage();
         this.updateStatusBar(game.getStatusDescription());
+
     },
 
     /**
-     * V2.24 切换租客保险 (下月生效 + 撤销逻辑)
+     * V2.XX: Render artifact slots on main screen
      */
+    renderArtifactSlots() {
+        if (!this.elements.artifactSlots) return;
+
+        const state = game.getState();
+        const artifacts = Array.isArray(state.artifacts) ? state.artifacts : [];
+        const maxSlots = 3;
+
+        // Simple diff check
+        const signature = artifacts.join(',');
+        if (this._lastArtifactSignature === signature) return;
+        this._lastArtifactSignature = signature;
+
+        this.elements.artifactSlots.innerHTML = '';
+
+        for (let i = 0; i < maxSlots; i++) {
+            const id = artifacts[i];
+            const slot = document.createElement('div');
+            slot.className = 'artifact-slot';
+            if (id) {
+                slot.dataset.artifactId = id;
+                const art = getArtifact(id);
+                slot.innerHTML = art ? art.icon : '❓';
+                // Optional: Check local click handler if needed, but for now just visual
+            } else {
+                slot.classList.add('empty');
+            }
+            this.elements.artifactSlots.appendChild(slot);
+        }
+    },
     toggleRentersInsurance() {
         const state = game.getState();
         const currentStatus = state.insurance.hasRentersInsurance;
@@ -1851,6 +2216,57 @@ export const UI = {
         this.elements.gameBackground.className = period;
     },
 
+    // V2.XX 动画状态
+    animationState: {
+        money: 0,
+        moneyRaf: null
+    },
+
+    /**
+     * 数字滚动动画
+     * @param {HTMLElement} element 目标元素
+     * @param {number} start 起始值
+     * @param {number} end 结束值
+     * @param {number} duration 持续时间(ms)
+     * @param {function} formatter 格式化函数
+     */
+    animateValue(element, start, end, duration, formatter) {
+        if (start === end) return;
+
+        const range = end - start;
+        let startTime = null;
+
+        // 清除之前的动画（如果有）
+        if (this.animationState.moneyRaf) {
+            cancelAnimationFrame(this.animationState.moneyRaf);
+        }
+
+        const step = (timestamp) => {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+
+            // Ease-out expo
+            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+
+            const current = start + (range * easeProgress);
+            element.textContent = formatter(current);
+
+            // 保持正负样式更新 during animation
+            element.classList.toggle('danger', current < 0);
+
+            if (progress < 1) {
+                this.animationState.moneyRaf = requestAnimationFrame(step);
+            } else {
+                this.animationState.moneyRaf = null;
+                // 确保最终值精确
+                element.textContent = formatter(end);
+                element.classList.toggle('danger', end < 0);
+            }
+        };
+
+        this.animationState.moneyRaf = requestAnimationFrame(step);
+    },
+
     /**
      * 更新状态栏
      */
@@ -1858,9 +2274,43 @@ export const UI = {
         const state = stateOverride || game.getState();
         const isPreview = !!stateOverride;
 
-        // 金额
-        this.elements.moneyValue.textContent = status.money;
-        this.elements.moneyValue.classList.toggle('danger', status.money.startsWith('-'));
+        // Apply Visual Offsets (only if not in preview mode, to keep previews accurate to logic)
+        // Actually, previews usually don't have artifacts running?
+        // If we choose an option that triggers artifacts, the preview shows the FINAL state.
+        // We probably shouldn't offset the preview, but updateStatusBar is called during animation which is NOT preview.
+        // So: Apply offsets if !isPreview.
+
+        const offset = (key) => (!isPreview && this.visualOffsets ? (this.visualOffsets[key] || 0) : 0);
+
+        // 金额 (带动画)
+        // Use state.money + offset
+        const currentMoney = state.money + offset('money');
+        const displayMoney = this.animationState.money;
+
+        // 数值有变化时播放动画（包括预览状态，确保点击时平滑过渡）
+        if (Math.abs(currentMoney - displayMoney) > 0.1) {
+            // 如果差异太大（例如读档），或者是初次加载，可能不希望动画那么慢？
+            // 目前统一用 1s 动画
+            this.animateValue(
+                this.elements.moneyValue,
+                displayMoney,
+                currentMoney,
+                1000,
+                (val) => game.formatMoney(val)
+            );
+            this.animationState.money = currentMoney;
+        } else {
+            // 目标数值无变化
+            // 如果不在动画中，才强制由 textContent 覆盖，以防浮点误差或格式问题
+            // 如果正在动画中 (moneyRaf != null)，则让动画继续跑到终点，不要打断
+            if (!this.animationState.moneyRaf) {
+                this.elements.moneyValue.textContent = status.money;
+                this.elements.moneyValue.classList.toggle('danger', parseFloat(status.money.replace(/[^0-9.-]+/g, "")) < 0);
+
+                // 确保同步状态 (防止通过其他方式直接修改了DOM导致不同步)
+                this.animationState.money = currentMoney;
+            }
+        }
 
         // Investment Value
         if (this.elements.investmentValue) {
@@ -1890,7 +2340,7 @@ export const UI = {
             // this.elements.investmentValue 是个 span，里面可以放 html
             // 但是要注意 resolveText 或 innerHTML 的使用
             const label = I18n.t('ui_static.finance.investment');
-            const valueStr = `$${portfolioValue.toLocaleString()}`;
+            const valueStr = game.formatMoney(portfolioValue);
 
             // 如果只有 0 资产，显示淡色
             if (portfolioValue === 0) {
@@ -1907,9 +2357,11 @@ export const UI = {
         this.elements.jobValue.textContent = status.job;
 
         // 精力条
-        this.elements.energyBar.style.width = `${status.energy}%`;
+        const effectiveEnergy = Math.max(0, Math.min(state.maxEnergy || 100, state.energy + offset('energy')));
+        this.elements.energyBar.style.width = `${effectiveEnergy}%`;
         if (this.elements.energyVal) {
-            this.elements.energyVal.textContent = `${Math.round(status.energy)}/100`;
+            const maxEnergy = state.maxEnergy || 100;
+            this.elements.energyVal.textContent = `${Math.round(effectiveEnergy)}/${Math.round(maxEnergy)}`;
         }
 
         // 低精力警告
@@ -1920,18 +2372,21 @@ export const UI = {
         }
 
         // 精神条
-        this.elements.mentalBar.style.width = `${status.mental}%`;
+        const effectiveMental = Math.max(0, Math.min(state.maxMental || 100, state.mental + offset('mental')));
+        this.elements.mentalBar.style.width = `${effectiveMental}%`;
         if (this.elements.mentalVal) {
             const maxMental = state.maxMental || 100;
-            this.elements.mentalVal.textContent = `${Math.round(status.mental)}/${maxMental}`;
+            this.elements.mentalVal.textContent = `${Math.round(effectiveMental)}/${maxMental}`;
         }
 
         // 健康条
-        this.elements.healthBar.style.width = `${status.health}%`;
+        const effectiveHealth = Math.max(0, Math.min(state.maxHealth || 100, state.health + offset('health')));
+        this.elements.healthBar.style.width = `${effectiveHealth}%`;
         if (this.elements.healthVal) {
             const hStatus = state.healthStatus || 'normal';
             const statusText = I18n.t(`data.healthStatuses.${hStatus}`);
-            this.elements.healthVal.textContent = `${statusText} ${Math.round(status.health)}/100`;
+            const maxHealth = state.maxHealth || 100;
+            this.elements.healthVal.textContent = `${statusText} ${Math.round(effectiveHealth)}/${Math.round(maxHealth)}`;
         }
 
         // Social
@@ -1942,7 +2397,8 @@ export const UI = {
             // this.elements.socialBar.style.background = 'linear-gradient(90deg, #a29bfe, #6c5ce7)'; 
 
             if (this.elements.socialVal) {
-                this.elements.socialVal.textContent = `${Math.round(social)}/100`;
+                const maxSocial = state.maxSocialValue || 100;
+                this.elements.socialVal.textContent = `${Math.round(social)}/${Math.round(maxSocial)}`;
             }
         }
 
@@ -2042,24 +2498,8 @@ export const UI = {
             this.elements.mealStatus.className = 'status-value' + (status.hasPreparedMeal ? ' positive' : ' warning');
         }
 
-        // Render Artifact (New Slot)
-        const artifactEl = document.getElementById('artifact-value');
-        if (artifactEl) {
-            if (state.artifact) {
-                const art = getArtifact(state.artifact);
-                if (art) {
-                    const artName = typeof art.name === 'function' ? art.name() : art.name;
-                    // V2.XX Fix: Only show name, no icon as per user request
-                    artifactEl.innerHTML = `<span title="${this.resolveText(art.description)}">${artName}</span>`;
-                    // Dynamic font size: <=4 chars -> 0.9em, >4 chars -> 0.7em
-                    artifactEl.style.fontSize = artName.length <= 4 ? '0.9em' : '0.7em';
-                } else {
-                    artifactEl.textContent = '未知';
-                }
-            } else {
-                artifactEl.textContent = '-';
-            }
-        }
+        // Render Artifacts (Slots)
+        this.renderArtifactSlots();
 
         // V2.7 任务进度
         // V2.28 住院时的 UI 覆盖 (替换工作任务显示)
@@ -2136,6 +2576,11 @@ export const UI = {
 
         // V2.41 预览特效
         this.updatePreviewEffects(stateOverride);
+
+        // V2.XX Update News Ticker (since it's in the header, update with status)
+        if (!isPreview) {
+            this.updateNewsTicker();
+        }
     },
 
     /**
@@ -2254,73 +2699,14 @@ export const UI = {
         });
     },
 
+    // showDevEditor moved to gm_panel.js logic
+
     /**
-     * V2.45 Dev Editor
+     * V2.45 Bind Dev Editor
+     * Logic is now handled by gm_panel.js which provides full feature support
      */
-    showDevEditor() {
-        const modal = document.getElementById('dev-editor-modal');
-        if (!modal) return;
-
-        const state = game.getState();
-        const setVal = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.value = val;
-        };
-
-        setVal('dev-input-money', state.money);
-        setVal('dev-input-energy', state.energy);
-        setVal('dev-input-mental', state.mental);
-        setVal('dev-input-health', state.health);
-        setVal('dev-input-social', state.socialValue !== undefined ? state.socialValue : 50);
-        setVal('dev-input-efficiency', state.workEfficiency !== undefined ? state.workEfficiency : 100);
-        setVal('dev-input-ingredients', state.ingredients || 0);
-
-        modal.classList.remove('hidden');
-        this.activeModal = modal;
-    },
-
     bindDevEditorEvents() {
-        const btn = document.getElementById('dev-edit-btn');
-        if (btn) {
-            btn.addEventListener('click', () => this.showDevEditor());
-        }
-
-        const closeBtn = document.getElementById('close-dev-editor');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                const modal = document.getElementById('dev-editor-modal');
-                if (modal) modal.classList.add('hidden');
-            });
-        }
-
-        const saveBtn = document.getElementById('dev-save-btn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
-                const getVal = (id) => Number(document.getElementById(id).value);
-
-                const state = game.getState();
-                state.money = getVal('dev-input-money');
-                state.energy = Math.min(100, Math.max(0, getVal('dev-input-energy')));
-                state.mental = Math.min(100, Math.max(0, getVal('dev-input-mental')));
-                state.health = Math.min(100, Math.max(0, getVal('dev-input-health')));
-                state.socialValue = Math.min(100, Math.max(0, getVal('dev-input-social')));
-                state.workEfficiency = Math.min(Number(state.maxWorkEfficiency || 100), Math.max(0, getVal('dev-input-efficiency')));
-                state.ingredients = Math.max(0, getVal('dev-input-ingredients'));
-
-                this.showToast('属性已修改', 'positive');
-
-                const modal = document.getElementById('dev-editor-modal');
-                if (modal) modal.classList.add('hidden');
-
-                // Update UI immediately (Status page or Main HUD)
-                // Also update status bar explicitly to refresh money display
-                this.updateStatusBar(game.getStatusDescription());
-                // Force refresh status page if active
-                if (document.getElementById('status-screen').classList.contains('active')) {
-                    this.renderStatusPage();
-                }
-            });
-        }
+        // Handled by initGMPanel() in gm_panel.js
     },
 
     /**
@@ -2773,13 +3159,8 @@ export const UI = {
         this.elements.eventType.textContent = `${eventTypeInfo.icon} ${this.resolveText(eventTypeInfo.name)}`;
         this.elements.eventType.style.color = eventTypeInfo.color;
 
-        // 精力消耗提示
-        if (event.energyCost) {
-            this.elements.eventEnergyCost.textContent = `⚡ -${event.energyCost}`;
-            this.elements.eventEnergyCost.style.display = 'flex';
-        } else {
-            this.elements.eventEnergyCost.style.display = 'none';
-        }
+        // 精力消耗提示 (根据需求屏蔽)
+        this.elements.eventEnergyCost.style.display = 'none';
 
         // 标题和描述
         this.elements.eventTitle.textContent = typeof event.title === 'function'
@@ -2852,51 +3233,54 @@ export const UI = {
     /**
      * 显示Toast (队列机制)
      */
-    showToast(message, type = 'neutral') {
-        // 支持换行符和HTML格式
-        if (message === undefined || message === null) return;
-
-        // 初始化队列
-        if (!this.toastQueue) {
-            this.toastQueue = [];
-            this.isToastProcessing = false;
-        }
-
-        // 加入队列
-        this.toastQueue.push({ message, type });
-
-        // 尝试处理队列
-        this.processToastQueue();
-    },
-
     /**
-     * 处理 Toast 队列
+     * 显示Toast (多重堆叠机制 - Max 3)
      */
-    processToastQueue() {
-        // 如果正在处理或队列为空，停止
-        if (this.isToastProcessing || !this.toastQueue || this.toastQueue.length === 0) {
-            return;
+    showToast(message, type = 'neutral') {
+        if (!message) return;
+
+        // 确保容器存在
+        const container = this.elements.toastContainer;
+        if (!container) return;
+
+        // 创建 Toast 元素
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = String(message).replace(/\n/g, '<br>'); // 支持换行
+
+        // 添加到容器
+        container.appendChild(toast);
+
+        // 限制数量：如果超过2个，移除最旧的（第一个）
+        // 注意：因为我们是 appendChild，所以最新的在最后。
+        // 如果要限制总数，应该移除 childNodes[0]
+        while (container.childNodes.length > 2) {
+            const oldToast = container.firstChild;
+            if (oldToast) {
+                oldToast.classList.add('fade-out');
+                // 动画结束后移除，或者立即移除以保持数量严格控制
+                // 这里为了视觉平滑，可能需要一个小技巧。
+                // 但为了严谨控制数量，直接移除或者快速移除。
+                container.removeChild(oldToast);
+            }
         }
 
-        this.isToastProcessing = true;
-        const nextToast = this.toastQueue.shift();
-
-        // 显示 Toast
-        const msgStr = String(nextToast.message);
-        this.elements.toastText.innerHTML = msgStr.replace(/\n/g, '<br>');
-        this.elements.messageToast.className = `toast ${nextToast.type}`;
-        this.elements.messageToast.classList.remove('hidden');
-
-        // 3秒后隐藏
+        // 自动消失计时器
         setTimeout(() => {
-            this.elements.messageToast.classList.add('hidden');
-
-            // 等待淡出动画结束 (500ms) 后处理下一条
+            // 添加淡出类
+            toast.classList.add('fade-out');
+            // 等待动画结束移除
+            toast.addEventListener('transitionend', () => {
+                if (toast.parentElement) {
+                    toast.parentElement.removeChild(toast);
+                }
+            });
+            //由于 transitionend 可能因为隐藏不可见而不触发，加个兜底
             setTimeout(() => {
-                this.isToastProcessing = false;
-                this.processToastQueue();
+                if (toast.parentElement) {
+                    toast.parentElement.removeChild(toast);
+                }
             }, 500);
-
         }, 3000);
     },
 
@@ -3483,13 +3867,218 @@ export const UI = {
 
         overlay.appendChild(content);
         document.body.appendChild(overlay);
+    },
+
+    /**
+     * V2.XX Update News Ticker
+     * Cycle between Insider Tip (if any) and Market News (if any)
+     */
+    updateNewsTicker() {
+        try {
+            if (!this.elements.newsTickerContainer || !this.elements.newsTickerContent) return;
+
+            const state = game.getState();
+            const news = state.currentNews;
+            const insider = state.dailyInsiderTip;
+
+            const messages = [];
+
+            // 1. Insider Tip (Only if player owns the artifact)
+            const artifacts = state.artifacts || [];
+            const hasInsiderPhone = artifacts.includes('insider_phone');
+
+            if (hasInsiderPhone && insider && insider.text) {
+                // Combine title and details for full content
+                const fullText = insider.details ? `${insider.text} ⚡ ${insider.details}` : insider.text;
+                messages.push({
+                    type: 'insider',
+                    text: fullText,
+                    data: insider
+                });
+            }
+
+            // 2. Market News
+            if (news) {
+                const title = news.title || I18n.t('game.artifactDaily.ticker_news_title');
+                const fullText = news.description ? `📰 ${title}：${news.description}` : `📰 ${title}`;
+                messages.push({
+                    type: 'news',
+                    text: fullText,
+                    data: news
+                });
+            }
+
+            // Compare with current items to avoid unnecessary restarts
+            const oldMessagesJson = JSON.stringify(this.tickerItems || []);
+            const newMessagesJson = JSON.stringify(messages);
+
+            // Store active ticker items
+            this.tickerItems = messages;
+
+            // If no items, hide
+            if (messages.length === 0) {
+                this.elements.newsTickerContainer.classList.add('hidden');
+                if (this.tickerTimer) clearTimeout(this.tickerTimer);
+                this.tickerTimer = null;
+                return;
+            }
+
+            this.elements.newsTickerContainer.classList.remove('hidden');
+
+            // Start cycling if not already or if messages changed significantly
+            if (!this.tickerTimer || oldMessagesJson !== newMessagesJson) {
+                if (this.tickerTimer) clearTimeout(this.tickerTimer);
+                this.currentTickerIndex = 0;
+                this.playNextTickerItem();
+            }
+        } catch (e) {
+            console.error("Ticker error", e);
+            if (this.elements.newsTickerContainer) this.elements.newsTickerContainer.classList.add('hidden');
+        }
+    },
+
+    playNextTickerItem() {
+        if (!this.tickerItems || this.tickerItems.length === 0) {
+            this.tickerTimer = null;
+            return;
+        }
+
+        // Clear existing timer if any (redundancy)
+        if (this.tickerTimer) clearTimeout(this.tickerTimer);
+
+        if (this.currentTickerIndex === undefined || this.currentTickerIndex >= this.tickerItems.length) {
+            this.currentTickerIndex = 0;
+        }
+
+        const item = this.tickerItems[this.currentTickerIndex];
+        const el = this.elements.newsTickerContent;
+        if (!el) return;
+
+        // Fade effect
+        el.style.opacity = 0;
+
+        setTimeout(() => {
+            el.innerHTML = `<span class="ticker-type-${item.type}">${item.text}</span>`;
+
+            // Reflow
+            el.classList.remove('ticker-scroll');
+            el.style.left = '';
+            el.style.transform = '';
+            void el.offsetWidth;
+
+            const containerWidth = this.elements.newsTickerContainer.offsetWidth;
+            const textWidth = el.offsetWidth;
+
+            let displayDuration = 5000; // Default 5s for short text
+
+            if (textWidth > containerWidth - 40) { // padding
+                el.style.left = '0';
+
+                // Calculate start position: containerWidth as percentage of textWidth
+                const startPercent = (containerWidth / textWidth) * 100;
+                el.style.setProperty('--scroll-start', `${startPercent}%`);
+
+                el.classList.add('ticker-scroll');
+
+                // Speed: 60 pixels per second
+                const durationSeconds = (textWidth + containerWidth) / 60;
+                const animationDuration = Math.max(8, durationSeconds);
+                el.style.animationDuration = `${animationDuration}s`;
+
+                // Switch when animation ends + small buffer
+                displayDuration = animationDuration * 1000 + 200;
+            } else {
+                // If short, center it
+                el.style.left = '50%';
+                el.style.transform = 'translate(-50%, 0)';
+                el.style.animationDuration = '';
+                displayDuration = 5000;
+            }
+
+            el.style.opacity = 1;
+
+            // Advance index for next time
+            this.currentTickerIndex = (this.currentTickerIndex + 1) % this.tickerItems.length;
+
+            // Schedule the NEXT transition
+            this.tickerTimer = setTimeout(() => {
+                this.playNextTickerItem();
+            }, displayDuration);
+        }, 200);
+    },
+
+    showNewsModal() {
+        try {
+            const state = game.getState();
+            const news = state.currentNews;
+            const insider = state.dailyInsiderTip;
+            const body = this.elements.newsDetailBody;
+            if (!body) return;
+
+            let html = '';
+
+            const insiderTitle = I18n.t('game.artifactDaily.modal_insider_title');
+            const noInsiderText = I18n.t('game.artifactDaily.modal_no_insider');
+
+            const artifacts = state.artifacts || [];
+            const hasInsiderPhone = artifacts.includes('insider_phone');
+
+            if (hasInsiderPhone) {
+                if (insider) {
+                    html += `
+             <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                 <h3 style="color: #ff7675; margin-bottom: 8px;">${insiderTitle}</h3>
+                 <p style="font-size: 1.1em; font-weight: bold; margin-bottom: 5px;">${insider.text}</p>
+                 <p style="font-size: 0.85em; color: var(--color-text-secondary);">
+                     ${insider.details || ''}
+                 </p>
+             </div>`;
+                } else {
+                    html += `
+             <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                 <h3 style="color: var(--color-text-muted); margin-bottom: 8px;">${insiderTitle}</h3>
+                 <p style="color: var(--color-text-muted); font-style: italic;">${noInsiderText}</p>
+             </div>`;
+                }
+            }
+
+            const newsTitle = I18n.t('game.artifactDaily.modal_news_title');
+            const noNewsText = I18n.t('game.artifactDaily.modal_no_news');
+            const sentimentLabel = I18n.t('game.artifactDaily.modal_news_sentiment');
+
+            if (news) {
+                const stageText = news.stage === 'rumor' ? '(传闻)' : (news.stage === 'confirmed' ? '(实锤)' : '');
+                html += `
+             <div>
+                 <h3 style="color: #a29bfe; margin-bottom: 8px;">${newsTitle} ${stageText}</h3>
+                 <p style="font-weight: bold; margin-bottom: 5px; font-size: 1.1em;">${news.title}</p>
+                 <p style="font-size: 0.9em; line-height: 1.5; color: #ddd;">${news.description || '...'}</p>
+                 <div style="margin-top: 15px; font-size: 0.8em; color: var(--color-text-secondary); background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                     <strong>${sentimentLabel}</strong> ${news.sentiment > 0 ? '+' : ''}${news.sentiment || 0}
+                 </div>
+             </div>`;
+            } else {
+                html += `
+             <div>
+                 <h3 style="color: var(--color-text-muted); margin-bottom: 8px;">${newsTitle}</h3>
+                 <p style="color: var(--color-text-muted); font-style: italic;">${noNewsText}</p>
+             </div>`;
+            }
+
+            body.innerHTML = html;
+            this.elements.newsDetailModal.classList.remove('hidden');
+        } catch (e) { console.error("Modal error", e); }
     }
+
 };
 
 // V2.9 绑定资产交易按钮事件 (初始化时绑定)
 document.addEventListener('DOMContentLoaded', () => {
     // 动态生成的按钮事件由 createAssetCard 中处理
 });
+
+// Expose UI to window for access from other modules (like time.js)
+window.UI = UI;
 
 
 

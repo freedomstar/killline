@@ -5,6 +5,8 @@
 
 export class SeededRNG {
     constructor(seed) {
+        // 保存原始种子字符串，用于存档和 UI 显示
+        this.originalSeed = seed ? seed.toString() : null;
         // 如果没有提供种子，使用当前时间戳
         this.seed = seed ? this.hashString(seed.toString()) : Date.now();
         this.initialSeed = this.seed; // 保存初始种子供重置

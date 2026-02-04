@@ -16,6 +16,7 @@
 @import url('components/progress.css');
 @import url('components/cards.css');
 @import url('components/modals.css');
+@import url('components/news-ticker.css');
 @import url('components/toast.css');
 
 /* Features */
@@ -24,8 +25,10 @@
 @import url('features/finance-panel.css');
 @import url('features/billing.css');
 @import url('features/save-system.css');
+@import url('features/save-system.css');
 @import url('features/investment.css');
 @import url('features/artifact-selection.css');
+@import url('features/message-log.css');
 
 /* Screens */
 @import url('screens/start.css');

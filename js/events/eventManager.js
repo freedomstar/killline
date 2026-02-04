@@ -91,12 +91,12 @@ export const EventManager = {
     calculateSuccessRate(state) {
         const config = GameData.energyConfig;
         let rate = 1.0;
-        if (state.energy < config.lowEnergyThreshold) {
-            rate -= config.lowEnergyPenalty;
-        }
+        // if (state.energy < config.lowEnergyThreshold) {
+        //     rate -= config.lowEnergyPenalty;
+        // }
 
         // V2.XX Artifact: Lucky Ring
-        if (state.artifact === 'lucky_ring') {
+        if (Array.isArray(state.artifacts) && state.artifacts.includes('lucky_ring')) {
             const bonus = GameData.artifactConfig?.lucky_ring?.successRateBonus || 0.25;
             rate += bonus;
         }

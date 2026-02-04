@@ -184,6 +184,7 @@
     /* No wrapping */
     font-size: 0.85rem !important;
     /* Slightly decrease base size from 0.9rem */
+    transform: translateY(7px);
 }
 
 .finance-sub-value {
@@ -192,6 +193,10 @@
     font-weight: 500;
     white-space: nowrap;
     /* No wrapping */
+}
+
+.finance-value-container .finance-sub-value {
+    transform: translateY(8px);
 }
 
 #dashboard-info .status-icon {

@@ -296,3 +296,135 @@
     position: relative;
     /* For z-index to work */
 }
+
+/* Artifact Slots */
+.artifact-slots {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+}
+
+.artifact-slot {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    transition: all 0.2s ease;
+    color: var(--color-text-secondary);
+}
+
+.artifact-slot.filled {
+    color: var(--color-text-primary);
+}
+
+.artifact-slot.triggered {
+    animation: artifact-glow 0.5s ease-out;
+}
+
+@keyframes artifact-glow {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 215, 0, 0);
+        filter: brightness(1);
+    }
+
+    50% {
+        transform: scale(1.6);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        filter: brightness(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 215, 0, 0);
+        filter: brightness(1);
+    }
+}
+
+.shake-continuous {
+    animation: shake-hard 0.3s ease-in-out infinite;
+}
+
+@keyframes shake-hard {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    25% {
+        transform: translate(-2px, 2px) rotate(-1deg);
+    }
+
+    50% {
+        transform: translate(2px, -2px) rotate(1deg);
+    }
+
+    75% {
+        transform: translate(-2px, -2px) rotate(-1deg);
+    }
+
+    100% {
+        transform: translate(2px, 2px) rotate(1deg);
+    }
+}
+
+.shake {
+    animation: shake-once 0.4s cubic-bezier(.36, .07, .19, .97) both !important;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+}
+
+@keyframes shake-once {
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+.flash-glow {
+    animation: flash-glow-anim 0.5s ease-out forwards !important;
+}
+
+.shake.flash-glow {
+    animation: shake-once 0.4s cubic-bezier(.36, .07, .19, .97) both, flash-glow-anim 0.5s ease-out forwards !important;
+}
+
+@keyframes flash-glow-anim {
+    0% {
+        box-shadow: 0 0 0 rgba(255, 215, 0, 0);
+        background-color: rgba(255, 215, 0, 0);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        background-color: rgba(255, 215, 0, 0.1);
+        border-color: rgba(255, 215, 0, 0.8);
+    }
+
+    100% {
+        box-shadow: 0 0 0 rgba(255, 215, 0, 0);
+        background-color: transparent;
+        border-color: rgba(255, 255, 255, 0.05);
+        /* Restore original border color if known, or transparent */
+    }
+}

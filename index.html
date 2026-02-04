@@ -389,11 +389,37 @@
             </div>
         </div>
 
+        <div id="news-detail-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel" style="max-width: 500px;">
+                <button id="close-news-detail" class="close-button">×</button>
+                <h2 class="modal-title">📰 市场情报</h2>
+                <div class="modal-body" id="news-detail-body" style="padding: 10px; line-height: 1.6;">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Message History Modal -->
+        <div id="modal-message-history" class="modal-overlay hidden">
+            <div class="modal-content glass-panel" style="max-width: 600px;">
+                <button id="close-message-history" class="close-button">×</button>
+                <h2 class="modal-title" data-i18n="ui_static.modals.message_history">📜 历史消息</h2>
+                <div class="message-history-list" id="message-history-list">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Message History Button -->
+        <button id="btn-message-history" class="hidden" aria-label="查看历史消息">
+            📜
+        </button>
+
         <div id="dev-editor-modal" class="modal-overlay hidden">
             <div class="modal-content glass-panel">
                 <button id="close-dev-editor" class="close-button">×</button>
                 <h2 class="modal-title" data-i18n="ui_static.modals.dev_editor">🔧 修改属性</h2>
-                <div class="dev-editor-form">
+                <div class="dev-editor-form modal-body">
                     <div class="form-group">
                         <label data-i18n="ui_static.dev_editor.money">存款 ($)</label>
                         <input type="number" id="dev-input-money" step="100">
@@ -429,6 +455,13 @@
                             <option value="fulltime">在职 (Employed)</option>
                             <option value="unemployed">失业 (Unemployed)</option>
                         </select>
+                    </div>
+                    <div class="form-group" style="flex-direction: column; align-items: flex-start;">
+                        <label>神器 (Artifacts)</label>
+                        <div id="dev-artifact-container"
+                            style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                            <!-- JS will flush selects here -->
+                        </div>
                     </div>
                     <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; gap: 10px;">
                         <input type="checkbox" id="dev-input-pip" style="width: auto;">
@@ -490,6 +523,12 @@
                             <span id="period-name">白天</span>
                         </span>
                     </div>
+
+                    <!-- News Ticker (V2.XX) -->
+                    <div id="news-ticker-container" class="clickable hidden">
+                        <div id="news-ticker-content"></div>
+                    </div>
+
                     <div class="period-indicator">
                         <div class="period-dot day active" id="dot-day"></div>
                         <div class="period-dot night" id="dot-night"></div>
@@ -587,12 +626,17 @@
                         </div>
 
                         <!-- Row 2 -->
-                        <div class="finance-item compact-stat clickable" id="artifact-display-container">
+                        <div class="finance-item compact-stat clickable artifact-slot-container"
+                            id="artifact-display-container">
                             <div class="finance-card-header">
-                                <span class="status-icon">🔮</span>
+                                <span class="status-icon">📦</span>
                                 <span class="status-label" data-i18n="ui_static.finance.artifact">神器</span>
                             </div>
-                            <span class="status-value" id="artifact-value" style="font-size: 0.5em;">-</span>
+                            <div class="artifact-slots" id="artifact-slots">
+                                <span class="artifact-slot" data-slot="0">?</span>
+                                <span class="artifact-slot" data-slot="1">?</span>
+                                <span class="artifact-slot" data-slot="2">?</span>
+                            </div>
                         </div>
                         <div class="finance-item compact-stat">
                             <div class="finance-card-header">
@@ -708,9 +752,7 @@
                 </div>
 
                 <!-- Toast Messages -->
-                <div id="message-toast" class="toast hidden">
-                    <span id="toast-text"></span>
-                </div>
+                <div id="toast-container"></div>
             </div>
         </div>
 
@@ -1063,18 +1105,26 @@
 
         <!-- V2.XX Artifact Detail Modal -->
         <div id="modal-artifact-detail" class="modal-overlay hidden" style="z-index: 2000;">
-            <div class="modal-content glass-panel" style="max-width: 320px; text-align: center; padding: 30px;">
+            <div class="modal-content glass-panel artifact-detail-modal">
                 <!-- Close Button -->
                 <button id="close-artifact-detail"
                     style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">&times;</button>
 
-                <div id="artifact-detail-icon" style="font-size: 4rem; margin-bottom: 20px;"></div>
-                <h3 id="artifact-detail-name" style="margin-bottom: 5px; font-size: 1.4rem;"></h3>
-                <div id="artifact-detail-rarity"
-                    style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; width: fit-content; margin: 0 auto 15px auto; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3);">
+                <div class="artifact-detail-header">
+                    <div class="artifact-detail-title" id="artifact-detail-title">📦 我的神器</div>
+                    <div class="artifact-detail-count" id="artifact-detail-count"></div>
                 </div>
-                <p id="artifact-detail-desc"
-                    style="color: var(--color-text-secondary); line-height: 1.6; font-size: 0.95rem;"></p>
+                <div id="artifact-detail-list" class="artifact-detail-list"></div>
+            </div>
+        </div>
+
+        <!-- V2.XX Artifact Selection Modal -->
+        <div id="modal-artifact-selection" class="modal-overlay hidden" style="z-index: 2000;">
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h3 data-i18n="ui.artifacts.selectionTitle">选择神器</h3>
+                </div>
+                <div id="artifact-cards-container"></div>
             </div>
         </div>
 

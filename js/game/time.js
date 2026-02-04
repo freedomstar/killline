@@ -4,6 +4,7 @@
 import { GameData } from '../data/index.js';
 import { EventManager as GameEvents } from '../events/index.js';
 import { I18n } from '../i18n.js';
+import { getArtifact } from '../data/artifacts.js';
 
 /**
  * 时间相关方法的 Mixin
@@ -21,9 +22,10 @@ export const TimeMixin = {
      */
     advancePeriod() {
         const currentPeriod = GameData.periods[this.state.period];
+        const isDayChange = currentPeriod.isLast;
 
         // 如果是当天最后一个时段，新的一天开始
-        if (currentPeriod.isLast) {
+        if (isDayChange) {
             this.advanceDay();
         }
 
@@ -77,13 +79,18 @@ export const TimeMixin = {
         // V2.4 便当过午不食机制
         // 如果是从白天结束（进入夜晚），且还没有吃便当，便当过期
         if (this.state.period === 'day') {
-            console.log('[Game] 便当未食用，已过期');
             this.state.hasPreparedMeal = false;
         }
         // 重置咖啡状态
         this.state.coffeeToday = false;
         // 切换到下一个时段
         this.state.period = currentPeriod.next;
+
+        // V2.12 自动存档 (在进入新的一天，且时段切换完成后保存)
+        if (isDayChange && this.isRunning !== false) {
+            this.currentEvent = null; // 确保清除上一天的事件，防止读档时回复旧事件
+            this.saveGame(0);
+        }
 
         // V2.XX 傍晚预兆提示 (进入夜晚时)
         if (this.state.period === 'night') {
@@ -230,11 +237,46 @@ export const TimeMixin = {
         this.state.dailyFinancialReport = []; // 重置每日财务报告
 
         // V2.41 Artifact Daily Effects
-        const artifactEffect = this.triggerArtifact('onDaily', this.state);
-        if (artifactEffect && artifactEffect.log) {
-            this.state.dailyFinancialReport.push(artifactEffect.log);
-            console.log(`[Game] Artifact Daily: ${artifactEffect.log}`);
-        }
+        const artifactEffects = this.triggerArtifacts('onDaily', this.state) || [];
+        artifactEffects.forEach((artifactEffect) => {
+            // 主触发器立即显示
+            if (artifactEffect && artifactEffect.id && window.UI && window.UI.triggerArtifactGlow) {
+                window.UI.triggerArtifactGlow(artifactEffect.id);
+            }
+
+            // V2.XX: 同时记录到消息历史
+            if (artifactEffect && artifactEffect.log) {
+                const art = getArtifact(artifactEffect.id);
+                const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '神器');
+                this.addLog(artifactEffect.log, 'positive', artName);
+            }
+
+            // V2.XX: Trigger shake for the source artifact effect itself
+            if (artifactEffect && artifactEffect.delta && window.UI && window.UI.triggerAttributeShake) {
+                window.UI.triggerAttributeShake(artifactEffect.delta);
+            }
+
+            // V2.XX: 使用分层结构逐层显示连锁触发效果
+            if (artifactEffect && artifactEffect.layers && Array.isArray(artifactEffect.layers)) {
+                if (window.UI && window.UI.showChainedArtifactEffects) {
+                    window.UI.showChainedArtifactEffects(artifactEffect.layers, 0);
+                }
+            }
+            // 兼容旧的 secondaryTriggers 格式
+            else if (artifactEffect && artifactEffect.secondaryTriggers && Array.isArray(artifactEffect.secondaryTriggers)) {
+                artifactEffect.secondaryTriggers.forEach((subId, index) => {
+                    if (window.UI && window.UI.triggerArtifactGlow) {
+                        const delay = (index + 1) * 200;
+                        setTimeout(() => {
+                            window.UI.triggerArtifactGlow(subId);
+                        }, delay);
+                    }
+                });
+            }
+
+
+        });
+
 
         // V2.XX 投资情绪系统：计算市场更新前后的净值变化
         const getPortfolioValue = () => {
@@ -251,6 +293,73 @@ export const TimeMixin = {
 
         // V2.8 更新市场价格
         this.updateMarket();
+
+        // V2.XX Insider Phone
+        if (this.hasArtifact && this.hasArtifact('insider_phone')) {
+            const insiderConf = GameData.artifactConfig.insider_phone || {};
+            const fineChance = insiderConf.fineChance || 0.1;
+            const tipChance = insiderConf.tipChance || 0.5;
+
+            // Reset tip for the day
+            this.state.dailyInsiderTip = null;
+
+            if (this.rng.random() < fineChance) {
+                const fineRate = insiderConf.fineRate || 0.3;
+                const fine = Math.max(0, Math.round((this.state.money || 0) * fineRate));
+                this.state.money -= fine;
+
+                if (window.UI) window.UI.triggerArtifactGlow('insider_phone');
+
+                const fineMsg = I18n.t('game.artifactDaily.insider_phone_fine', fine);
+                if (this.state.dailyFinancialReport) {
+                    this.state.dailyFinancialReport.push(fineMsg);
+                }
+
+                // V2.XX: 同时记录到消息历史
+                const art = getArtifact('insider_phone');
+                const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '内幕电话');
+                this.addLog(fineMsg, 'negative', artName);
+            } else if (this.rng.random() < tipChance) {
+                const prices = this.state.marketPrices || {};
+                let bestId = null;
+                let bestChange = -Infinity;
+                Object.keys(prices).forEach(id => {
+                    const change = prices[id]?.change || 0;
+                    if (change > bestChange) {
+                        bestChange = change;
+                        bestId = id;
+                    }
+                });
+
+                if (bestId) {
+                    const socialGain = insiderConf.socialGain || 5;
+                    this.state.socialValue = Math.min(this.state.maxSocialValue || 100, (this.state.socialValue || 0) + socialGain);
+
+                    if (window.UI) window.UI.triggerArtifactGlow('insider_phone');
+
+                    const item = GameData.items[bestId];
+                    const assetName = item ? (typeof item.name === 'function' ? item.name() : item.name) : bestId;
+                    const tipMsg = I18n.t('game.artifactDaily.insider_phone_tip', assetName, socialGain);
+
+                    if (this.state.dailyFinancialReport) {
+                        this.state.dailyFinancialReport.push(tipMsg);
+                    }
+
+                    // V2.XX: 同时记录到消息历史
+                    const art = getArtifact('insider_phone');
+                    const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '内幕电话');
+                    this.addLog(tipMsg, 'positive', artName);
+
+                    // Store for UI Ticker
+                    this.state.dailyInsiderTip = {
+                        type: 'insider',
+                        text: tipMsg,
+                        assetId: bestId,
+                        details: I18n.t('game.artifactDaily.insider_phone_detail', assetName)
+                    };
+                }
+            }
+        }
 
         const newPortfolioValue = getPortfolioValue();
 
@@ -278,7 +387,8 @@ export const TimeMixin = {
         }
 
         // V2.16 精力耗尽昏睡惩罚
-        if (this.state.energy <= 0) {
+        // V2.XX Fix: Use faintedToday flag instead of current energy, as UI might have already restored it
+        if (this.state.energy <= 0 || this.state.faintedToday) {
             const faintingConfig = GameData.healthConstants.fainting;
 
             // 精神上限惩罚
@@ -293,6 +403,9 @@ export const TimeMixin = {
             const msg = I18n.t('game.finance.fainting', faintingConfig.maxMentalPenalty, faintingConfig.maxHealthPenalty);
             this.state.dailyFinancialReport.push(msg);
             console.log(`[Game] ${msg}`);
+
+            // Reset flag
+            this.state.faintedToday = false;
         }
 
         // V2.1 财务系统倒计时
@@ -457,6 +570,26 @@ export const TimeMixin = {
         // V2.3 每日水电费累计
         const dailyUtility = this.state.dailyUtilityBase || GameData.initialState.dailyUtilityBase;
         this.state.utilityBill += dailyUtility;
+
+        // V2.XX Piggy Bank
+        if (this.hasArtifact && this.hasArtifact('piggy_bank') && !this.state.spentMoneyToday) {
+            const bonus = GameData.artifactConfig.piggy_bank?.dailyBonus || 50;
+            this.state.money += bonus;
+
+            if (window.UI && window.UI.triggerArtifactGlow) {
+                window.UI.triggerArtifactGlow('piggy_bank');
+            }
+            if (window.UI && window.UI.triggerAttributeShake) {
+                window.UI.triggerAttributeShake({ money: bonus });
+            }
+
+            // V2.XX: 同时记录到消息历史
+            const msg = I18n.t('game.artifactDaily.piggy_bank', bonus);
+            const art = getArtifact('piggy_bank');
+            const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '存钱罐');
+            this.addLog(msg, 'positive', artName);
+        }
+        this.state.spentMoneyToday = false;
 
 
         // 注释：日常消费现在完全由事件驱动（吃饭、加油等选择）

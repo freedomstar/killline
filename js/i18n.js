@@ -228,7 +228,7 @@ export const I18n = {
 
                 // 市场新闻
                 marketNews: {
-                    tech_earnings_beat: { title: '📈 科技巨头财报超预期', description: '苹果、微软季度营收创新高' },
+                    tech_earnings_beat: { title: '📈 科技巨头财报超预期', description: '梨子、巨硬季度营收创新高' },
                     tech_layoffs: { title: '📉 硅谷爆发大规模裁员潮', description: '多家科技公司宣布裁员万人' },
                     ai_breakthrough: { title: '🤖 AI技术重大突破', description: '新一代AI模型性能飙升' },
                     oil_surge: { title: '⛽ OPEC宣布减产', description: '国际油价应声上涨' },
@@ -264,7 +264,7 @@ export const I18n = {
                 // 午餐选项
                 lunchOptions: {
                     bento: { name: '🍱 吃便当', hint: (cfg) => `健康+${cfg.healthEffect}，消耗1库存` },
-                    fastfood: { name: '🍔 买快餐', hint: (cfg) => `健康${cfg.healthEffect}，-$${cfg.cost}` },
+                    fastfood: { name: '🍔 买快餐', hint: (cfg) => `健康${cfg.healthEffect}，精神+${cfg.mentalEffect}，-$${cfg.cost}` },
                     skip: { name: '🤐 不吃午饭', hint: (cfg) => `健康${cfg.healthEffect}，省钱` },
                     business: { name: '🍽️ 商务宴请', hint: (cfg) => `-$${cfg.cost}，精神+${cfg.mentalEffect}，社交+${cfg.socialEffect}` },
                     salad: { name: '🥗 轻食沙拉', hint: (cfg) => `-$${cfg.cost}，健康+${cfg.healthEffect}，精力+${cfg.energyEffect}` },
@@ -466,7 +466,7 @@ export const I18n = {
                     },
                     mom_credit_card: {
                         name: '神奇信用卡',
-                        description: '当你的存款为负时，所有消费减少 {0}%。但你被禁止购买任何奢侈品 (>{1})。',
+                        description: '存款低于$500时生效。所有消费减少 {0}%。',
                         log: (subsidy) => `神奇信用卡。`
                     },
                     gopro_camera: {
@@ -477,10 +477,79 @@ export const I18n = {
                         name: '幸运戒指',
                         description: '任何概率事件的成功率提升 {0}%。精力消耗不变。',
                     },
-                    coffee_iv_drip: {
-                        name: '咖啡因剂',
-                        description: '每天早上精力恢复至 {0}。代价是每天健康 -{1}。',
-                        log: '咖啡滴注生效。精力回满，健康 -2。'
+                    coffee_drip: {
+                        name: '咖啡点滴',
+                        description: '精力锁定 ≥ {0}，永远不会归零透支。',
+                    },
+                    side_job_bot: {
+                        name: '副业机器人',
+                        description: '每次获得金钱时额外 +$${0}。',
+                    },
+                    gig_cap: {
+                        name: '零工只因',
+                        description: '所有消耗精力的行动，基础收益 +$${0}。',
+                    },
+                    piggy_bank: {
+                        name: '存钱罐',
+                        description: '当天不花钱 → 金钱收益 +$${0}。',
+                    },
+                    bull_plushie: {
+                        name: '牛市公仔',
+                        description: '当前每拥有 $100，金钱获取 +{0}%。',
+                    },
+                    grinder_tie: {
+                        name: '奋斗逼领带',
+                        description: '工作时精神 +{0}，健康损失 x{1}。',
+                    },
+                    blood_contract: {
+                        name: '卖血契约',
+                        description: '健康低于 50% 时，所有收益 x2。',
+                    },
+                    jammed_copier: {
+                        name: '卡纸复印机',
+                        description: '若今天工作与昨天相同，自动增加相同进度。',
+                    },
+                    intern_badge: {
+                        name: '实习生工牌',
+                        description: '抵消一次裁员，使用后消失（社交 -{0}）。',
+                    },
+                    leverage_jack: {
+                        name: '杠杆千斤顶',
+                        description: '投资收益 x{0}，亏损也 x{0}。',
+                    },
+                    insider_phone: {
+                        name: '内幕电话',
+                        description: '{0}% 几率预知涨幅最大资产，{1}% 几率被罚款。',
+                    },
+                    golden_parachute: {
+                        name: '黄金降落伞',
+                        description: '资产跌幅超过 {0}% 时自动止损。',
+                    },
+                    actuary_glasses: {
+                        name: '精算师眼镜',
+                        description: '保险理赔不再被拒，网外就医视为网内，修车费用减半。',
+                    },
+                    wellness_tea: {
+                        name: '养生茶具',
+                        description: '每日恢复 {0} 点健康，{1} 点精神。',
+                        log: (health, mental) => `🍵 养生茶具：健康+${health}，精神+${mental}。`
+                    },
+                    neural_chip: {
+                        name: '神经植入体',
+                        description: '每日消耗 {0} 点健康，恢复 {1} 点精力，工作进度固定 +{2}%。',
+                        log: (health, energy) => `💾 神经植入体：健康-${health}，精力+${energy}。`
+                    },
+                    quantum_meditation_mat: {
+                        name: '量子冥想垫',
+                        description: '精神不仅仅是虚幻的。每恢复 1 点精神，同时恢复 {0} 点健康。',
+                    },
+                    streamer_mic: {
+                        name: '主播麦克风',
+                        description: '把你的情绪价值变现。每恢复 1 点精神，获得 ${0}。',
+                    },
+                    super_vitamin: {
+                        name: '超级维他命',
+                        description: '健康的身体带来健康的心灵。每恢复 1 点健康，同时恢复 {0} 点精神。',
                     }
                 },
             },
@@ -518,6 +587,37 @@ export const I18n = {
                     taskOverdue: (days, risk) => `[Game] 任务超时 ${days} 天, PIP风险: ${risk * 100}%`,
                     lostEmployerInsurance: '[Game] 失去工作，雇主保险失效',
                     gotEmployerInsurance: '[Game] 获得全职工作，自动加入雇主基础医保',
+                },
+
+                artifactTriggers: {
+                    side_job_bot: (bonus) => `🤖 副业机器人：+$${bonus}`,
+                    gig_cap: (bonus) => `🧢 零工只因：+$${bonus}`,
+                    gopro_camera: (reward) => `📹 运动相机：受伤赚钱 +$${reward}`,
+                    gopro_camera_medical: '📹 运动相机：医疗费用增加',
+                    bull_plushie: (percent) => `🐂 牛市公仔：收益 +${percent}%`,
+                    blood_contract: '📝 卖血契约：收益翻倍',
+                    grinder_tie: (mental) => `👔 奋斗逼领带：精神 +${mental}`,
+                    jammed_copier: (gain) => `🖨️ 卡纸复印机：额外进度 +${gain}%`,
+                    neural_chip: (gain) => `💾 神经植入体：额外进度 +${gain}%`,
+                    mom_credit_card: (info) => `💳 神奇信用卡：省下了 $${info}`,
+                    quantum_meditation_mat: (amount) => `🧘 量子冥想垫：健康 +${amount}`,
+                    streamer_mic: (amount) => `🎤 主播麦克风：收益 +$${amount}`,
+                    super_vitamin: (amount) => `💊 超级维他命：精神 +${amount}`,
+                },
+
+                artifactDaily: {
+                    piggy_bank: (bonus) => `🪙 存钱罐：今日零花费奖励 +$${bonus}`,
+                    insider_phone_tip: (assetName, socialGain) => `📱 内幕电话：看涨 ${assetName}（社交 +${socialGain}）`,
+                    insider_phone_fine: (fine) => `📱 内幕电话：被罚款 -$${fine}`,
+                    insider_phone_detail: (assetName) => `内幕消息确认：${assetName} 今日表现强劲。`,
+                    ticker_insider_title: '内幕电话',
+                    ticker_news_title: '市场新闻',
+                    modal_insider_title: '📱 内幕电话 (Insider Phone)',
+                    modal_news_title: '📰 市场新闻 (News)',
+                    modal_no_insider: '今日暂无内幕消息。',
+                    modal_no_news: '今日市场平稳，无重大新闻。',
+                    modal_news_sentiment: '市场情绪影响:',
+                    golden_parachute: (assetName, price, proceeds) => `🪂 黄金降落伞：${assetName} 跌破警戒线，止损卖出 @$${price}，回收 $${proceeds}`,
                 },
 
                 // 财务报告
@@ -617,7 +717,6 @@ export const I18n = {
                 },
             },
 
-            // ========== 静态 UI 文本 ==========
             ui_static: {
                 help: {
                     title: '📖 生存指南',
@@ -694,6 +793,7 @@ export const I18n = {
                     cancel: '取消',
                     confirm: '确定',
                     dev_editor: '🔧 修改属性',
+                    message_history: '📜 历史消息',
                 },
                 dev_editor: {
                     money: '存款 ($)',
@@ -797,6 +897,11 @@ export const I18n = {
 
             // ========== ui.js 文本 ==========
             ui: {
+                messageHistory: {
+                    title: '历史消息',
+                    empty: '暂无消息记录 (仅记录最近 2 天)',
+                    dailySummary: '每日总结'
+                },
                 // Toast 消息
                 toast: {
                     seedCopied: '世界线种子已复制',
@@ -821,6 +926,12 @@ export const I18n = {
                     socialLow: '⚠️ 社交值过低！如果不去社交，精神将会崩溃。',
                 },
 
+                artifacts: {
+                    title: '📦 我的神器',
+                    emptySlot: '[ 空插槽 ]',
+                    selectionTitle: '🃏 选择神器',
+                },
+
                 confirm: {
                     returnToTitle: '确定返回标题？未保存的进度将丢失。',
                     returnToTitleHeader: '返回标题',
@@ -838,7 +949,9 @@ export const I18n = {
                     loadGame: '📂 选择存档',
                     buyAsset: '买入资产',
                     sellAsset: '卖出资产',
+                    confirm: '确定',
                     dev_editor: '🔧 修改属性',
+                    message_history: '📜 历史消息',
                 },
 
                 dev_editor: {
@@ -875,6 +988,7 @@ export const I18n = {
                 // 存档页面
                 save: {
                     slot: (id) => `槽位 ${id}`,
+                    autoSlot: '自动存档',
                     emptySlot: '空存档',
                     day: (d) => `第${d}天`,
                     continueBtn: '继续',
@@ -953,10 +1067,9 @@ export const I18n = {
 
                 // ====== 按事件 ID 组织的文本 ======
 
-                // 住院系统
                 hospital_stay: {
                     title: '🏥 住院治疗',
-                    description: (daysLeft, cost) => `你正在住院治疗中... (剩余 ${daysLeft} 天)\n每日病房费: $${cost}`,
+                    description: (health, target, daysLeft, cost) => `你正在住院治疗中...\n当前健康: ${health} / 目标: ${target} (预计约 ${daysLeft} 天)\n每日病房费: $${cost}`,
                     descRestDay: '\n📅 今天是休息日，安心养病。',
                     descPtoAvailable: (days) => `\n💼 你有 ${days} 天带薪病假可用。`,
                     descPtoWarning: '\n⚠️ 警告：病假已耗尽！继续住院将扣除工资并增加解雇风险。',
@@ -965,7 +1078,7 @@ export const I18n = {
                         restDay: { text: '🛌 遵医嘱治疗 (休息日)', hint: '仅支付住院费，无需请假' },
                         unpaidLeave: { text: '🛌 遵医嘱治疗 (无薪假)', hint: (percent) => `扣除${percent}%月薪，增加解雇风险` },
                         selfPay: { text: '🛌 遵医嘱治疗 (自费)', hint: '消耗存款恢复' },
-                        ama: { text: '🏃 强行出院 (AMA)', hint: (health, mental) => `结束住院，恢复至${health}健康，精神-${mental}` },
+                        ama: { text: '🏃 强行出院 (AMA)', hint: (health, mental) => `需健康>=${health}，精神-${mental}` },
                     },
                     messages: {
                         paidLeave: '安心养病一天。虽然在医院，但至少工资照发。',
@@ -1013,7 +1126,7 @@ export const I18n = {
                     title: '求职日常',
                     description: '没有工作的早晨，你打开招聘网站，看着满屏的"已读不回"...',
                     choices: {
-                        apply: { text: '海投简历', hint: (e, mental) => `-${e} 精力，失败精神-${mental}` },
+                        apply: { text: '海投简历', hint: (e, rate, mental) => `-${e} 精力，${rate}%获得面试（受工作能力影响），失败精神-${mental}` },
                         relax: { text: '刷视频放松', hint: (m) => `+${m} 精神` },
                         learn: { text: '学习新技能', hint: (e, mental, workGain) => `-${e} 精力，-${mental}精神，工作能力+${workGain}` },
                         medicaid: { text: '申请白卡福利', hint: (limit, energy) => `需总资产<${limit}且失业，-${energy}精力` },
@@ -1134,6 +1247,19 @@ export const I18n = {
                         accept: (amount) => `被裁了...至少拿到了$${amount}的赔偿金`,
                         fightSuccess: (amount) => `据理力争后，拿到了$${amount}的赔偿！`,
                         fightFail: (amount) => `争取失败，只拿到$${amount}赔偿，心力交瘁`,
+                    },
+                },
+
+                intern_badge_decision: {
+                    title: '📛 实习生背锅',
+                    description: 'HR通知你即将被裁。你想起了实习生工牌，也许能转移这次责任。',
+                    choices: {
+                        use: { text: '让实习生背锅', hint: (social) => `社交-${social}，保住工作` },
+                        accept: { text: '接受裁员', hint: '你不想害人' },
+                    },
+                    messages: {
+                        use: '实习生替你背锅，你暂时保住了工作。',
+                        accept: '你选择承担后果，离开了公司。',
                     },
                 },
 
@@ -1426,6 +1552,100 @@ export const I18n = {
                         }
                     }
                 },
+
+                // 卖神器 - 危机
+                sell_artifact_crisis: {
+                    title: '变卖传家宝',
+                    description: '负债累累，债主已经堵到了门口。你手里摩挲着那件所谓的神器，也许它是你翻身的资本，但现在，它或许只能换来几天的安宁。',
+                    choices: {
+                        sell: {
+                            text: '忍痛割爱',
+                            hint: (gain, mentalLoss) => `出售神器，获得$${gain}，精神-${mentalLoss}`
+                        },
+                        keep: {
+                            text: '绝不放弃',
+                            hint: (mentalGain) => `保留神器，精神+${mentalGain}，但债务危机依旧`
+                        }
+                    },
+                    messages: {
+                        sell: (gain) => `你把神器卖给了当铺，换来了$${gain}。心里空荡荡的。`,
+                        keep: '你决定无论如何也要留住它。这是你最后的希望。'
+                    }
+                },
+
+                // 买神器 - 黑市
+                black_market_artifact: {
+                    title: '黑市交易',
+                    description: '你在暗网的一个隐秘角落发现了一个卖家。他声称手里有些"特殊"的货色。既然你现在手里有点闲钱，要不要赌一把？',
+                    choices: {
+                        buy: {
+                            text: '购买盲盒',
+                            hint: (cost) => `支付$${cost}，随机获得一个神器`
+                        },
+                        leave: {
+                            text: '离开',
+                            hint: '不感兴趣'
+                        }
+                    },
+                    messages: {
+                        buy: (name) => `交易成功！你获得了：${name}。`,
+                        leave: '你关闭了网页，钱还是留着应急吧。'
+                    }
+                },
+
+                // 社交事件
+                team_lunch: {
+                    title: '团队聚餐',
+                    description: '同事们提议今天中午一起去附近的新餐厅聚餐。这是个拉近关系的好机会。',
+                    choices: {
+                        join: { text: '参加聚餐', hint: (cost, social, eff) => `-$${cost}，社交+${social}，工作能力+${eff}` },
+                        brown_bag: { text: '自己带饭', hint: (ing, energy, social) => `消耗${ing}食材，精力+${energy}，社交-${social}` }
+                    },
+                    messages: {
+                        join: '大家聊得很开心，你也听到了不少公司八卦。',
+                        brown_bag: '你一个人在工位上吃饭，虽然省钱，但显得有些不合群。'
+                    }
+                },
+                after_work_drinks: {
+                    title: '下班小酌',
+                    description: '下班后，几个核心团队成员和老板准备去酒吧喝一杯。',
+                    choices: {
+                        network: { text: '扩展人脉', hint: (cost, energy) => `-$${cost}，精力-${energy}。成功率受社交和工作能力影响。` },
+                        go_home: { text: '早点回家', hint: (energy, social) => `精力+${energy}，社交-${social}` }
+                    },
+                    messages: {
+                        success: (eff, mental, social) => `你在酒局上表现得体，老板对你的见解印象深刻！(工作能力+${eff}, 精神+${mental}, 社交+${social})`,
+                        fail: (mental, social) => `你喝多了说了些不该说的话，气氛一度很尴尬。(精神-${mental}, 社交-${social})`,
+                        go_home: '你婉拒了邀请。虽然休息不错，但你感到自己正在边缘化。'
+                    }
+                },
+                industry_mixer: {
+                    title: '行业交流会',
+                    description: '你注意到本市有一个行业专业人士的交流酒会。很多公司的大佬都会去。',
+                    choices: {
+                        network: { text: '展示专业能力', hint: (cost, energy) => `-$${cost}，精力-${energy}。成功率受工作能力影响。` },
+                        skip: { text: '算了', hint: '省钱要紧' }
+                    },
+                    messages: {
+                        success: (social, mental) => `你成功与几位业内资深人士建立了联系，收获颇丰。(社交+${social}, 精神+${mental})`,
+                        fail: (mental) => `你在角落里站了一晚，没人对你的经历感兴趣。(精神-${mental})`,
+                        skip: '你决定不去凑热闹了。'
+                    }
+                },
+                alumni_reunion: {
+                    title: '校友重聚',
+                    description: '大学校友会发来邀请函，举办年度重聚晚宴。',
+                    choices: {
+                        attend: { text: '盛装出席', hint: (cost) => `-$${cost}。成功率受社交值影响。` },
+                        ignore: { text: '假装没看见', hint: (mental) => `精神${mental}` }
+                    },
+                    messages: {
+                        success: (mental, social) => `你是全场的焦点！大家都很羡慕你的现状。(精神+${mental}, 社交+${social})`,
+                        fail: (mental, social) => `别人都在谈论千万年薪和上市公司，你感到格格不入。(精神-${mental}, 社交-${social})`,
+                        ignore: '你把邀请函扔进了垃圾桶。眼不见心不烦。'
+                    }
+                },
+
 
                 // 邻居噪音
                 neighbor_noise: {
@@ -1883,30 +2103,30 @@ export const I18n = {
                 hospital_stay_choices: {
                     paid_leave: {
                         text: '🛌 遵医嘱治疗 (带薪假)',
-                        hint: (health, energy) => `PTO-1，健康+${health}，精力+${energy}`,
-                        message: '你安心休养了一天，工资照常发放，也不用担心工作。'
+                        hint: (min, max, energy) => `PTO-1，健康+${min}~${max}，精力+${energy}`,
+                        message: (recovered) => `你安心休养了一天，健康+${recovered}。工资照常发放，也不用担心工作。`
                     },
                     rest_day: {
                         text: '🛌 遵医嘱治疗 (休息日)',
-                        hint: (health, energy) => `仅支付住院费，健康+${health}，精力+${energy}`,
-                        message: '在休息日安心治疗，无需请假。'
+                        hint: (min, max, energy) => `仅支付住院费，健康+${min}~${max}，精力+${energy}`,
+                        message: (recovered) => `在休息日安心治疗，健康+${recovered}。`
                     },
                     unpaid_leave: {
                         text: '🛌 遵医嘱治疗 (无薪假)',
-                        hint: (percent, health) => `健康+${health}，扣除${percent}%月薪，增加解雇风险`,
-                        message: (chance) => `无薪修养中... 解雇风险 ${chance}%`,
+                        hint: (percent, min, max) => `健康+${min}~${max}，扣除${percent}%月薪，增加解雇风险`,
+                        message: (recovered, chance) => `无薪修养中，健康+${recovered}。解雇风险 ${chance}%`,
                         report: (pay) => `🚫 无薪病假: 将扣除本月工资约 $${pay}`,
                         fired: '❌ 坏消息！你收到公司的解雇邮件。因长期缺勤被开除！',
                         fired_no_ins: '❌ 坏消息！你收到公司的解雇邮件。因长期缺勤被开除！\n⚠️ 雇主医保将在次日失效！'
                     },
                     out_of_pocket: {
                         text: '🛌 遵医嘱治疗 (自费)',
-                        hint: (health) => `消耗存款恢复，健康+${health}`,
-                        message: '在医院继续接受治疗...'
+                        hint: (min, max) => `消耗存款恢复，健康+${min}~${max}`,
+                        message: (recovered) => `在医院继续接受治疗，健康+${recovered}。`
                     },
                     ama: {
                         text: '🏃 强行出院 (AMA)',
-                        hint: (health, mental) => `健康>=${health}，精神-${mental}`,
+                        hint: (health, mental) => `需健康>=${health}，精神-${mental}`,
                         message: '你签署了《违背医嘱出院书》强行离开。身体虽然还虚弱，但你自由了。\n⚠️ 注意：可能会复发！'
                     }
                 },

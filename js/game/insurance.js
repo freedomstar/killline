@@ -144,6 +144,11 @@ export const InsuranceMixin = {
     rollMedicalRisk(baseCost, isEmergency = false) {
         const riskFactor = { isOutOfNetwork: false, isDenied: false, note: '' };
 
+        // Actuary Glasses: Immunity to risks
+        if (this.state.artifacts && this.state.artifacts.includes('actuary_glasses')) {
+            return riskFactor;
+        }
+
         // 判定网外 (Out-of-Network) - 仅紧急情况 20% 几率
         if (isEmergency && this.rng.random() < GameData.medicalRiskConfig.outOfNetworkChance) {
             riskFactor.isOutOfNetwork = true;

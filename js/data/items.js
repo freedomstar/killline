@@ -230,6 +230,7 @@ export const lunchOptions = {
         hint: () => I18n.t('data.lunch.fastfood.hint'),
         cost: 15,
         healthEffect: -2,
+        mentalEffect: 10,
         condition: (state) => true
     },
     skip: {
@@ -534,11 +535,11 @@ export const healthConstants = {
     },
     // 住院系统参数
     hospitalization: {
-        emergencyDaysMin: 3,        // 紧急住院最少天数
-        emergencyDaysMax: 7,        // 紧急住院最多天数
         dailyBaseCost: 2000,        // 每日住院基础费用
         ambulanceCost: 2500,        // 救护车费用
-        healthRecoveryPerDay: 15,   // 住院每日健康恢复
+        dischargeHealthMin: 70,     // 出院所需最低健康值
+        healthRecoveryMin: 10,      // 住院每日健康恢复最小值
+        healthRecoveryMax: 20,      // 住院每日健康恢复最大值
         energyRecoveryPerDay: 20,   // 住院每日精力恢复 (带薪假)
         energyRecoveryRestDay: 10,  // 休息日住院精力恢复
         amaHealthMin: 50,           // 强行出院最低健康

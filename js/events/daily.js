@@ -161,17 +161,29 @@ export const dailyEvents = [
                 text: I18n.t('events.day_jobless.choices.apply.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.routine_events.day_jobless.apply;
-                    return I18n.t('events.day_jobless.choices.apply.hint', conf.energyCost, conf.mentalLossFail);
+                    const interviewConf = GameData.eventConfigs.afternoon_interview.tryHard;
+                    // 工作能力影响简历通过率
+                    const efficiency = state.workEfficiency || 100;
+                    const efficiencyBonus = (efficiency - 100) * interviewConf.efficiencyBonusPerPoint;
+                    const baseRate = conf.successMod + efficiencyBonus;
+                    const finalRate = Math.max(0.1, Math.min(0.6, baseRate));
+                    return I18n.t('events.day_jobless.choices.apply.hint', conf.energyCost, Math.round(finalRate * 100), conf.mentalLossFail);
                 },
                 hintType: 'energy',
                 energyCost: GameData.eventConfigs.routine_events.day_jobless.apply.energyCost,
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.routine_events.day_jobless.apply;
+                    const interviewConf = GameData.eventConfigs.afternoon_interview.tryHard;
                     state.energy = Math.max(0, state.energy - conf.energyCost);
 
                     const successRate = context.successRate || 0.5;
+                    // 工作能力影响简历通过率
+                    const efficiency = state.workEfficiency || 100;
+                    const efficiencyBonus = (efficiency - 100) * interviewConf.efficiencyBonusPerPoint;
+                    const baseRate = conf.successMod + efficiencyBonus;
+                    const finalRate = Math.max(0.1, Math.min(0.6, baseRate));
 
-                    if (context.rng.random() < successRate * conf.successMod) {
+                    if (context.rng.random() < successRate * finalRate) {
                         return {
                             message: I18n.t('events.day_jobless.messages.applySuccess'),
                             type: 'positive',
@@ -260,9 +272,9 @@ export const dailyEvents = [
 
                     const energyConf = GameData.energyConfig;
                     let energyRate = 1.0;
-                    if (state.energy < energyConf.lowEnergyThreshold) {
-                        energyRate -= energyConf.lowEnergyPenalty;
-                    }
+                    // if (state.energy < energyConf.lowEnergyThreshold) {
+                    //     energyRate -= energyConf.lowEnergyPenalty;
+                    // }
                     energyRate = Math.max(0.1, energyRate);
 
                     const efficiency = state.workEfficiency || 100;
@@ -333,9 +345,9 @@ export const dailyEvents = [
 
                     const energyConf = GameData.energyConfig;
                     let energyRate = 1.0;
-                    if (state.energy < energyConf.lowEnergyThreshold) {
-                        energyRate -= energyConf.lowEnergyPenalty;
-                    }
+                    // if (state.energy < energyConf.lowEnergyThreshold) {
+                    //     energyRate -= energyConf.lowEnergyPenalty;
+                    // }
                     energyRate = Math.max(0.1, energyRate);
 
                     const efficiency = state.workEfficiency || 100;
@@ -692,6 +704,12 @@ export function getAvailableLunchOptions(state, context) {
     for (const [key, config] of Object.entries(base)) {
         if (key === 'hospital_cafeteria') continue;
         const opt = { ...config, key: key };
+
+        // V2.XX Fix: Display full cost for fastfood including tip to match settlement logic
+        if (key === 'fastfood' && GameData.usaFeatures) {
+            opt.cost += Math.round(opt.cost * GameData.usaFeatures.tipRate);
+        }
+
         opt.name = I18n.t(`data.lunchOptions.${key}.name`);
         if (!opt.disabled) {
             opt.hint = I18n.t(`data.lunchOptions.${key}.hint`, opt);

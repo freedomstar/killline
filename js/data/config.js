@@ -33,13 +33,17 @@ export const initialState = {
     day: 1,                 // 当前天数
     period: 'day',          // 时段: day, night, deep_night
 
+    // 多神器系统
+    artifacts: [],
+
     // 随机事件限制
     randomEventsToday: [],
     randomEventsTodayCount: 0,
     randomEventLastDay: {},
     dailyFinancialReport: [],
 
-    // V2.17 极速财务系统 (10天/月，4天/周)
+    // V2.XX 消息历史记录
+    messageLog: [],
     daysUntilPayday: 1,    // 距离发薪日
     daysUntilRent: timeCycle.monthDays,      // 距离交租日 (10天周期)
     daysUntilUtility: timeCycle.monthDays,   // 距离水电费缴费日 (10天周期)
@@ -94,6 +98,10 @@ export const initialState = {
     selectedIncident: null,    // V2.10 选定的突发事件处理方案 (null=不选)
     selectedCommute: null,     // V2.21 选定的通勤方式: car, bus, walk (null=必须选)
     sideActionsLocked: false,   // V2.55 侧边行动锁定 (防止同一时段内重复显示)
+    spentMoneyToday: false,     // 当天是否发生花钱行为
+    lastWorkChoiceId: null,     // 上次工作选择
+    lastWorkProgressGain: 0,    // 上次工作进度增量
+    pendingInternBadge: null,   // 实习生工牌待处理
 
     // V2.6 保险系统状态
     insurance: {
@@ -173,6 +181,8 @@ export const initialState = {
         maxWealth: 0, // 历史最高资产
     }
 };
+
+export const artifactMaxSlots = 3;
 
 export const energyConfig = {
     lowEnergyThreshold: 30,     // 低精力阈值

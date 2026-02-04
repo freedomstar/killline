@@ -177,6 +177,10 @@ export const MarketMixin = {
         }
 
         // 3. 更新每个资产价格
+        const leverageMult = this.hasArtifact && this.hasArtifact('leverage_jack')
+            ? (GameData.artifactConfig.leverage_jack?.multiplier || 3)
+            : 1;
+
         for (const assetId in this.state.marketPrices) {
             const assetData = this.state.marketPrices[assetId];
             const config = this.getAssetConfig(assetId);
@@ -203,6 +207,11 @@ export const MarketMixin = {
                 }
             }
 
+            // 杠杆神器：放大涨跌
+            if (leverageMult !== 1) {
+                fluctuation *= leverageMult;
+            }
+
             // 计算新价格
             const oldPrice = assetData.price;
             assetData.price = Math.max(0.01, assetData.price * (1 + fluctuation));
@@ -218,6 +227,32 @@ export const MarketMixin = {
 
             // 计算涨跌幅
             assetData.change = Math.round(((assetData.price - oldPrice) / oldPrice) * 100 * 10) / 10;
+
+            // 黄金降落伞：跌幅超过20%自动止损
+            if (this.hasArtifact && this.hasArtifact('golden_parachute')) {
+                if (assetData.change <= -20) {
+                    const holding = this.state.holdings?.[assetId];
+                    if (holding && holding.quantity > 0) {
+                        const proceeds = holding.quantity * oldPrice;
+                        this.state.money += proceeds;
+                        holding.quantity = 0;
+                        holding.avgCost = 0;
+                        if (this.state.dailyFinancialReport) {
+                            const assetName = I18n.t('data.assetNames.' + assetId);
+                            const msg = I18n.t('game.artifactDaily.golden_parachute', assetName, Math.round(oldPrice), Math.round(proceeds));
+                            this.state.dailyFinancialReport.push(msg);
+
+                            // V2.XX: 同时记录到消息历史
+                            const art = getArtifact('golden_parachute');
+                            const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '黄金降落伞');
+                            this.addLog(msg, 'positive', artName);
+                        }
+                        if (window.UI && window.UI.triggerArtifactGlow) {
+                            window.UI.triggerArtifactGlow('golden_parachute');
+                        }
+                    }
+                }
+            }
 
             // 更新历史记录 (保留最近7天)
             assetData.history.push(assetData.price);

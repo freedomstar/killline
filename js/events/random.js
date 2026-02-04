@@ -3,6 +3,7 @@
  */
 import { I18n } from '../i18n.js';
 import { GameData } from '../data/index.js';
+import { getArtifact } from '../data/artifacts.js';
 
 export const randomEvents = [
 
@@ -115,12 +116,12 @@ export const randomEvents = [
             {
                 text: I18n.t('events.buy_used_car.choices.deal.text'),
                 hint: (state) => {
-                    const conf = GameData.eventConfigs.buy_used_car.deal;
+                    const conf = GameData.eventConfigs.random_events_cleanup.buy_used_car.deal;
                     return I18n.t('events.buy_used_car.choices.deal.hint', conf.cost, conf.mentalGain);
                 },
                 hintType: 'positive',
                 effect: (state, context) => {
-                    const conf = GameData.eventConfigs.buy_used_car.deal;
+                    const conf = GameData.eventConfigs.random_events_cleanup.buy_used_car.deal;
                     state.money -= conf.cost;
                     state.hasCar = true;
                     state.carBroken = false;
@@ -236,45 +237,355 @@ export const randomEvents = [
         description: () => I18n.t('events.mysterious_trader.description'),
         period: 'any',
         isRandom: true,
-        condition: (state) => !!state.artifact,
+        condition: (state) => Array.isArray(state.artifacts) && state.artifacts.length > 0,
         weight: 0.05, // Rare event
+        generateChoices: (state, context) => {
+            const game = context.game;
+            const conf = GameData.eventConfigs.random_events_cleanup.mysterious_trader.swap;
+            const artifacts = Array.isArray(state.artifacts) ? state.artifacts : [];
+
+            const swapChoices = artifacts.map((id) => {
+                const current = getArtifact(id);
+                const currentName = current && typeof current.name === 'function' ? current.name() : (current?.name || id);
+                return {
+                    text: `${I18n.t('events.mysterious_trader.choices.swap.text')} (${currentName})`,
+                    hint: I18n.t('events.mysterious_trader.choices.swap.hint'),
+                    hintType: 'warning',
+                    effect: (state, context) => {
+                        if (context.isPreview) {
+                            return { message: I18n.t('events.mysterious_trader.choices.swap.hint'), type: 'neutral' };
+                        }
+                        const excludeIds = artifacts.filter(existingId => existingId !== id);
+                        const options = game.getArtifactDraftOptions(5, excludeIds);
+                        const newArtifact = options.length > 0 ? options[0] : null;
+
+                        if (newArtifact) {
+                            game.removeArtifact(id);
+                            game.addArtifact(newArtifact.id);
+                            state.mental += conf.mentalGain;
+                            game.triggerArtifacts('onInit', state);
+
+                            return {
+                                message: I18n.t('events.mysterious_trader.choices.swap.message', newArtifact.name()),
+                                type: 'positive'
+                            };
+                        }
+
+                        return { message: I18n.t('events.mysterious_trader.choices.swap.error'), type: 'neutral' };
+                    }
+                };
+            });
+
+            return [
+                ...swapChoices,
+                {
+                    text: I18n.t('events.mysterious_trader.choices.refuse.text'),
+                    hint: I18n.t('events.mysterious_trader.choices.refuse.hint'),
+                    hintType: 'neutral',
+                    effect: () => ({ message: I18n.t('events.mysterious_trader.choices.refuse.message'), type: 'neutral' })
+                }
+            ];
+        },
+        choices: []
+    },
+    {
+        id: 'sell_artifact_crisis',
+        type: 'opportunity',
+        title: () => I18n.t('events.sell_artifact_crisis.title'),
+        description: () => I18n.t('events.sell_artifact_crisis.description'),
+        period: 'any',
+        isRandom: true,
+        condition: (state) => state.money < -500 && Array.isArray(state.artifacts) && state.artifacts.length > 0,
+        weight: 0.1, // High chance when in crisis
+        generateChoices: (state, context) => {
+            const game = context.game;
+            const sellConf = GameData.eventConfigs.random_events_cleanup.sell_artifact_crisis.sell;
+            const keepConf = GameData.eventConfigs.random_events_cleanup.sell_artifact_crisis.keep;
+            const artifacts = Array.isArray(state.artifacts) ? state.artifacts : [];
+
+            const sellChoices = artifacts.map((id) => {
+                const art = getArtifact(id);
+                const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || id);
+                return {
+                    text: `${I18n.t('events.sell_artifact_crisis.choices.sell.text')} (${artName})`,
+                    hint: I18n.t('events.sell_artifact_crisis.choices.sell.hint', sellConf.moneyGain, sellConf.mentalLoss),
+                    hintType: 'negative',
+                    effect: (state) => {
+                        if (context.isPreview) {
+                            return { message: I18n.t('events.sell_artifact_crisis.choices.sell.hint', sellConf.moneyGain, sellConf.mentalLoss), type: 'negative' };
+                        }
+                        state.money += sellConf.moneyGain;
+                        game.removeArtifact(id);
+                        state.mental -= sellConf.mentalLoss;
+                        return { message: I18n.t('events.sell_artifact_crisis.messages.sell', sellConf.moneyGain), type: 'negative' };
+                    }
+                };
+            });
+
+            return [
+                ...sellChoices,
+                {
+                    text: I18n.t('events.sell_artifact_crisis.choices.keep.text'),
+                    hint: I18n.t('events.sell_artifact_crisis.choices.keep.hint', keepConf.mentalGain),
+                    hintType: 'positive',
+                    effect: (state) => {
+                        if (context.isPreview) {
+                            return { message: I18n.t('events.sell_artifact_crisis.choices.keep.hint', keepConf.mentalGain), type: 'positive' };
+                        }
+                        state.mental += keepConf.mentalGain;
+                        return { message: I18n.t('events.sell_artifact_crisis.messages.keep'), type: 'positive' };
+                    }
+                }
+            ];
+        },
+        choices: []
+    },
+    {
+        id: 'black_market_artifact',
+        type: 'opportunity',
+        title: () => I18n.t('events.black_market_artifact.title'),
+        description: () => I18n.t('events.black_market_artifact.description'),
+        period: 'any',
+        isRandom: true,
+        condition: (state) => Array.isArray(state.artifacts) && state.artifacts.length < (GameData.artifactMaxSlots || 3) && state.money >= 1000,
+        weight: 0.05,
         choices: [
             {
-                text: I18n.t('events.mysterious_trader.choices.swap.text'),
-                hint: I18n.t('events.mysterious_trader.choices.swap.hint'),
+                text: I18n.t('events.black_market_artifact.choices.buy.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.black_market_artifact.buy;
+                    return I18n.t('events.black_market_artifact.choices.buy.hint', conf.cost);
+                },
                 hintType: 'warning',
                 effect: (state, context) => {
                     const game = context.game;
-                    const conf = GameData.eventConfigs.random_events_cleanup.mysterious_trader.swap;
+                    const conf = GameData.eventConfigs.random_events_cleanup.black_market_artifact.buy;
 
-                    // Get replacement
-                    // Fetch 5 to ensure we get a different one
-                    const options = game.getArtifactDraftOptions(5);
-                    const currentId = state.artifact;
-                    const newArtifact = options.find(a => a.id !== currentId) || options[0];
+                    if (context.isPreview) {
+                        return { message: I18n.t('events.black_market_artifact.choices.buy.hint', conf.cost), type: 'neutral' };
+                    }
 
-                    if (newArtifact) {
-                        state.artifact = newArtifact.id;
-                        state.mental += conf.mentalGain;
-                        // Trigger init hook for new artifact?
-                        // Yes, artifacts should initialize when equipped.
-                        game.triggerArtifact('onInit', state);
+                    state.money -= conf.cost;
 
-                        return {
-                            message: I18n.t('events.mysterious_trader.choices.swap.message', newArtifact.name()),
-                            type: 'positive'
-                        };
+                    const excludeIds = Array.isArray(state.artifacts) ? state.artifacts : [];
+                    const options = game.getArtifactDraftOptions(1, excludeIds); // Get 1 random artifact
+                    if (options && options.length > 0) {
+                        const newArtifact = options[0];
+                        game.addArtifact(newArtifact.id);
+                        // Init hook
+                        game.triggerArtifacts('onInit', state);
+                        return { message: I18n.t('events.black_market_artifact.messages.buy', newArtifact.name()), type: 'positive' };
+                    }
+                    return { message: "Error: No artifact found", type: 'neutral' };
+                }
+            },
+            {
+                text: I18n.t('events.black_market_artifact.choices.leave.text'),
+                hint: I18n.t('events.black_market_artifact.choices.leave.hint'),
+                hintType: 'neutral',
+                effect: (state, context) => {
+                    return { message: I18n.t('events.black_market_artifact.messages.leave'), type: 'neutral' };
+                }
+            }
+        ]
+    },
+    // Social Events implementation
+    {
+        id: 'team_lunch',
+        type: 'opportunity',
+        title: () => I18n.t('events.team_lunch.title'),
+        description: () => I18n.t('events.team_lunch.description'),
+        period: 'day',
+        isRandom: true,
+        condition: (state) => state.job !== 'unemployed' && state.money >= 30, // Basic check
+        weight: 0.15,
+        choices: [
+            {
+                text: I18n.t('events.team_lunch.choices.join.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.team_lunch.join;
+                    return I18n.t('events.team_lunch.choices.join.hint', conf.cost, conf.socialGain, conf.workEfficiencyGain);
+                },
+                hintType: 'social',
+                effect: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.team_lunch.join;
+                    state.money -= conf.cost;
+                    state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.socialGain);
+                    state.workEfficiency = Math.min(GameData.initialState.maxWorkEfficiency, (state.workEfficiency || 100) + conf.workEfficiencyGain);
+                    return { message: I18n.t('events.team_lunch.messages.join'), type: 'positive' };
+                }
+            },
+            {
+                text: I18n.t('events.team_lunch.choices.brown_bag.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.team_lunch.brown_bag;
+                    return I18n.t('events.team_lunch.choices.brown_bag.hint', conf.ingredientsCost, conf.energyGain, conf.socialLoss);
+                },
+                hintType: 'neutral',
+                condition: (state) => state.ingredients >= 1,
+                effect: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.team_lunch.brown_bag;
+                    state.ingredients -= conf.ingredientsCost;
+                    state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + conf.energyGain);
+                    state.socialValue = Math.max(0, (state.socialValue || 0) - conf.socialLoss);
+                    return { message: I18n.t('events.team_lunch.messages.brown_bag'), type: 'neutral' };
+                }
+            }
+        ]
+    },
+    {
+        id: 'after_work_drinks',
+        type: 'opportunity',
+        title: () => I18n.t('events.after_work_drinks.title'),
+        description: () => I18n.t('events.after_work_drinks.description'),
+        period: 'day', // late afternoon
+        isRandom: true,
+        condition: (state) => state.job !== 'unemployed' && state.money >= 50,
+        weight: 0.12,
+        choices: [
+            {
+                text: I18n.t('events.after_work_drinks.choices.network.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.after_work_drinks.network;
+                    const baseRate = GameData.eventConfigs.random_events_cleanup.after_work_drinks.baseSuccessRate;
+                    const socialBonus = GameData.eventConfigs.random_events_cleanup.after_work_drinks.socialBonus;
+                    return I18n.t('events.after_work_drinks.choices.network.hint', conf.cost, conf.energyCost, baseRate, socialBonus, 0);
+                },
+                hintType: 'social',
+                effect: (state, context) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.after_work_drinks.network;
+                    const baseConf = GameData.eventConfigs.random_events_cleanup.after_work_drinks;
+
+                    state.money -= conf.cost;
+                    state.energy = Math.max(0, state.energy - conf.energyCost);
+
+                    const successChance = baseConf.baseSuccessRate + ((state.socialValue || 0) * baseConf.socialBonus) + ((state.workEfficiency || 100) * baseConf.efficiencyBonus);
+
+                    const rng = context.rng || Math;
+                    if (rng.random() < successChance) {
+                        state.workEfficiency = Math.min(GameData.initialState.maxWorkEfficiency, (state.workEfficiency || 100) + conf.successWorkEfficiencyGain);
+                        state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.successMentalGain);
+                        state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.successSocialGain);
+                        return { message: I18n.t('events.after_work_drinks.messages.success', conf.successWorkEfficiencyGain, conf.successMentalGain, conf.successSocialGain), type: 'positive' };
                     } else {
-                        return { message: I18n.t('events.mysterious_trader.choices.swap.error'), type: 'neutral' };
+                        state.mental = Math.max(0, state.mental - conf.failMentalLoss);
+                        state.socialValue = Math.max(0, (state.socialValue || 0) - conf.failSocialLoss);
+                        return { message: I18n.t('events.after_work_drinks.messages.fail', conf.failMentalLoss, conf.failSocialLoss), type: 'negative' };
                     }
                 }
             },
             {
-                text: I18n.t('events.mysterious_trader.choices.refuse.text'),
-                hint: I18n.t('events.mysterious_trader.choices.refuse.hint'),
+                text: I18n.t('events.after_work_drinks.choices.go_home.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.after_work_drinks.go_home;
+                    return I18n.t('events.after_work_drinks.choices.go_home.hint', conf.energyGain, conf.socialLoss);
+                },
                 hintType: 'neutral',
+                effect: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.after_work_drinks.go_home;
+                    state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + conf.energyGain);
+                    state.socialValue = Math.max(0, (state.socialValue || 0) - conf.socialLoss);
+                    return { message: I18n.t('events.after_work_drinks.messages.go_home'), type: 'neutral' };
+                }
+            }
+        ]
+    },
+    {
+        id: 'industry_mixer',
+        type: 'opportunity',
+        title: () => I18n.t('events.industry_mixer.title'),
+        description: () => I18n.t('events.industry_mixer.description'),
+        period: 'day',
+        isRandom: true,
+        condition: (state) => state.job === 'unemployed' && state.money >= 100,
+        weight: 0.12,
+        choices: [
+            {
+                text: I18n.t('events.industry_mixer.choices.network.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.industry_mixer.network;
+                    return I18n.t('events.industry_mixer.choices.network.hint', conf.cost, conf.energyCost);
+                },
+                hintType: 'social',
                 effect: (state, context) => {
-                    return { message: I18n.t('events.mysterious_trader.choices.refuse.message'), type: 'neutral' };
+                    const conf = GameData.eventConfigs.random_events_cleanup.industry_mixer.network;
+                    const baseConf = GameData.eventConfigs.random_events_cleanup.industry_mixer;
+
+                    state.money -= conf.cost;
+                    state.energy = Math.max(0, state.energy - conf.energyCost);
+
+                    const successChance = baseConf.baseSuccessRate + ((state.workEfficiency || 100) * baseConf.efficiencyBonus);
+
+                    const rng = context.rng || Math;
+                    if (rng.random() < successChance) {
+                        state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.successSocialGain);
+                        state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.successMentalGain);
+                        return { message: I18n.t('events.industry_mixer.messages.success', conf.successSocialGain, conf.successMentalGain), type: 'positive' };
+                    } else {
+                        state.mental = Math.max(0, state.mental - conf.failMentalLoss);
+                        return { message: I18n.t('events.industry_mixer.messages.fail', conf.failMentalLoss), type: 'negative' };
+                    }
+                }
+            },
+            {
+                text: I18n.t('events.industry_mixer.choices.skip.text'),
+                hint: I18n.t('events.industry_mixer.choices.skip.hint'),
+                hintType: 'neutral',
+                effect: (state) => {
+                    return { message: I18n.t('events.industry_mixer.messages.skip'), type: 'neutral' };
+                }
+            }
+        ]
+    },
+    {
+        id: 'alumni_reunion',
+        type: 'opportunity',
+        title: () => I18n.t('events.alumni_reunion.title'),
+        description: () => I18n.t('events.alumni_reunion.description'),
+        period: 'day',
+        isRandom: true,
+        condition: (state) => state.job === 'unemployed',
+        weight: 0.1,
+        choices: [
+            {
+                text: I18n.t('events.alumni_reunion.choices.attend.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.alumni_reunion.attend;
+                    return I18n.t('events.alumni_reunion.choices.attend.hint', conf.cost);
+                },
+                hintType: 'social',
+                condition: (state) => state.money >= GameData.eventConfigs.random_events_cleanup.alumni_reunion.attend.cost,
+                effect: (state, context) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.alumni_reunion.attend;
+                    const baseConf = GameData.eventConfigs.random_events_cleanup.alumni_reunion;
+
+                    state.money -= conf.cost;
+
+                    const successChance = baseConf.baseSuccessRate + ((state.socialValue || 0) * baseConf.socialBonus);
+
+                    const rng = context.rng || Math;
+                    if (rng.random() < successChance) {
+                        state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.successMentalGain);
+                        state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.successSocialGain);
+                        return { message: I18n.t('events.alumni_reunion.messages.success', conf.successMentalGain, conf.successSocialGain), type: 'positive' };
+                    } else {
+                        state.mental = Math.max(0, state.mental - conf.failMentalLoss);
+                        state.socialValue = Math.max(0, (state.socialValue || 0) - conf.failSocialLoss);
+                        return { message: I18n.t('events.alumni_reunion.messages.fail', conf.failMentalLoss, conf.failSocialLoss), type: 'negative' };
+                    }
+                }
+            },
+            {
+                text: I18n.t('events.alumni_reunion.choices.ignore.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.alumni_reunion.ignore;
+                    return I18n.t('events.alumni_reunion.choices.ignore.hint', conf.mentalLoss);
+                },
+                hintType: 'negative',
+                effect: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.alumni_reunion.ignore;
+                    state.mental = Math.max(0, state.mental - conf.mentalLoss);
+                    return { message: I18n.t('events.alumni_reunion.messages.ignore'), type: 'negative' };
                 }
             }
         ]
