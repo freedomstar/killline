@@ -219,7 +219,7 @@ export const lunchOptions = {
     bento: {
         id: 'bento',
         name: () => I18n.t('data.lunch.bento.name'),
-        hint: () => I18n.t('data.lunch.bento.hint'),
+        hint: (cfg) => I18n.t('data.lunch.bento.hint', cfg),
         cost: 0,
         healthEffect: 3,
         condition: (state) => state.hasPreparedMeal
@@ -227,16 +227,16 @@ export const lunchOptions = {
     fastfood: {
         id: 'fastfood',
         name: () => I18n.t('data.lunch.fastfood.name'),
-        hint: () => I18n.t('data.lunch.fastfood.hint'),
+        hint: (cfg) => I18n.t('data.lunch.fastfood.hint', cfg),
         cost: 15,
-        healthEffect: -2,
-        mentalEffect: 10,
+        healthEffect: -3,
+        mentalEffect: 5,
         condition: (state) => true
     },
     skip: {
         id: 'skip',
         name: () => I18n.t('data.lunch.skip.name'),
-        hint: () => I18n.t('data.lunch.skip.hint'),
+        hint: (cfg) => I18n.t('data.lunch.skip.hint', cfg),
         cost: 0,
         healthEffect: -5,
         condition: (state) => true
@@ -244,7 +244,7 @@ export const lunchOptions = {
     business: {
         id: 'business',
         name: () => I18n.t('data.lunch.business.name'),
-        hint: () => I18n.t('data.lunch.business.hint'),
+        hint: (cfg) => I18n.t('data.lunch.business.hint', cfg),
         cost: 60,
         healthEffect: 0,
         mentalEffect: 10,
@@ -254,7 +254,7 @@ export const lunchOptions = {
     salad: {
         id: 'salad',
         name: () => I18n.t('data.lunch.salad.name'),
-        hint: () => I18n.t('data.lunch.salad.hint'),
+        hint: (cfg) => I18n.t('data.lunch.salad.hint', cfg),
         cost: 12,
         healthEffect: 2,
         energyEffect: 5,
@@ -266,7 +266,7 @@ export const lunchOptions = {
         hint: (cfg) => I18n.t('data.lunch.sandwich.hint', cfg),
         cost: 6,
         healthEffect: 0,
-        energyEffect: 2,
+        energyEffect: 5,
         condition: (state) => true
     },
     hospital_cafeteria: {

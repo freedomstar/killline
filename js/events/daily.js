@@ -687,13 +687,13 @@ export function getAvailableLunchOptions(state, context) {
         for (const key of allowed) {
             if (base[key]) {
                 const opt = { ...base[key], key: key };
-                opt.name = I18n.t(`data.lunchOptions.${key}.name`) || opt.name;
+                opt.name = I18n.t(`data.lunch.${key}.name`) || opt.name;
                 if (key === 'hospital_cafeteria') {
-                    opt.name = I18n.t('data.lunchOptions.hospital_cafeteria.name');
-                    opt.hint = I18n.t('data.lunchOptions.hospital_cafeteria.hint', opt);
+                    opt.name = I18n.t('data.lunch.hospital_cafeteria.name');
+                    opt.hint = I18n.t('data.lunch.hospital_cafeteria.hint', opt);
                 } else if (key === 'skip') {
-                    opt.name = I18n.t('data.lunchOptions.skip.name');
-                    opt.hint = I18n.t('data.lunchOptions.skip.hint', opt);
+                    opt.name = I18n.t('data.lunch.skip.name');
+                    opt.hint = I18n.t('data.lunch.skip.hint', opt);
                 }
                 options.push(opt);
             }
@@ -710,9 +710,9 @@ export function getAvailableLunchOptions(state, context) {
             opt.cost += Math.round(opt.cost * GameData.usaFeatures.tipRate);
         }
 
-        opt.name = I18n.t(`data.lunchOptions.${key}.name`);
+        opt.name = I18n.t(`data.lunch.${key}.name`);
         if (!opt.disabled) {
-            opt.hint = I18n.t(`data.lunchOptions.${key}.hint`, opt);
+            opt.hint = I18n.t(`data.lunch.${key}.hint`, opt);
         }
 
         if (key === 'business') {

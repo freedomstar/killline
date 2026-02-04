@@ -48,7 +48,7 @@ export const I18n = {
                         },
                         survived: {
                             title: '幸存者',
-                            subtitle: '你活过了365天',
+                            subtitle: '你活过了一年',
                             message: '恭喜！你在M国的斩杀线上艰难地活了下来。但这真的是胜利吗？还是只是另一年的挣扎？'
                         },
                         debtSpiral: {
@@ -201,13 +201,13 @@ export const I18n = {
 
                 // 午餐选项
                 lunch: {
-                    bento: { name: '🍱 吃便当', hint: '健康+3，食材-1' },
-                    fastfood: { name: '🍔 买快餐', hint: '健康-2，-$15' },
-                    skip: { name: '🤐 不吃午饭', hint: '健康-5，省钱' },
-                    business: { name: '🍽️ 商务宴请', hint: '-$60，精神+10，社交+5' },
-                    salad: { name: '🥗 轻食沙拉', hint: '-$12，健康+2，精力+5' },
-                    sandwich: { name: '🥪 便利店三明治', hint: '-$6，精力+2' },
-                    hospital_cafeteria: { name: '🏥 医院食堂', hint: '-$10，健康+1，精力+3' }
+                    bento: { name: '🍱 吃便当', hint: (cfg) => `健康+${cfg.healthEffect}，消耗1库存` },
+                    fastfood: { name: '🍔 买快餐', hint: (cfg) => `健康${cfg.healthEffect}，精神+${cfg.mentalEffect}，-$${cfg.cost}` },
+                    skip: { name: '🤐 不吃午饭', hint: (cfg) => `健康${cfg.healthEffect}，省钱` },
+                    business: { name: '🍽️ 商务宴请', hint: (cfg) => `-$${cfg.cost}，精神+${cfg.mentalEffect}，社交+${cfg.socialEffect}` },
+                    salad: { name: '🥗 轻食沙拉', hint: (cfg) => `-$${cfg.cost}，健康+${cfg.healthEffect}，精力+${cfg.energyEffect}` },
+                    sandwich: { name: '🥪 便利店三明治', hint: (cfg) => `-$${cfg.cost}，精力+${cfg.energyEffect}` },
+                    hospital_cafeteria: { name: '🏥 医院食堂', hint: (cfg) => `-$${cfg.cost}，健康+${cfg.healthEffect}，精力+${cfg.energyEffect}` }
                 },
 
                 // 通勤选项
@@ -261,16 +261,6 @@ export const I18n = {
                     election_year: { title: '🗳️ 大选年政策红利', description: '候选人承诺刺激经济，能源与国防受益' },
                 },
 
-                // 午餐选项
-                lunchOptions: {
-                    bento: { name: '🍱 吃便当', hint: (cfg) => `健康+${cfg.healthEffect}，消耗1库存` },
-                    fastfood: { name: '🍔 买快餐', hint: (cfg) => `健康${cfg.healthEffect}，精神+${cfg.mentalEffect}，-$${cfg.cost}` },
-                    skip: { name: '🤐 不吃午饭', hint: (cfg) => `健康${cfg.healthEffect}，省钱` },
-                    business: { name: '🍽️ 商务宴请', hint: (cfg) => `-$${cfg.cost}，精神+${cfg.mentalEffect}，社交+${cfg.socialEffect}` },
-                    salad: { name: '🥗 轻食沙拉', hint: (cfg) => `-$${cfg.cost}，健康+${cfg.healthEffect}，精力+${cfg.energyEffect}` },
-                    sandwich: { name: '🥪 便利店三明治', hint: (cfg) => `-$${cfg.cost}，充饥` },
-                    hospital_cafeteria: { name: '🏥 医院食堂', hint: (cfg) => `-$${cfg.cost}，健康+${cfg.healthEffect}，精力+${cfg.energyEffect}` },
-                },
 
                 // 通勤选项
                 commuteOptions: {
@@ -557,11 +547,13 @@ export const I18n = {
                         description: '虽然房租涨了，但房东为了安抚你，或者你在搬家/清理房间时发现了一些奇怪的古董...',
                         choices: {
                             get: '获得新神器: {0}',
-                            swap: '交换神器: {0} 变为 {1}'
+                            swap: '交换神器: {0} 变为 {1}',
+                            skip: '不，谢谢 (保持现状)'
                         },
                         messages: {
                             get: '你获得了神器：{0}',
-                            swap: '你用 {0} 交换了 {1}'
+                            swap: '你用 {0} 交换了 {1}',
+                            skip: '你决定不接受这份意外的馈赠。'
                         }
                     }
                 },
@@ -1332,7 +1324,7 @@ export const I18n = {
                             hintOther: (cost, mental) => `-$${cost} (自费维修)，精神-${mental}`,
                         },
                         creditRepair: { text: '刷信用卡维修', hint: (cost, credit, mental) => `-$${cost}，信用-${credit}，精神-${mental}` },
-                        skip: { text: '暂不修理', hint: (mental) => `车辆故障，下次开车需修理，精神-${mental}` },
+                        skip: { text: '暂不修理', hint: (mental) => `车辆故障，下次开车需自费修理，保险不保，精神-${mental}` },
                     },
                     messages: {
                         fullCoverage: '幸好买了全险，保险公司承担了大部分维修费，你只付了免赔额。',

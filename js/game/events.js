@@ -373,20 +373,27 @@ export const EventsMixin = {
         const availableEvents = GameEvents.getAvailableEvents(this.state, period, this.rng);
         let selectedEvent = GameEvents.selectRandomEvent(availableEvents, this.rng);
 
-        // V2.42 修复：工作日优先工作，随机事件（如朋友援助）加入队列在傍晚触发
-        if (period === 'day' && selectedEvent && selectedEvent.id !== 'day_work') {
+        // V2.42+：白天主事件优先级
+        // - 工作日：优先 day_work
+        // - 休息日：优先 day_rest
+        // 其它白天随机/机会事件不应顶替主事件：允许进入队列，傍晚再处理。
+        if (period === 'day' && selectedEvent) {
             const workEvent = availableEvents.find(e => e.id === 'day_work');
-            if (workEvent) {
-                console.log(`[Game] Conflict: Picked ${selectedEvent.id} but should work. Queueing random event.`);
+            const restEvent = availableEvents.find(e => e.id === 'day_rest');
+
+            // day_rest 与 day_work 在条件上应互斥；这里按“哪个存在就优先哪个”处理。
+            const preferred = restEvent || workEvent;
+
+            if (preferred && selectedEvent.id !== preferred.id) {
+                console.log(`[Game] Conflict: Picked ${selectedEvent.id} but should be ${preferred.id}. Queueing event.`);
 
                 // 确保队列存在
                 if (!this.state.eventQueue) this.state.eventQueue = [];
 
                 // 只有非强制事件，或者显式允许排队的强制事件才通过队列延后
-                // 朋友援助(friend_help) isRandom=true, 且非 mandatory
                 if (!selectedEvent.mandatory || selectedEvent.allowQueue) {
                     this.state.eventQueue.push(selectedEvent);
-                    selectedEvent = workEvent;
+                    selectedEvent = preferred;
                 }
             }
         }
@@ -418,8 +425,6 @@ export const EventsMixin = {
 
         // V2.55 Fix: 如果侧边行动已锁定（已在同一时段的前一个事件中结算），不再重复执行
         if (state.sideActionsLocked) return;
-
-        state.sideActionsLocked = true; // 结算开始，锁定选择器
         // V2.46 Fix: 如果是随机事件 (isRandom / isRandomEncounter)，忽略侧边行动 (DailyAction/Commute)
         // 防止用户在主界面选择了动作后，弹出随机事件时，后台依然扣除了该动作的资源
         if (this.currentEvent && (this.currentEvent.isRandom || this.currentEvent.isRandomEncounter)) {
@@ -434,6 +439,9 @@ export const EventsMixin = {
         if (this.currentEvent && this.currentEvent.id === 'medical_emergency') {
             return;
         }
+
+        // 只有在真正执行结算时才锁定，避免随机/插队事件导致侧边栏被永久锁死到当天结束
+        state.sideActionsLocked = true; // 结算开始，锁定选择器
 
         // 1. 结算午餐
         if (!result.ignoreLunch) {
@@ -494,27 +502,6 @@ export const EventsMixin = {
 
         // 4. 结算通勤费用（公交、步行等）
         const commuteId = state.selectedCommute;
-
-        // V2.XX 交通意外逻辑 (Car Accident)
-        if (commuteId === 'car') {
-            const accConfig = GameData.eventConfigs.traffic_accident;
-            // 只有未坏的车才可能发生事故（已坏的车根本开不了，或走repair逻辑）
-            // V2.XX Fix: 预览模式下不触发随机事故，避免 masking 导致数值预览消失
-            if (accConfig && !state.carBroken && !(context && context.isPreview) && context.rng.random() < accConfig.chance) {
-                state.money -= accConfig.moneyCost;
-                state.health = Math.max(0, state.health - accConfig.healthLoss);
-                state.mental = Math.max(0, state.mental - accConfig.mentalLoss);
-                if (accConfig.carBroken) {
-                    state.carBroken = true;
-                }
-                const msg = I18n.t('events.traffic_accident.message', accConfig.moneyCost, accConfig.healthLoss, accConfig.mentalLoss);
-                result.message += `\n${msg}`;
-
-                // 事故发生后，不执行后续的迟到逻辑或正常通勤结算（视为此次通勤以事故告终）
-                // 如果需要，也可以标记 state.pendingLate = true;
-                return;
-            }
-        }
 
         if (commuteId && commuteId !== 'car' && commuteId !== 'car_refuel' && commuteId !== 'car_repair') {
             const commuteConfig = GameData.commuteOptions[commuteId];

@@ -30,7 +30,7 @@ export const rentIncreaseBonusEvent = {
             }];
         }
 
-        return options.map(newArt => {
+        const choices = options.map(newArt => {
             let ownedArtName = "";
             let ownedArtId = "";
             if (isFull) {
@@ -76,6 +76,22 @@ export const rentIncreaseBonusEvent = {
                 };
             }
         });
+
+        // Add Skip option
+        choices.push({
+            text: I18n.t('data.artifacts.rent_increase_bonus.choices.skip'),
+            hintType: 'neutral',
+            effect: (state, ctx) => {
+                if (ctx.isPreview) return { message: "Preview", type: 'neutral' };
+                return {
+                    message: I18n.t('data.artifacts.rent_increase_bonus.messages.skip'),
+                    type: 'neutral',
+                    triggerEvent: 'FORCE_NEXT'
+                };
+            }
+        });
+
+        return choices;
     },
     choices: []
 };

@@ -90,7 +90,7 @@ export const eventConfigs = {
         support: { energyCost: 10, socialGain: 3, workEfficiencyGain: 2 }
     },
     work_general: {
-        focus_work: { energyCost: 65, pipEnergyCost: 60, pipGain: 15, socialPipBonus: 5 },
+        focus_work: { energyCost: 70, pipEnergyCost: 60, pipGain: 15, socialPipBonus: 5 },
         slack_off: {
             energyCost: 30,
             pipMentalGain: 5,

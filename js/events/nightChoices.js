@@ -73,7 +73,7 @@ export const nightChoices = {
     },
     overtime: {
         id: 'overtime',
-        condition: (housing) => true, // 任何地方都能加班(远程/带回家) 简化
+        condition: (housing, state) => state && state.job === 'fulltime',
         hint: () => I18n.t('data.night_choices.overtime.hint',
             GameData.eventConfigs.night_choice_hints.overtime.money,
             GameData.eventConfigs.night_choice_hints.overtime.stress,

@@ -27,7 +27,7 @@ export const accidentEvents = [
         description: I18n.t('events.car_breakdown.description'),
         period: 'any',
         isRandom: true,
-        condition: (state) => state.day > GameData.newbieProtectionDays && state.hasCar && state.job === 'fulltime' && state.money < 5000,
+        condition: (state) => state.day > GameData.newbieProtectionDays && state.hasCar && !state.carBroken && state.job === 'fulltime' && state.money < 5000,
         weight: GameData.eventWeights.car_breakdown, // 危机事件，权重较高
         choices: [
             {

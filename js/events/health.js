@@ -138,6 +138,7 @@ export const healthEvents = [
 
                     if (context.rng.random() < emergConfig.uberDeathChance) {
                         state.health = 0;
+                        state.forcedGameOver = true;
                         return { message: I18n.t('events.medical_emergency.messages.uberDied'), type: 'negative' };
                     }
 
@@ -164,6 +165,7 @@ export const healthEvents = [
                 hintType: 'danger',
                 effect: (state, context) => {
                     state.health = 0;
+                    state.forcedGameOver = true;
                     return { message: I18n.t('events.medical_emergency.messages.died'), type: 'negative' };
                 }
             }

@@ -37,6 +37,13 @@ export const EndingMixin = {
      * 检查结局 (Modified to call triggerEnding which returns object)
      */
     checkEnding() {
+        // V2.XX 优先检查强制结束标志 (如医疗紧急情况点“放弃”)
+        if (this.state.forcedGameOver) {
+            console.log('[Game] 触发强制结局 (玩家选择放弃或致死判定)');
+            this.isRunning = false;
+            return this.triggerEnding('healthCollapse');
+        }
+
         // 1. 深度破产 (连锁斩杀结局)
         if (this.state.money < GameData.endingRules.debtSpiralThreshold) {
             console.log('[Game] 触发结局: 深度破产 (债务螺旋)');
