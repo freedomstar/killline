@@ -50,6 +50,11 @@
     /* Green for market general */
 }
 
+.ticker-type-rumor {
+    color: #fdcb6e;
+    /* Orange/Yellow for rumors */
+}
+
 /* Animation classes managed by JS */
 .ticker-scroll {
     animation: ticker-scroll-anim 10s linear forwards;

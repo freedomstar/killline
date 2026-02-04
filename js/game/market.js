@@ -3,6 +3,7 @@
  */
 import { GameData } from '../data/index.js';
 import { I18n } from '../i18n.js';
+import { getArtifact } from '../data/artifacts.js';
 
 /**
  * 市场相关方法的 Mixin
@@ -81,8 +82,9 @@ export const MarketMixin = {
 
         const news = newsList[Math.floor(this.rng.random() * newsList.length)];
         this.state.marketRumorId = news.id;
-        this.state.marketRumorConfirmDay = this.state.day + 1;
+        this.state.marketRumorConfirmDay = this.state.day + 2; // T + 2 生效
         this.state.lastMarketRumorDay = this.state.day;
+        this.state.isInsiderRumor = false; // 普通传闻
 
         // 传闻当天只影响情绪，不影响价格
         const sentimentDelta = Math.round((news.sentiment || 0) * (cfg.marketRumorSentimentScale || 0));
@@ -128,24 +130,41 @@ export const MarketMixin = {
         let newsEffect = {};
         let isRumorStage = false;
 
-        // 1. 传闻转实锤 (次日生效)
+        // 1. 传闻转实锤 (结算)
         if (this.state.marketRumorId && this.state.marketRumorConfirmDay <= this.state.day) {
             const rumorNews = this.getMarketNewsById(this.state.marketRumorId);
-            if (rumorNews) {
-                this.state.currentNews = this.createStagedNews(rumorNews, 'confirmed');
-                newsEffect = this.scaleNewsEffect(rumorNews.effect, foreseeing.marketRumorConfirmMultiplier || 1);
+            const isInsider = this.state.isInsiderRumor;
 
-                // 行业连锁影响：油价/通胀传导到生活成本
-                const utilityImpact = foreseeing.utilityNewsImpact && foreseeing.utilityNewsImpact[rumorNews.id];
-                if (utilityImpact) {
-                    this.state.utilityBill = Math.max(0, (this.state.utilityBill || 0) + utilityImpact);
-                    if (this.state.dailyFinancialReport) {
-                        this.state.dailyFinancialReport.push(I18n.t('game.foreseeing.utilityShock', utilityImpact));
+            if (rumorNews) {
+                // 如果不是内幕消息，有 50% 几率辟谣
+                if (!isInsider && this.rng.random() < 0.5) {
+                    const assetName = rumorNews.assetId ? I18n.t(`data.assetNames.${rumorNews.assetId}`) : '';
+                    this.state.currentNews = {
+                        id: 'denial_' + rumorNews.id,
+                        title: I18n.t('game.artifactDaily.ticker_news_title'),
+                        description: I18n.t('game.log.marketDenial', assetName),
+                        type: 'news',
+                        stage: 'denied',
+                        effect: {}
+                    };
+                    // newsEffect 保持为空，价格不波动
+                } else {
+                    this.state.currentNews = this.createStagedNews(rumorNews, 'confirmed');
+                    newsEffect = this.scaleNewsEffect(rumorNews.effect, foreseeing.marketRumorConfirmMultiplier || 1);
+
+                    // 行业连锁影响
+                    const utilityImpact = foreseeing.utilityNewsImpact && foreseeing.utilityNewsImpact[rumorNews.id];
+                    if (utilityImpact) {
+                        this.state.utilityBill = Math.max(0, (this.state.utilityBill || 0) + utilityImpact);
+                        if (this.state.dailyFinancialReport) {
+                            this.state.dailyFinancialReport.push(I18n.t('game.foreseeing.utilityShock', utilityImpact));
+                        }
                     }
                 }
             }
             this.state.marketRumorId = null;
             this.state.marketRumorConfirmDay = 0;
+            this.state.isInsiderRumor = false;
         } else {
             // 2. 60% 几率触发新闻 (使用 RNG)
             if (!this.state.marketRumorId && this.rng.random() < 0.60) {
@@ -244,7 +263,7 @@ export const MarketMixin = {
 
                             // V2.XX: 同时记录到消息历史
                             const art = getArtifact('golden_parachute');
-                            const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '黄金降落伞');
+                            const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || I18n.t('data.artifacts.golden_parachute.name'));
                             this.addLog(msg, 'positive', artName);
                         }
                         if (window.UI && window.UI.triggerArtifactGlow) {

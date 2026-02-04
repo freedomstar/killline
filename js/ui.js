@@ -3875,47 +3875,47 @@ export const UI = {
      */
     updateNewsTicker() {
         try {
-            if (!this.elements.newsTickerContainer || !this.elements.newsTickerContent) return;
-
             const state = game.getState();
             const news = state.currentNews;
             const insider = state.dailyInsiderTip;
+            const rumorId = state.marketRumorId;
 
             const messages = [];
-
-            // 1. Insider Tip (Only if player owns the artifact)
             const artifacts = state.artifacts || [];
             const hasInsiderPhone = artifacts.includes('insider_phone');
 
+            // 1. Insider Tip
             if (hasInsiderPhone && insider && insider.text) {
-                // Combine title and details for full content
                 const fullText = insider.details ? `${insider.text} ⚡ ${insider.details}` : insider.text;
-                messages.push({
-                    type: 'insider',
-                    text: fullText,
-                    data: insider
-                });
+                messages.push({ type: 'insider', text: fullText, data: insider });
             }
 
             // 2. Market News
             if (news) {
                 const title = news.title || I18n.t('game.artifactDaily.ticker_news_title');
                 const fullText = news.description ? `📰 ${title}：${news.description}` : `📰 ${title}`;
-                messages.push({
-                    type: 'news',
-                    text: fullText,
-                    data: news
-                });
+                messages.push({ type: 'news', text: fullText, data: news });
             }
 
-            // Compare with current items to avoid unnecessary restarts
-            const oldMessagesJson = JSON.stringify(this.tickerItems || []);
-            const newMessagesJson = JSON.stringify(messages);
+            // 3. Market Rumors
+            if (rumorId && state.marketRumorConfirmDay > state.day) {
+                const rumorNews = GameData.marketNews.find(n => n.id === rumorId);
+                if (rumorNews) {
+                    const tag = I18n.t('game.artifactDaily.ticker_rumor_label') || '[传闻]';
+                    const title = rumorNews.title || I18n.t('game.artifactDaily.ticker_news_title');
+                    const fullText = rumorNews.description ? `${tag} ${title}：${rumorNews.description}` : `${tag} ${title}`;
+                    messages.push({ type: 'rumor', text: fullText, data: rumorNews });
+                }
+            }
 
-            // Store active ticker items
+            // --- Update Single Ticker ---
+            if (!this.elements.newsTickerContainer || !this.elements.newsTickerContent) return;
+
+            const oldJson = JSON.stringify(this.tickerItems || []);
+            const newJson = JSON.stringify(messages);
+
             this.tickerItems = messages;
 
-            // If no items, hide
             if (messages.length === 0) {
                 this.elements.newsTickerContainer.classList.add('hidden');
                 if (this.tickerTimer) clearTimeout(this.tickerTimer);
@@ -3925,15 +3925,14 @@ export const UI = {
 
             this.elements.newsTickerContainer.classList.remove('hidden');
 
-            // Start cycling if not already or if messages changed significantly
-            if (!this.tickerTimer || oldMessagesJson !== newMessagesJson) {
+            if (!this.tickerTimer || oldJson !== newJson) {
                 if (this.tickerTimer) clearTimeout(this.tickerTimer);
                 this.currentTickerIndex = 0;
                 this.playNextTickerItem();
             }
+
         } catch (e) {
             console.error("Ticker error", e);
-            if (this.elements.newsTickerContainer) this.elements.newsTickerContainer.classList.add('hidden');
         }
     },
 
@@ -3943,7 +3942,6 @@ export const UI = {
             return;
         }
 
-        // Clear existing timer if any (redundancy)
         if (this.tickerTimer) clearTimeout(this.tickerTimer);
 
         if (this.currentTickerIndex === undefined || this.currentTickerIndex >= this.tickerItems.length) {
@@ -3951,47 +3949,36 @@ export const UI = {
         }
 
         const item = this.tickerItems[this.currentTickerIndex];
-        const el = this.elements.newsTickerContent;
-        if (!el) return;
+        const content = this.elements.newsTickerContent;
+        const container = this.elements.newsTickerContainer;
+        if (!content || !container) return;
 
-        // Fade effect
-        el.style.opacity = 0;
+        content.style.opacity = 0;
 
         setTimeout(() => {
-            el.innerHTML = `<span class="ticker-type-${item.type}">${item.text}</span>`;
+            content.innerHTML = `<span class="ticker-type-${item.type}">${item.text}</span>`;
+            content.classList.remove('ticker-scroll');
+            content.style.left = '';
+            content.style.transform = '';
+            void content.offsetWidth;
 
-            // Reflow
-            el.classList.remove('ticker-scroll');
-            el.style.left = '';
-            el.style.transform = '';
-            void el.offsetWidth;
+            const containerWidth = container.offsetWidth;
+            const textWidth = content.offsetWidth;
 
-            const containerWidth = this.elements.newsTickerContainer.offsetWidth;
-            const textWidth = el.offsetWidth;
-
-            el.style.left = '0';
-
-            // Calculate start position: containerWidth as percentage of textWidth
-            // Even if text is short, this ensures it starts from the right edge of the container
+            content.style.left = '0';
             const startPercent = (containerWidth / textWidth) * 100;
-            el.style.setProperty('--scroll-start', `${startPercent}%`);
+            content.style.setProperty('--scroll-start', `${startPercent}%`);
+            content.classList.add('ticker-scroll');
 
-            el.classList.add('ticker-scroll');
-
-            // Speed: 60 pixels per second
             const durationSeconds = (textWidth + containerWidth) / 60;
             const animationDuration = Math.max(8, durationSeconds);
-            el.style.animationDuration = `${animationDuration}s`;
+            content.style.animationDuration = `${animationDuration}s`;
 
-            // Switch when animation ends + small buffer
             let displayDuration = animationDuration * 1000 + 200;
+            content.style.opacity = 1;
 
-            el.style.opacity = 1;
-
-            // Advance index for next time
             this.currentTickerIndex = (this.currentTickerIndex + 1) % this.tickerItems.length;
 
-            // Schedule the NEXT transition
             this.tickerTimer = setTimeout(() => {
                 this.playNextTickerItem();
             }, displayDuration);
@@ -4000,66 +3987,84 @@ export const UI = {
 
     showNewsModal() {
         try {
-            const state = game.getState();
-            const news = state.currentNews;
-            const insider = state.dailyInsiderTip;
             const body = this.elements.newsDetailBody;
             if (!body) return;
 
-            let html = '';
+            const state = game.getState();
+            const news = state.currentNews;
+            const insider = state.dailyInsiderTip;
+            const rumorId = state.marketRumorId;
 
-            const insiderTitle = I18n.t('game.artifactDaily.modal_insider_title');
-            const noInsiderText = I18n.t('game.artifactDaily.modal_no_insider');
+            let html = '';
 
             const artifacts = state.artifacts || [];
             const hasInsiderPhone = artifacts.includes('insider_phone');
 
+            // 1. Insider Tip Section
+            const insiderTitle = I18n.t('game.artifactDaily.modal_insider_title');
             if (hasInsiderPhone) {
                 if (insider) {
                     html += `
-             <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-                 <h3 style="color: #ff7675; margin-bottom: 8px;">${insiderTitle}</h3>
-                 <p style="font-size: 1.1em; font-weight: bold; margin-bottom: 5px;">${insider.text}</p>
-                 <p style="font-size: 0.85em; color: var(--color-text-secondary);">
-                     ${insider.details || ''}
-                 </p>
-             </div>`;
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+                        <h3 style="color: #ff7675; margin-bottom: 8px; font-size: 0.9em;">${insiderTitle}</h3>
+                        <p style="font-size: 1.1em; font-weight: bold; margin-bottom: 5px;">${insider.text}</p>
+                        <p style="font-size: 0.85em; color: var(--color-text-secondary); line-height: 1.4;">
+                            ${insider.details || ''}
+                        </p>
+                    </div>`;
                 } else {
                     html += `
-             <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-                 <h3 style="color: var(--color-text-muted); margin-bottom: 8px;">${insiderTitle}</h3>
-                 <p style="color: var(--color-text-muted); font-style: italic;">${noInsiderText}</p>
-             </div>`;
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+                        <h3 style="color: var(--color-text-muted); margin-bottom: 8px; font-size: 0.9em;">${insiderTitle}</h3>
+                        <p style="color: var(--color-text-muted); font-style: italic; font-size: 0.85em;">${I18n.t('game.artifactDaily.modal_no_insider')}</p>
+                    </div>`;
                 }
             }
 
+            // 2. Confirmed News Section
             const newsTitle = I18n.t('game.artifactDaily.modal_news_title');
-            const noNewsText = I18n.t('game.artifactDaily.modal_no_news');
-            const sentimentLabel = I18n.t('game.artifactDaily.modal_news_sentiment');
-
-            if (news) {
-                const stageText = news.stage === 'rumor' ? '(传闻)' : (news.stage === 'confirmed' ? '(实锤)' : '');
+            // Only show as "Confirmed News" if it's not currently in the rumor stage
+            if (news && news.stage !== 'rumor') {
+                const stageMarker = news.stage === 'confirmed' ? ` <span style="font-size: 0.7em; background: #6c5ce7; padding: 2px 4px; border-radius: 3px; vertical-align: middle;">已证实</span>` : '';
                 html += `
-             <div>
-                 <h3 style="color: #a29bfe; margin-bottom: 8px;">${newsTitle} ${stageText}</h3>
-                 <p style="font-weight: bold; margin-bottom: 5px; font-size: 1.1em;">${news.title}</p>
-                 <p style="font-size: 0.9em; line-height: 1.5; color: #ddd;">${news.description || '...'}</p>
-                 <div style="margin-top: 15px; font-size: 0.8em; color: var(--color-text-secondary); background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
-                     <strong>${sentimentLabel}</strong> ${news.sentiment > 0 ? '+' : ''}${news.sentiment || 0}
-                 </div>
-             </div>`;
+                <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+                    <h3 style="color: #a29bfe; margin-bottom: 8px; font-size: 0.9em;">${newsTitle}${stageMarker}</h3>
+                    <p style="font-weight: bold; margin-bottom: 5px; font-size: 1.05em;">${news.title}</p>
+                    <p style="font-size: 0.85em; line-height: 1.5; color: #eee;">${news.description || ''}</p>
+                    <div style="margin-top: 10px; font-size: 0.75em; color: var(--color-text-secondary); background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px;">
+                        <strong>${I18n.t('game.artifactDaily.modal_news_sentiment')}</strong> ${news.sentiment > 0 ? '+' : ''}${news.sentiment || 0}
+                    </div>
+                </div>`;
             } else {
                 html += `
-             <div>
-                 <h3 style="color: var(--color-text-muted); margin-bottom: 8px;">${newsTitle}</h3>
-                 <p style="color: var(--color-text-muted); font-style: italic;">${noNewsText}</p>
-             </div>`;
+                <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+                    <h3 style="color: var(--color-text-muted); margin-bottom: 8px; font-size: 0.9em;">${newsTitle}</h3>
+                    <p style="color: var(--color-text-muted); font-style: italic; font-size: 0.85em;">${I18n.t('game.artifactDaily.modal_no_news')}</p>
+                </div>`;
+            }
+
+            // 3. Market Rumors Section (Separate Section!)
+            if (rumorId && state.marketRumorConfirmDay > state.day) {
+                const rumorNews = GameData.marketNews.find(n => n.id === rumorId);
+                if (rumorNews) {
+                    html += `
+                    <div style="margin-bottom: 10px;">
+                        <h3 style="color: #fdcb6e; margin-bottom: 8px; font-size: 0.9em;">🔍 市场传闻 (Rumor)</h3>
+                        <div style="border-left: 3px solid #fdcb6e; padding-left: 10px; background: rgba(253, 203, 110, 0.05); padding: 8px 10px; border-radius: 0 4px 4px 0;">
+                            <p style="font-weight: bold; margin-bottom: 5px; font-size: 1.05em;">${rumorNews.title}</p>
+                            <p style="font-size: 0.85em; line-height: 1.5; color: #eee;">${rumorNews.description || ''}</p>
+                            <p style="margin-top: 8px; font-size: 0.75em; color: #fdcb6e; font-style: italic;">
+                                注意：该消息尚待证实，预计将在第 ${state.marketRumorConfirmDay} 天揭晓真相。
+                            </p>
+                        </div>
+                    </div>`;
+                }
             }
 
             body.innerHTML = html;
             this.elements.newsDetailModal.classList.remove('hidden');
         } catch (e) { console.error("Modal error", e); }
-    }
+    },
 
 };
 

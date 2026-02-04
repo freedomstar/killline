@@ -5,7 +5,83 @@ import { I18n } from '../i18n.js';
 import { GameData } from '../data/index.js';
 import { getArtifact } from '../data/artifacts.js';
 
+
+export const rentIncreaseBonusEvent = {
+    id: 'rent_increase_bonus',
+    type: 'special',
+    title: () => I18n.t('data.artifacts.rent_increase_bonus.title'),
+    description: () => I18n.t('data.artifacts.rent_increase_bonus.description'),
+    period: 'any',
+    isRandom: false,
+    isRandomEncounter: true,
+    generateChoices: (state, context) => {
+        const game = context.game;
+        const artifacts = Array.isArray(state.artifacts) ? state.artifacts : [];
+        const maxSlots = GameData.artifactMaxSlots || 3;
+        const isFull = artifacts.length >= maxSlots;
+
+        const excludeIds = artifacts;
+        const options = game.getArtifactDraftOptions(2, excludeIds);
+
+        if (!options || options.length === 0) {
+            return [{
+                text: "No more artifacts available",
+                effect: (s) => ({ message: "Nothing found.", type: 'neutral', triggerEvent: 'FORCE_NEXT' })
+            }];
+        }
+
+        return options.map(newArt => {
+            let ownedArtName = "";
+            let ownedArtId = "";
+            if (isFull) {
+                const idx = Math.floor(context.rng.random() * artifacts.length);
+                ownedArtId = artifacts[idx];
+                const ownedArt = getArtifact(ownedArtId);
+                ownedArtName = ownedArt ? (typeof ownedArt.name === 'function' ? ownedArt.name() : ownedArt.name) : ownedArtId;
+            }
+            const newArtName = newArt.name();
+
+            if (isFull) {
+                return {
+                    text: I18n.t('data.artifacts.rent_increase_bonus.choices.swap', ownedArtName, newArtName),
+                    hint: newArt.description,
+                    hintType: 'positive',
+                    effect: (state, ctx) => {
+                        if (ctx.isPreview) return { message: "Preview", type: 'neutral' };
+                        game.removeArtifact(ownedArtId);
+                        game.addArtifact(newArt.id);
+                        game.triggerArtifacts('onInit', state);
+                        return {
+                            message: I18n.t('data.artifacts.rent_increase_bonus.messages.swap', ownedArtName, newArtName),
+                            type: 'positive',
+                            triggerEvent: 'FORCE_NEXT'
+                        };
+                    }
+                };
+            } else {
+                return {
+                    text: I18n.t('data.artifacts.rent_increase_bonus.choices.get', newArtName),
+                    hint: newArt.description,
+                    hintType: 'positive',
+                    effect: (state, ctx) => {
+                        if (ctx.isPreview) return { message: "Preview", type: 'neutral' };
+                        game.addArtifact(newArt.id);
+                        game.triggerArtifacts('onInit', state);
+                        return {
+                            message: I18n.t('data.artifacts.rent_increase_bonus.messages.get', newArtName),
+                            type: 'positive',
+                            triggerEvent: 'FORCE_NEXT'
+                        };
+                    }
+                };
+            }
+        });
+    },
+    choices: []
+};
+
 export const randomEvents = [
+
 
 
 

@@ -223,6 +223,13 @@ export const workTaskConfig = {
     deadlineMax: 10,                     // 任务期限最大天数
 };
 
+export const financialIncreaseConfig = {
+    interval: 10,                        // 触发周期 (天)
+    minWorkEfficiencyForRaise: 110,      // 加薪所需的最低工作能力
+    salaryRaiseRange: { min: 0.05, max: 0.10 }, // 加薪幅度 5%-15%
+    rentRaiseRange: { min: 0.08, max: 0.15 }    // 房租涨幅 3%-8%
+};
+
 export const socialCollapseConfig = {
     warningThreshold: 20,       // 警告阶段阈值
     criticalThreshold: 0,       // 崩溃阶段阈值

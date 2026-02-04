@@ -83,9 +83,12 @@ export const InsuranceMixin = {
             report.push(`租客险: -$${rentIns.monthlyPremium}`);
         }
 
+        // V2.XX Intercept state for artifact effects
+        const processingState = this._getReactiveState(this.state);
+
         // 扣款
         if (totalPremium > 0) {
-            this.state.money -= totalPremium;
+            processingState.money -= totalPremium;
             this.state.carInsurancePaid = true; // 标记已支付
             const summary = `🛡️ 支付保险月费: -$${totalPremium}`;
             this.state.dailyFinancialReport.push(summary);

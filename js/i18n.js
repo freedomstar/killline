@@ -342,6 +342,7 @@ export const I18n = {
                     night: '夜间选择',
                     work: '工作相关',
                     system: '系统',
+                    bonus: '特殊奖励',
                 },
 
                 // 夜间选项
@@ -519,7 +520,7 @@ export const I18n = {
                     },
                     insider_phone: {
                         name: '内幕电话',
-                        description: '{0}% 几率预知涨幅最大资产，{1}% 几率被罚款。',
+                        description: '随机有 50% 几率接到 100% 准确的明日情报。（有冷却时间）',
                     },
                     golden_parachute: {
                         name: '黄金降落伞',
@@ -550,6 +551,18 @@ export const I18n = {
                     super_vitamin: {
                         name: '超级维他命',
                         description: '健康的身体带来健康的心灵。每恢复 1 点健康，同时恢复 {0} 点精神。',
+                    },
+                    rent_increase_bonus: {
+                        title: '🏠 租金溢价补偿',
+                        description: '虽然房租涨了，但房东为了安抚你，或者你在搬家/清理房间时发现了一些奇怪的古董...',
+                        choices: {
+                            get: '获得新神器: {0}',
+                            swap: '交换神器: {0} 变为 {1}'
+                        },
+                        messages: {
+                            get: '你获得了神器：{0}',
+                            swap: '你用 {0} 交换了 {1}'
+                        }
                     }
                 },
             },
@@ -578,6 +591,7 @@ export const I18n = {
                     gameInit: (seed) => `[Game] 初始化, 种子: ${seed}`,
                     newTask: (name, difficulty, deadline) => `[Game] 新任务: ${name}, 难度${difficulty}, 期限${deadline}天`,
                     marketNews: (title, change) => `[Market News] ${title} | 情绪变化: ${change > 0 ? '+' : ''}${change}`,
+                    marketDenial: (assetName) => `[Market] 辟谣：关于 ${assetName} 的传闻已被官方否定，行情回归平稳。`,
                     marketDefiance: (title) => `[Market] 🤯 市场无视了"${title}"的影响！走势完全相反！`,
                     marketStatus: (sentiment, news) => `[Market] 情绪=${sentiment}, 新闻=${news || '无'}`,
                     useCarCommute: (remaining, capacity) => `[Game] 使用汽车通勤，剩余油量 ${remaining}/${capacity}`,
@@ -607,12 +621,13 @@ export const I18n = {
 
                 artifactDaily: {
                     piggy_bank: (bonus) => `🪙 存钱罐：今日零花费奖励 +$${bonus}`,
-                    insider_phone_tip: (assetName, socialGain) => `📱 内幕电话：看涨 ${assetName}（社交 +${socialGain}）`,
+                    insider_phone_tip: (assetName) => `📱 明日看涨 ${assetName}`,
                     insider_phone_fine: (fine) => `📱 内幕电话：被罚款 -$${fine}`,
-                    insider_phone_detail: (assetName) => `内幕消息确认：${assetName} 今日表现强劲。`,
-                    ticker_insider_title: '内幕电话',
+                    insider_phone_detail: (assetName) => `据线报，${assetName} 预计将在明日迎来显著波动。`,
+                    ticker_insider_label: '[内幕情报]',
+                    ticker_rumor_label: '[传闻]',
                     ticker_news_title: '市场新闻',
-                    modal_insider_title: '📱 内幕电话 (Insider Phone)',
+                    modal_insider_title: '🔑 核心内幕',
                     modal_news_title: '📰 市场新闻 (News)',
                     modal_no_insider: '今日暂无内幕消息。',
                     modal_no_news: '今日市场平稳，无重大新闻。',
@@ -639,6 +654,9 @@ export const I18n = {
                     medicaidApproved: '✅ 白卡申请通过！医疗费用现已全免。',
                     medicaidDenied: '❌ 白卡申请被拒：资产或收入不符合条件。',
                     emergencyMedical: (amount) => `🚑 紧急送医自付: -$${amount}`,
+                    salaryIncrease: (amount, current) => `💰 绩效评估：工作表现优异，月薪上调了 $${amount} (现为 $${current})`,
+                    salaryNoIncrease: '💼 绩效评估：本月表现平平，薪资维持不变。',
+                    rentIncrease: (amount, current) => `🏠 市场波动：因市场行情变化，房租上涨了 $${amount} (现为 $${current})`,
                 },
 
                 // 预见未来提示 (仅提示)

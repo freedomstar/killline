@@ -393,6 +393,7 @@ export const eventTypes = {
     night: { icon: '🌙', name: () => I18n.t('data.eventTypes.night'), color: '#a29bfe' },
     work: { icon: '💼', name: () => I18n.t('data.eventTypes.work'), color: '#74b9ff' },
     system: { icon: '⚙️', name: () => I18n.t('data.eventTypes.system'), color: '#8888a0' },
+    special: { icon: '🎁', name: () => I18n.t('data.eventTypes.opportunity'), color: '#2ed573' },
 };
 
 export const medicalSystem = {

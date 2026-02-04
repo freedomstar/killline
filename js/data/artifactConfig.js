@@ -28,8 +28,8 @@ export const artifactConfig = {
 
     // 卖血流 (Risk/Reward)
     gopro_camera: {
-        healthLossReward: 5,
-        medicalCostMultiplier: 1.5 // +50%
+        healthLossReward: 50,
+        medicalCostMultiplier: 1.2 // +50%
     },
 
     // 欧皇流 (Luck)
@@ -99,7 +99,8 @@ export const artifactConfig = {
         tipChance: 0.5,
         fineChance: 0.1,
         fineRate: 0.3,
-        socialGain: 5
+        socialGain: 5,
+        cooldownDays: 5
     },
 
     golden_parachute: {

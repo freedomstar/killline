@@ -8,6 +8,7 @@ export * from './accidents.js';
 export * from './health.js';
 export * from './hospital.js';
 export * from './random.js';
+export { rentIncreaseBonusEvent } from './random.js';
 export * from './night.js';
 export * from './nightChoices.js';
 export * from './financial.js';

@@ -2,7 +2,7 @@
  * 时间系统模块 - 时段推进与日期管理
  */
 import { GameData } from '../data/index.js';
-import { EventManager as GameEvents } from '../events/index.js';
+import { EventManager as GameEvents, rentIncreaseBonusEvent } from '../events/index.js';
 import { I18n } from '../i18n.js';
 import { getArtifact } from '../data/artifacts.js';
 
@@ -297,13 +297,21 @@ export const TimeMixin = {
         // V2.XX Insider Phone
         if (this.hasArtifact && this.hasArtifact('insider_phone')) {
             const insiderConf = GameData.artifactConfig.insider_phone || {};
-            const fineChance = insiderConf.fineChance || 0.1;
-            const tipChance = insiderConf.tipChance || 0.5;
+
+            // 减少冷却时间
+            if (this.state.insiderPhoneCD > 0) {
+                this.state.insiderPhoneCD--;
+            }
 
             // Reset tip for the day
             this.state.dailyInsiderTip = null;
 
+            // 只有冷却结束且未被罚款时才可能触发
+            let triggeredFine = false;
+            const fineChance = insiderConf.fineChance || 0.1;
+
             if (this.rng.random() < fineChance) {
+                triggeredFine = true;
                 const fineRate = insiderConf.fineRate || 0.3;
                 const fine = Math.max(0, Math.round((this.state.money || 0) * fineRate));
                 this.state.money -= fine;
@@ -315,48 +323,54 @@ export const TimeMixin = {
                     this.state.dailyFinancialReport.push(fineMsg);
                 }
 
-                // V2.XX: 同时记录到消息历史
                 const art = getArtifact('insider_phone');
                 const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '内幕电话');
                 this.addLog(fineMsg, 'negative', artName);
-            } else if (this.rng.random() < tipChance) {
-                const prices = this.state.marketPrices || {};
-                let bestId = null;
-                let bestChange = -Infinity;
-                Object.keys(prices).forEach(id => {
-                    const change = prices[id]?.change || 0;
-                    if (change > bestChange) {
-                        bestChange = change;
-                        bestId = id;
+            }
+
+            // 冷却检查
+            if (!triggeredFine && (this.state.insiderPhoneCD || 0) <= 0) {
+                const tipChance = insiderConf.tipChance || 0.5;
+                if (this.rng.random() < tipChance) {
+                    const newsList = GameData.marketNews || [];
+                    // 筛选包含上涨效果的新闻
+                    const bullNews = newsList.filter(n => n.effect && Object.values(n.effect).some(v => v > 0));
+
+                    if (bullNews.length > 0) {
+                        const selectedNews = bullNews[Math.floor(this.rng.random() * bullNews.length)];
+
+                        // 强制覆盖当前传闻，内幕消息优先级最高
+                        this.state.marketRumorId = selectedNews.id;
+                        this.state.marketRumorConfirmDay = this.state.day + 1; // 明早生效
+                        this.state.isInsiderRumor = true; // 神器保证 100% 准确
+
+                        const assetId = Object.keys(selectedNews.effect).find(k => selectedNews.effect[k] > 0);
+                        const item = GameData.assetTypes[assetId];
+                        const assetName = item ? (typeof item.name === 'function' ? item.name() : item.name) : assetId;
+
+                        const tipMsg = I18n.t('game.artifactDaily.insider_phone_tip', assetName);
+
+                        if (this.state.dailyFinancialReport) {
+                            this.state.dailyFinancialReport.push(tipMsg);
+                        }
+
+                        const art = getArtifact('insider_phone');
+                        const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '内幕电话');
+                        this.addLog(tipMsg, 'positive', artName);
+
+                        if (window.UI) window.UI.triggerArtifactGlow('insider_phone');
+
+                        // 存储以便 Ticker 显示详细描述
+                        this.state.dailyInsiderTip = {
+                            type: 'insider',
+                            text: tipMsg,
+                            assetId: assetId,
+                            details: I18n.t('game.artifactDaily.insider_phone_detail', assetName)
+                        };
+
+                        // 只有触发成功后才重置冷却时间
+                        this.state.insiderPhoneCD = insiderConf.cooldownDays || 2;
                     }
-                });
-
-                if (bestId) {
-                    const socialGain = insiderConf.socialGain || 5;
-                    this.state.socialValue = Math.min(this.state.maxSocialValue || 100, (this.state.socialValue || 0) + socialGain);
-
-                    if (window.UI) window.UI.triggerArtifactGlow('insider_phone');
-
-                    const item = GameData.items[bestId];
-                    const assetName = item ? (typeof item.name === 'function' ? item.name() : item.name) : bestId;
-                    const tipMsg = I18n.t('game.artifactDaily.insider_phone_tip', assetName, socialGain);
-
-                    if (this.state.dailyFinancialReport) {
-                        this.state.dailyFinancialReport.push(tipMsg);
-                    }
-
-                    // V2.XX: 同时记录到消息历史
-                    const art = getArtifact('insider_phone');
-                    const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '内幕电话');
-                    this.addLog(tipMsg, 'positive', artName);
-
-                    // Store for UI Ticker
-                    this.state.dailyInsiderTip = {
-                        type: 'insider',
-                        text: tipMsg,
-                        assetId: bestId,
-                        details: I18n.t('game.artifactDaily.insider_phone_detail', assetName)
-                    };
                 }
             }
         }
@@ -547,6 +561,46 @@ export const TimeMixin = {
                 console.log(`[Game] ${msg} | 信用分 -${creditDrop} (隐藏)`);
             }
             this.state.daysUntilRent = GameData.timeCycle.monthDays; // 10天周期
+
+            // --- Periodic Increases (Salary & Rent) & Artifact Bonus ---
+            // Triggered every cycle (10 days)
+            const increaseConf = GameData.financialIncreaseConfig;
+
+            // 1. Salary Increase Logic
+            if (this.state.job === 'fulltime' && this.state.monthlyIncome > 0) {
+                // Check if eligible
+                if ((this.state.workEfficiency || 100) >= increaseConf.minWorkEfficiencyForRaise) {
+                    const min = increaseConf.salaryRaiseRange.min;
+                    const max = increaseConf.salaryRaiseRange.max;
+                    const raisePct = min + this.rng.random() * (max - min);
+                    const raiseAmount = Math.floor(this.state.monthlyIncome * raisePct);
+                    // eslint-disable-next-line no-unused-vars
+                    const oldIncome = this.state.monthlyIncome;
+                    this.state.monthlyIncome += raiseAmount;
+
+                    this.state.dailyFinancialReport.push(I18n.t('game.finance.salaryIncrease', raiseAmount, this.state.monthlyIncome));
+                } else {
+                    this.state.dailyFinancialReport.push(I18n.t('game.finance.salaryNoIncrease'));
+                }
+            }
+
+            // 2. Rent Increase Logic
+            if (this.state.housing !== 'homeless' && this.state.housing !== 'car' && this.state.housingCost > 0) {
+                const min = increaseConf.rentRaiseRange.min;
+                const max = increaseConf.rentRaiseRange.max;
+                const rentRaisePct = min + this.rng.random() * (max - min);
+                const rentRaiseAmount = Math.floor(this.state.housingCost * rentRaisePct);
+                // eslint-disable-next-line no-unused-vars
+                const oldRent = this.state.housingCost;
+                this.state.housingCost += rentRaiseAmount;
+
+                this.state.dailyFinancialReport.push(I18n.t('game.finance.rentIncrease', rentRaiseAmount, this.state.housingCost));
+
+                // 3. Trigger Artifact Bonus Event
+                // Separate event that doesn't consume the daytime period
+                if (!this.state.eventQueue) this.state.eventQueue = [];
+                this.state.eventQueue.unshift(rentIncreaseBonusEvent);
+            }
         }
 
         // V2.3 水电结算（每5天）
