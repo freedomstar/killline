@@ -23,6 +23,7 @@ export const artifactConfig = {
 
     // 啃老流 (Survival)
     mom_credit_card: {
+        threshold: 500,
         debtDiscount: 0.5, // 50% discount on spending
     },
 
@@ -55,6 +56,7 @@ export const artifactConfig = {
     },
 
     bull_plushie: {
+        divisor: 100,
         percentPerHundred: 0.01
     },
 
@@ -64,6 +66,7 @@ export const artifactConfig = {
     },
 
     blood_contract: {
+        threshold: 0.5,
         multiplier: 2
     },
 
@@ -77,7 +80,8 @@ export const artifactConfig = {
     },
 
     super_vitamin: {
-        mentalRestoreRatio: 0.5 // Recover 0.2 Mental per 1 Health
+        unit: 1,
+        mentalRestoreRatio: 0.5 // Recover 0.5 Mental per unit Health
     },
 
     // 赛博修仙流 (Cyber-Enhancement)
@@ -97,6 +101,7 @@ export const artifactConfig = {
 
     insider_phone: {
         tipChance: 0.5,
+        accuracy: 1.0,
         fineChance: 0.1,
         fineRate: 0.3,
         socialGain: 5,
@@ -115,10 +120,12 @@ export const artifactConfig = {
 
     // 精神回复流 (Mental Gain)
     quantum_meditation_mat: {
-        healthRestoreRatio: 0.5 // Recover 0.5 Health per 1 Mental
+        unit: 1,
+        healthRestoreRatio: 0.5 // Recover 0.5 Health per unit Mental
     },
 
     streamer_mic: {
-        moneyPerMental: 2 // $2 per 1 Mental
+        unit: 1,
+        moneyPerMental: 2 // $2 per unit Mental
     }
 };

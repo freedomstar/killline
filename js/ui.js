@@ -1996,7 +1996,7 @@ export const UI = {
         content.style.maxWidth = '400px';
 
         const name = this.resolveText(houseInfo.name);
-        const cost = houseInfo.cost;
+        const cost = Math.floor(houseInfo.cost * (state.rentIndex || 1));
         let effects = [];
 
         if (houseInfo.energyRecovery !== 0) {

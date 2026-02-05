@@ -12,9 +12,9 @@ export const insuranceSystem = {
             name: () => I18n.t('data.insuranceNames.employer_basic'),
             type: 'employer',
             monthlyPremium: 120,    // 员工自付部分 (大幅上涨)
-            deductible: 3000,       // 免赔额 $3000
+            deductible: 800,       // 免赔额 $3000
             coinsurance: 0.2,       // 个人承担 20%
-            outOfPocketMax: 6500,   // 年度封顶
+            outOfPocketMax: 3000,   // 年度封顶
             copayDist: {            // 门诊挂号费 (不计入免赔额)
                 doctor: 60,
                 specialist: 90,
@@ -27,7 +27,7 @@ export const insuranceSystem = {
             name: () => I18n.t('data.insuranceNames.employer_premium'),
             type: 'employer',
             monthlyPremium: 250,    // 涨价
-            deductible: 1000,       // 免赔额 $1000
+            deductible: 500,       // 免赔额 $1000
             coinsurance: 0.1,       // 个人承担 10%
             outOfPocketMax: 3000,
             copayDist: {
@@ -43,7 +43,7 @@ export const insuranceSystem = {
             name: () => I18n.t('data.insuranceNames.marketplace_bronze'),
             type: 'marketplace',
             monthlyPremium: 200,
-            deductible: 6500,       // 极高免赔额
+            deductible: 1500,       // 极高免赔额
             coinsurance: 0.4,       // 个人承担 40%
             outOfPocketMax: 8500,
             copayDist: {
@@ -57,8 +57,8 @@ export const insuranceSystem = {
             id: 'marketplace_silver',
             name: () => I18n.t('data.insuranceNames.marketplace_silver'),
             type: 'marketplace',
-            monthlyPremium: 550,
-            deductible: 4500,
+            monthlyPremium: 250,
+            deductible: 1000,
             coinsurance: 0.3,
             outOfPocketMax: 7800,
             description: (premium, deductible) => I18n.t('data.insuranceDescriptions.marketplace_silver', premium, deductible)
@@ -67,8 +67,8 @@ export const insuranceSystem = {
             id: 'marketplace_gold',
             name: () => I18n.t('data.insuranceNames.marketplace_gold'),
             type: 'marketplace',
-            monthlyPremium: 800,
-            deductible: 1500,
+            monthlyPremium: 300,
+            deductible: 800,
             coinsurance: 0.2,
             outOfPocketMax: 5000,
             description: (premium, deductible) => I18n.t('data.insuranceDescriptions.marketplace_gold', premium, deductible)

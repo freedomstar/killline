@@ -58,7 +58,8 @@ export const financialEvents = [
                     const conf = GameData.eventConfigs.random_events_cleanup.rent_due.moveOut;
                     if (state.housing === 'apartment') {
                         // 降级为廉价房
-                        const newCost = GameData.housingTypes.cheapRoom ? GameData.housingTypes.cheapRoom.cost : 800;
+                        const baseCost = GameData.housingTypes.cheapRoom?.cost || 500;
+                        const newCost = Math.floor(baseCost * (state.rentIndex || 1));
                         return I18n.t('events.rent_due.choices.moveOut.hint', newCost, conf.mentalLoss);
                     }
                     // 已经是廉价房，只能流浪
@@ -71,7 +72,8 @@ export const financialEvents = [
 
                     if (state.housing === 'apartment') {
                         state.housing = 'cheapRoom';
-                        state.housingCost = GameData.housingTypes.cheapRoom.cost;
+                        const baseCost = GameData.housingTypes.cheapRoom?.cost || 500;
+                        state.housingCost = Math.floor(baseCost * (state.rentIndex || 1));
                         state.mental -= conf.mentalLoss;
                         return { message: I18n.t('events.rent_due.messages.moveOut'), type: 'negative' };
                     } else {

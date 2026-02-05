@@ -237,7 +237,7 @@ export const eventConfigs = {
         day_rest: {
             sleep: { energyGain: 30, healthGain: 5 },
             cook: { ingredientsCost: 1, healthGain: 5, mentalGain: 5 },
-            shop: { cost: 40, energyCost: 30, ingredientsGain: 5 },
+            shop: { cost: 30, energyCost: 30, ingredientsGain: 5 },
             delivery: { cost: 200, energyCost: 45 },
             walk: { cost: 20, mentalGain: 5, luckyMoney: 50, luckyChance: 0.2 },
             hangout: { cost: 30, energyCost: 45, socialGain: 5, mentalGain: 5 }
@@ -371,8 +371,8 @@ export const eventConfigs = {
         phone: { mentalGain: 5, energyRecoveryTomorrow: -30 },
         overtime: { money: 100, energyRecoveryTomorrow: -40, stress: 30 },
         entertainment: { money: 50, mental: 10, energyRecoveryTomorrow: -10 },
-        prepareMeal: { cost: 1, energyRecoveryTomorrow: 10 },
-        grocery: { money: 50, ingredients: 3, energyRecoveryTomorrow: 10 },
+        prepareMeal: { cost: 1, energyRecoveryTomorrow: 20, mentalGain: 5 },
+        grocery: { money: 20, ingredients: 3, energyRecoveryTomorrow: 10 },
         phone_social: { socialGain: 5, mentalGain: 5, energyRecoveryTomorrow: -20 }
     },
     // 社交值与工作效率影响裁员机制

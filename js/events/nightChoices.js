@@ -127,13 +127,17 @@ export const nightChoices = {
         condition: (housing) => housing === 'apartment' || housing === 'cheapRoom',
         hint: () => I18n.t('data.night_choices.prepareMeal.hint',
             GameData.eventConfigs.night_choice_hints.prepareMeal.cost,
-            GameData.eventConfigs.night_choice_hints.prepareMeal.energyRecoveryTomorrow
+            GameData.eventConfigs.night_choice_hints.prepareMeal.energyRecoveryTomorrow,
+            GameData.eventConfigs.night_choice_hints.prepareMeal.mentalGain
         ),
         effect: (state, context) => {
             const cfg = GameData.eventConfigs.night_choice_hints.prepareMeal;
             if (state.ingredients >= cfg.cost) {
                 state.ingredients -= cfg.cost;
                 state.hasPreparedMeal = true;
+                if (cfg.mentalGain) {
+                    state.mental = Math.min(state.maxMental, (state.mental || 0) + cfg.mentalGain);
+                }
                 return {
                     message: I18n.t('game.nightResults.prepareMeal'),
                     energyRecoveryTomorrow: cfg.energyRecoveryTomorrow

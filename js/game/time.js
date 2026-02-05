@@ -584,20 +584,26 @@ export const TimeMixin = {
                 }
             }
 
-            // 2. Rent Increase Logic
-            if (this.state.housing !== 'homeless' && this.state.housing !== 'car' && this.state.housingCost > 0) {
-                const min = increaseConf.rentRaiseRange.min;
-                const max = increaseConf.rentRaiseRange.max;
-                const rentRaisePct = min + this.rng.random() * (max - min);
-                const rentRaiseAmount = Math.floor(this.state.housingCost * rentRaisePct);
-                // eslint-disable-next-line no-unused-vars
-                const oldRent = this.state.housingCost;
-                this.state.housingCost += rentRaiseAmount;
+            // 2. Rent Increase Logic (Market Inflation)
+            const min = increaseConf.rentRaiseRange.min;
+            const max = increaseConf.rentRaiseRange.max;
+            const rentRaisePct = min + this.rng.random() * (max - min);
 
-                this.state.dailyFinancialReport.push(I18n.t('game.finance.rentIncrease', rentRaiseAmount, this.state.housingCost));
+            // V2.XX: Increase the global rent index instead of just the current cost
+            const oldIndex = this.state.rentIndex || 1;
+            this.state.rentIndex = oldIndex * (1 + rentRaisePct);
+
+            if (this.state.housing !== 'homeless' && this.state.housing !== 'car' && this.state.housingCost > 0) {
+                const oldRent = this.state.housingCost;
+                // Update current housing cost based on new index
+                const baseCost = GameData.housingTypes[this.state.housing]?.cost || 1000;
+                this.state.housingCost = Math.floor(baseCost * this.state.rentIndex);
+
+                const actualIncrease = this.state.housingCost - oldRent;
+
+                this.state.dailyFinancialReport.push(I18n.t('game.finance.rentIncrease', actualIncrease, this.state.housingCost));
 
                 // 3. Trigger Artifact Bonus Event
-                // Separate event that doesn't consume the daytime period
                 if (!this.state.eventQueue) this.state.eventQueue = [];
                 this.state.eventQueue.unshift(rentIncreaseBonusEvent);
             }

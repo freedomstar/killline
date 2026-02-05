@@ -261,7 +261,7 @@ export const artifacts = {
     mom_credit_card: {
         id: 'mom_credit_card',
         name: () => I18n.t('data.artifacts.mom_credit_card.name'),
-        description: () => I18n.t('data.artifacts.mom_credit_card.description', (artifactConfig.mom_credit_card.debtDiscount * 100)),
+        description: () => I18n.t('data.artifacts.mom_credit_card.description', (artifactConfig.mom_credit_card.debtDiscount * 100), artifactConfig.mom_credit_card.threshold),
         icon: '💳',
         rarity: 'rare',
         onDaily: (state) => {
@@ -356,12 +356,12 @@ export const artifacts = {
     bull_plushie: {
         id: 'bull_plushie',
         name: () => I18n.t('data.artifacts.bull_plushie.name'),
-        description: () => I18n.t('data.artifacts.bull_plushie.description', Math.round(artifactConfig.bull_plushie.percentPerHundred * 100)),
+        description: () => I18n.t('data.artifacts.bull_plushie.description', Math.round(artifactConfig.bull_plushie.percentPerHundred * 100), artifactConfig.bull_plushie.divisor),
         icon: '🐂',
         rarity: 'rare',
         onModifyMult: (state, actionInfo, delta) => {
             if (!delta.money || delta.money <= 0) return null;
-            const steps = Math.floor((state.money || 0) / 100);
+            const steps = Math.floor((state.money || 0) / artifactConfig.bull_plushie.divisor);
             if (steps <= 0) return null;
             const multiplier = 1 + steps * artifactConfig.bull_plushie.percentPerHundred;
             return {
@@ -391,13 +391,13 @@ export const artifacts = {
     blood_contract: {
         id: 'blood_contract',
         name: () => I18n.t('data.artifacts.blood_contract.name'),
-        description: () => I18n.t('data.artifacts.blood_contract.description'),
+        description: () => I18n.t('data.artifacts.blood_contract.description', Math.round(artifactConfig.blood_contract.threshold * 100), artifactConfig.blood_contract.multiplier),
         icon: '📝',
         rarity: 'epic',
         onModifyMult: (state, actionInfo, delta) => {
             if (!delta.money || delta.money <= 0) return null;
             const healthRatio = (state.health || 0) / (state.maxHealth || 100);
-            if (healthRatio >= 0.5) return null;
+            if (healthRatio >= artifactConfig.blood_contract.threshold) return null;
             return {
                 multiplier: artifactConfig.blood_contract.multiplier,
                 appliesTo: 'positive',
@@ -501,7 +501,7 @@ export const artifacts = {
     insider_phone: {
         id: 'insider_phone',
         name: () => I18n.t('data.artifacts.insider_phone.name'),
-        description: () => I18n.t('data.artifacts.insider_phone.description', Math.round(artifactConfig.insider_phone.tipChance * 100), Math.round(artifactConfig.insider_phone.fineChance * 100)),
+        description: () => I18n.t('data.artifacts.insider_phone.description', Math.round(artifactConfig.insider_phone.tipChance * 100), Math.round(artifactConfig.insider_phone.accuracy * 100)),
         icon: '📱',
         rarity: 'epic'
     },
@@ -526,7 +526,7 @@ export const artifacts = {
     quantum_meditation_mat: {
         id: 'quantum_meditation_mat',
         name: () => I18n.t('data.artifacts.quantum_meditation_mat.name'),
-        description: () => I18n.t('data.artifacts.quantum_meditation_mat.description', artifactConfig.quantum_meditation_mat.healthRestoreRatio),
+        description: () => I18n.t('data.artifacts.quantum_meditation_mat.description', artifactConfig.quantum_meditation_mat.healthRestoreRatio, artifactConfig.quantum_meditation_mat.unit),
         icon: '🧘',
         rarity: 'rare',
         onModifyBase: (delta) => {
@@ -543,7 +543,7 @@ export const artifacts = {
     streamer_mic: {
         id: 'streamer_mic',
         name: () => I18n.t('data.artifacts.streamer_mic.name'),
-        description: () => I18n.t('data.artifacts.streamer_mic.description', artifactConfig.streamer_mic.moneyPerMental),
+        description: () => I18n.t('data.artifacts.streamer_mic.description', artifactConfig.streamer_mic.moneyPerMental, artifactConfig.streamer_mic.unit),
         icon: '🎤',
         rarity: 'common',
         onModifyBase: (delta) => {
@@ -564,7 +564,7 @@ export const artifacts = {
     super_vitamin: {
         id: 'super_vitamin',
         name: () => I18n.t('data.artifacts.super_vitamin.name'),
-        description: () => I18n.t('data.artifacts.super_vitamin.description', artifactConfig.super_vitamin.mentalRestoreRatio),
+        description: () => I18n.t('data.artifacts.super_vitamin.description', artifactConfig.super_vitamin.mentalRestoreRatio, artifactConfig.super_vitamin.unit),
         icon: '💊',
         rarity: 'rare',
         onModifyBase: (delta) => {

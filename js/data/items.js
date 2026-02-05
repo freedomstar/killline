@@ -221,7 +221,9 @@ export const lunchOptions = {
         name: () => I18n.t('data.lunch.bento.name'),
         hint: (cfg) => I18n.t('data.lunch.bento.hint', cfg),
         cost: 0,
-        healthEffect: 3,
+        healthEffect: 5,
+        energyEffect: 10,
+        mentalEffect: 10,
         condition: (state) => state.hasPreparedMeal
     },
     fastfood: {
@@ -229,7 +231,7 @@ export const lunchOptions = {
         name: () => I18n.t('data.lunch.fastfood.name'),
         hint: (cfg) => I18n.t('data.lunch.fastfood.hint', cfg),
         cost: 15,
-        healthEffect: -3,
+        healthEffect: -4,
         mentalEffect: 5,
         condition: (state) => true
     },

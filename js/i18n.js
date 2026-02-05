@@ -201,7 +201,7 @@ export const I18n = {
 
                 // 午餐选项
                 lunch: {
-                    bento: { name: '🍱 吃便当', hint: (cfg) => `健康+${cfg.healthEffect}，消耗1库存` },
+                    bento: { name: '🍱 吃便当', hint: (cfg) => `精力+${cfg.energyEffect}，健康+${cfg.healthEffect}，精神+${cfg.mentalEffect}` },
                     fastfood: { name: '🍔 买快餐', hint: (cfg) => `健康${cfg.healthEffect}，精神+${cfg.mentalEffect}，-$${cfg.cost}` },
                     skip: { name: '🤐 不吃午饭', hint: (cfg) => `健康${cfg.healthEffect}，省钱` },
                     business: { name: '🍽️ 商务宴请', hint: (cfg) => `-$${cfg.cost}，精神+${cfg.mentalEffect}，社交+${cfg.socialEffect}` },
@@ -342,7 +342,7 @@ export const I18n = {
                     phone_social: { text: '📞 给朋友打电话', hint: (social, mental, energyPenalty) => `+${social}社交，+${mental}精神，明天精力${energyPenalty > 0 ? `+${energyPenalty}` : energyPenalty}` },
                     overtime: { text: '加班工作', hint: (money, mental, progress, energyPenalty) => `+$${money}，-${mental}精神，进度+${progress * 100}%，明天精力${energyPenalty > 0 ? `+${energyPenalty}` : energyPenalty}` },
                     entertainment: { text: '🎉 出去放松', hint: (cost, mental, energyBonus) => `-$${cost}，+${mental}精神，明天精力${energyBonus > 0 ? `+${energyBonus}` : energyBonus}` },
-                    prepareMeal: { text: '🍳 准备明天的便当', hint: (ingredients, energyBonus) => `-${ingredients}食材，明天精力${energyBonus > 0 ? `+${energyBonus}` : energyBonus}` },
+                    prepareMeal: { text: '🍳 准备明天的便当', hint: (ingredients, energyBonus, mental) => `-${ingredients}食材，+${mental}精神，明天精力${energyBonus > 0 ? `+${energyBonus}` : energyBonus}` },
                     grocery: { text: '🛒 去超市采购食材', hint: (cost, ingredients, energyBonus) => `-$${cost}，+${ingredients}食材，明天精力${energyBonus > 0 ? `+${energyBonus}` : energyBonus}` },
                 },
 
@@ -457,7 +457,7 @@ export const I18n = {
                     },
                     mom_credit_card: {
                         name: '神奇信用卡',
-                        description: '存款低于$500时生效。所有消费减少 {0}%。',
+                        description: '存款低于${1}时生效。所有消费减少 {0}%。',
                         log: (subsidy) => `神奇信用卡。`
                     },
                     gopro_camera: {
@@ -477,16 +477,16 @@ export const I18n = {
                         description: '每次获得金钱时额外 +$${0}。',
                     },
                     gig_cap: {
-                        name: '零工只因',
-                        description: '所有消耗精力的行动，基础收益 +$${0}。',
+                        name: '奋斗者之帽',
+                        description: '所有消耗精力的行动，基础收益 +${0}。',
                     },
                     piggy_bank: {
                         name: '存钱罐',
-                        description: '当天不花钱 → 金钱收益 +$${0}。',
+                        description: '当天不花钱 → 金钱收益 +${0}。',
                     },
                     bull_plushie: {
                         name: '牛市公仔',
-                        description: '当前每拥有 $100，金钱获取 +{0}%。',
+                        description: '当前每拥有 ${1}，金钱获取 +{0}%。',
                     },
                     grinder_tie: {
                         name: '奋斗逼领带',
@@ -494,7 +494,7 @@ export const I18n = {
                     },
                     blood_contract: {
                         name: '卖血契约',
-                        description: '健康低于 50% 时，所有收益 x2。',
+                        description: '健康低于 {0}% 时，所有收益 x{1}。',
                     },
                     jammed_copier: {
                         name: '卡纸复印机',
@@ -510,7 +510,7 @@ export const I18n = {
                     },
                     insider_phone: {
                         name: '内幕电话',
-                        description: '随机有 50% 几率接到 100% 准确的明日情报。（有冷却时间）',
+                        description: '随机有 {0}% 几率接到 {1}% 准确的明日情报。（有冷却时间）',
                     },
                     golden_parachute: {
                         name: '黄金降落伞',
@@ -532,15 +532,15 @@ export const I18n = {
                     },
                     quantum_meditation_mat: {
                         name: '量子冥想垫',
-                        description: '精神不仅仅是虚幻的。每恢复 1 点精神，同时恢复 {0} 点健康。',
+                        description: '精神不仅仅是虚幻的。每恢复 {1} 点精神，同时恢复 {0} 点健康。',
                     },
                     streamer_mic: {
                         name: '主播麦克风',
-                        description: '把你的情绪价值变现。每恢复 1 点精神，获得 ${0}。',
+                        description: '把你的情绪价值变现。每恢复 {1} 点精神，获得 ${0}。',
                     },
                     super_vitamin: {
                         name: '超级维他命',
-                        description: '健康的身体带来健康的心灵。每恢复 1 点健康，同时恢复 {0} 点精神。',
+                        description: '健康的身体带来健康的心灵。每恢复 {1} 点健康，同时恢复 {0} 点精神。',
                     },
                     rent_increase_bonus: {
                         title: '🏠 租金溢价补偿',
@@ -597,7 +597,7 @@ export const I18n = {
 
                 artifactTriggers: {
                     side_job_bot: (bonus) => `🤖 副业机器人：+$${bonus}`,
-                    gig_cap: (bonus) => `🧢 零工只因：+$${bonus}`,
+                    gig_cap: (bonus) => `🧢 奋斗者之帽：+$${bonus}`,
                     gopro_camera: (reward) => `📹 运动相机：受伤赚钱 +$${reward}`,
                     gopro_camera_medical: '📹 运动相机：医疗费用增加',
                     bull_plushie: (percent) => `🐂 牛市公仔：收益 +${percent}%`,
