@@ -225,8 +225,8 @@ export const eventConfigs = {
             prepare: { energyCost: 0, socialGain: 10, energyRecoveryTomorrow: -30 }
         },
         emergency_oon: {
-            nearest: { oonChance: 0.6, mentalCost: 40, baseCost: 8000, healthGain: 25 },
-            inNetwork: { healthLoss: 25, mentalLoss: 20, baseCost: 8000 }
+            nearest: { oonChance: 0.6, mentalCost: 40, baseCost: 2000, healthGain: 25 },
+            inNetwork: { healthLoss: 25, mentalLoss: 20, baseCost: 2000 }
         }
     },
     // Phase 4: Final Cleanup

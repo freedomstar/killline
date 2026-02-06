@@ -52,8 +52,10 @@ export const UI = {
         // 状态栏
         this.elements.moneyValue = document.getElementById('money-value');
         this.elements.investmentValue = document.getElementById('investment-value');
+        this.elements.debtValue = document.getElementById('debt-value');
         this.elements.housingValue = document.getElementById('housing-value');
         this.elements.housingCard = document.getElementById('housing-card-container');
+        this.elements.financeCard = document.getElementById('finance-card-container');
         this.elements.jobValue = document.getElementById('job-value');
         this.elements.energyBar = document.getElementById('energy-bar');
         this.elements.mentalBar = document.getElementById('mental-bar');
@@ -126,6 +128,20 @@ export const UI = {
         this.elements.billDetailTotal = document.getElementById('bill-detail-total');
         this.elements.closeBillDetail = document.getElementById('close-bill-detail');
 
+        this.elements.financeDetailModal = document.getElementById('finance-detail-modal');
+        this.elements.financeDetailCash = document.getElementById('finance-detail-cash');
+        this.elements.financeDetailInvestments = document.getElementById('finance-detail-investments');
+        this.elements.financeDetailInvestmentList = document.getElementById('finance-detail-investment-list');
+        this.elements.financeDetailDebtTotal = document.getElementById('finance-detail-debt-total');
+        this.elements.financeDetailDebtList = document.getElementById('finance-detail-debt-list');
+        this.elements.financeDetailRepayInput = document.getElementById('finance-detail-repay-input');
+        this.elements.financeDetailRepayBtn = document.getElementById('finance-detail-repay-btn');
+        this.elements.closeFinanceDetail = document.getElementById('close-finance-detail');
+
+        if (this.elements.financeDetailRepayInput) {
+            this.elements.financeDetailRepayInput.placeholder = I18n.t('ui_static.finance_detail.repay_placeholder') || '输入偿还金额';
+        }
+
         // V2.1 储备信息
         this.elements.ingredientsCount = document.getElementById('ingredients-count');
         this.elements.mealStatus = document.getElementById('meal-status');
@@ -180,6 +196,11 @@ export const UI = {
         if (this.elements.housingCard) {
             this.elements.housingCard.addEventListener('click', () => {
                 this.showHousingDetailModal();
+            });
+        }
+        if (this.elements.financeCard) {
+            this.elements.financeCard.addEventListener('click', () => {
+                this.showFinanceDetailModal();
             });
         }
 
@@ -360,6 +381,22 @@ export const UI = {
                         this.elements.billDetailModal.classList.add('hidden');
                     }
                 });
+            }
+
+            if (this.elements.closeFinanceDetail) {
+                this.elements.closeFinanceDetail.addEventListener('click', () => {
+                    this.elements.financeDetailModal.classList.add('hidden');
+                });
+            }
+            if (this.elements.financeDetailModal) {
+                this.elements.financeDetailModal.addEventListener('click', (e) => {
+                    if (e.target === this.elements.financeDetailModal) {
+                        this.elements.financeDetailModal.classList.add('hidden');
+                    }
+                });
+            }
+            if (this.elements.financeDetailRepayBtn) {
+                this.elements.financeDetailRepayBtn.addEventListener('click', () => this.handleDebtRepay());
             }
 
             // 绑定交易模态框事件
@@ -1089,8 +1126,7 @@ export const UI = {
             this.elements.statusCash.textContent = game.formatMoney(state.money);
         }
         if (this.elements.statusDebt) {
-            // 目前没有显式的债务字段，用负资产近似
-            const debt = state.money < 0 ? Math.abs(state.money) : 0;
+            const debt = Math.max(0, state.debt || 0);
             this.elements.statusDebt.textContent = `$${debt.toLocaleString()}`;
         }
         if (this.elements.statusCredit) {
@@ -2171,22 +2207,132 @@ export const UI = {
         total += utilCost;
         this.createBillRow(list, I18n.t('ui_static.bill_detail.utility'), utilCost, utilDays);
 
-        // 4. 医疗债务分期
-        if (state.medicalDebtInstallment && state.medicalDebt > 0) {
-            const medCost = GameData.eventConfigs.medical_debt.installment.amount;
-            const monthDays = GameData.timeCycle.monthDays;
-            const currentMod = state.day % monthDays;
-            const medDays = currentMod === 0 ? 0 : (monthDays - currentMod);
-            total += medCost;
-            this.createBillRow(list, I18n.t('events.medical_debt_installment.title'), medCost, medDays);
-        }
-
         // 总计
         if (this.elements.billDetailTotal) {
             this.elements.billDetailTotal.textContent = `$${total.toLocaleString()}`;
         }
 
         this.elements.billDetailModal.classList.remove('hidden');
+    },
+
+    /**
+     * 财务详情弹窗
+     */
+    showFinanceDetailModal() {
+        if (!this.elements.financeDetailModal) return;
+
+        const state = game.getState();
+
+        if (this.elements.financeDetailCash) {
+            this.elements.financeDetailCash.textContent = game.formatMoney(state.money || 0);
+        }
+
+        const prices = state.marketPrices || {};
+        const holdings = state.holdings || {};
+        let portfolioValue = 0;
+
+        if (this.elements.financeDetailInvestmentList) {
+            this.elements.financeDetailInvestmentList.innerHTML = '';
+        }
+
+        const investmentRows = [];
+        Object.keys(holdings).forEach(id => {
+            const holding = holdings[id];
+            if (holding && holding.quantity > 0 && prices[id]) {
+                const value = holding.quantity * prices[id].price;
+                portfolioValue += value;
+                const asset = GameData.assetTypes[id];
+                const name = asset ? this.resolveText(asset.name) : id;
+                investmentRows.push({ name, value });
+            }
+        });
+
+        if (this.elements.financeDetailInvestments) {
+            this.elements.financeDetailInvestments.textContent = game.formatMoney(portfolioValue);
+        }
+
+        if (this.elements.financeDetailInvestmentList) {
+            if (investmentRows.length === 0) {
+                this.elements.financeDetailInvestmentList.innerHTML = `<div class="finance-detail-empty">${I18n.t('ui_static.finance_detail.noInvestments') || '暂无持仓'}</div>`;
+            } else {
+                investmentRows.forEach(row => {
+                    const item = document.createElement('div');
+                    item.className = 'finance-detail-item';
+                    item.innerHTML = `<span>${row.name}</span><span>$${Math.round(row.value).toLocaleString()}</span>`;
+                    this.elements.financeDetailInvestmentList.appendChild(item);
+                });
+            }
+        }
+
+        const totalDebt = Math.max(0, state.debt || 0);
+        if (this.elements.financeDetailDebtTotal) {
+            this.elements.financeDetailDebtTotal.textContent = game.formatMoney(totalDebt);
+        }
+
+        if (this.elements.financeDetailDebtList) {
+            this.elements.financeDetailDebtList.innerHTML = '';
+
+            const addDebtItem = (label, value) => {
+                const item = document.createElement('div');
+                item.className = 'finance-detail-item';
+                item.innerHTML = `<span>${label}</span><span>$${Math.round(value).toLocaleString()}</span>`;
+                this.elements.financeDetailDebtList.appendChild(item);
+            };
+
+            const pendingTotal = (state.pendingMedicalInstallments || [])
+                .reduce((sum, item) => sum + (item.remaining || 0), 0);
+            if (pendingTotal > 0) {
+                addDebtItem(I18n.t('finance.pendingInstallment') || '待结转分期', pendingTotal);
+            }
+
+            const interestTotal = Math.max(0, state.debtInterestAccrued || 0);
+            if (interestTotal > 0) {
+                addDebtItem(I18n.t('finance.interest') || '累计利息', interestTotal);
+            }
+
+            const sourceTotals = {};
+            (state.debtItems || []).forEach(item => {
+                if (!item || !item.source || typeof item.amount !== 'number') return;
+                sourceTotals[item.source] = (sourceTotals[item.source] || 0) + item.amount;
+            });
+
+            Object.keys(sourceTotals).forEach(source => {
+                if (source === 'interest') return;
+                const label = game._getDebtSourceLabel ? game._getDebtSourceLabel(source) : source;
+                addDebtItem(label, sourceTotals[source]);
+            });
+
+            if (this.elements.financeDetailDebtList.children.length === 0) {
+                this.elements.financeDetailDebtList.innerHTML = `<div class="finance-detail-empty">${I18n.t('ui_static.finance_detail.noDebt') || '暂无债务'}</div>`;
+            }
+        }
+
+        if (this.elements.financeDetailRepayInput) {
+            this.elements.financeDetailRepayInput.max = `${Math.max(0, state.money || 0)}`;
+        }
+
+        this.elements.financeDetailModal.classList.remove('hidden');
+    },
+
+    handleDebtRepay() {
+        if (!this.elements.financeDetailRepayInput) return;
+        const raw = parseFloat(this.elements.financeDetailRepayInput.value);
+        if (!raw || raw <= 0) {
+            this.showToast(I18n.t('ui.toast.invalidQuantity') || '请输入有效数量', 'negative');
+            return;
+        }
+
+        const result = game.repayDebt(raw);
+        if (!result || !result.success) {
+            this.showToast(I18n.t('finance.repayEmpty') || '当前没有可偿还的债务', 'warning');
+            return;
+        }
+
+        this.elements.financeDetailRepayInput.value = '';
+        this.showToast(I18n.t('finance.repaySuccess', result.paid) || `成功偿还 $${result.paid}`, 'positive');
+        this.updateStatusBar(game.getStatusDescription());
+        this.renderStatusPage();
+        this.showFinanceDetailModal();
     },
 
     createBillRow(container, name, amount, days) {
@@ -2350,6 +2496,13 @@ export const UI = {
             }
         }
 
+        if (this.elements.debtValue) {
+            const debtAmount = Math.max(0, state.debt || 0);
+            const label = I18n.t('finance.debt') || '债务';
+            this.elements.debtValue.textContent = `${label}: $${debtAmount.toLocaleString()}`;
+            this.elements.debtValue.style.opacity = debtAmount > 0 ? '1' : '0.6';
+        }
+
         // 住所
         this.elements.housingValue.textContent = status.housing;
 
@@ -2443,23 +2596,9 @@ export const UI = {
         const utilDays = state.daysUntilUtility;
 
         let totalMonthlyBill = rentCost + insCost + utilCost;
-        let medicalCost = 0;
-        let medicalDays = 999;
-
-        if (state.medicalDebtInstallment && state.medicalDebt > 0) {
-            medicalCost = GameData.eventConfigs.medical_debt.installment.amount;
-            // Calculate days until next installment (based on monthDays cycle)
-            const monthDays = GameData.timeCycle.monthDays;
-            const currentMod = state.day % monthDays;
-            // If currentMod is 0, it means today is the day (paid or checking), so next is in monthDays
-            // Or if it's strictly upcoming, it's monthDays - currentMod.
-            // Let's assume consistent with rent logic.
-            medicalDays = currentMod === 0 ? 0 : (monthDays - currentMod);
-            totalMonthlyBill += medicalCost;
-        }
 
         // Find nearest due date
-        const nearestDays = Math.min(rentDays, insDays, utilDays, medicalDays);
+        const nearestDays = Math.min(rentDays, insDays, utilDays);
 
         if (this.elements.monthlyBillTotal) {
             this.elements.monthlyBillTotal.textContent = `$${totalMonthlyBill.toLocaleString()}`;

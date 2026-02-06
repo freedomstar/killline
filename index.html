@@ -389,6 +389,42 @@
             </div>
         </div>
 
+        <div id="finance-detail-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel finance-detail-modal">
+                <button id="close-finance-detail" class="close-button">×</button>
+                <h2 class="modal-title" data-i18n="ui_static.finance_detail.title">💼 财务详情</h2>
+                <div class="modal-body finance-detail-body">
+                    <div class="finance-detail-section">
+                        <div class="finance-detail-section-title" data-i18n="ui_static.finance_detail.cash_title">现金资产</div>
+                        <div class="finance-detail-row">
+                            <span class="finance-detail-label" data-i18n="ui_static.assets_page.cash_label">现金</span>
+                            <span id="finance-detail-cash" class="finance-detail-value positive">...</span>
+                        </div>
+                        <div class="finance-detail-row">
+                            <span class="finance-detail-label" data-i18n="ui_static.assets_page.portfolio_label">投资总值</span>
+                            <span id="finance-detail-investments" class="finance-detail-value">...</span>
+                        </div>
+                        <div class="finance-detail-list" id="finance-detail-investment-list"></div>
+                    </div>
+
+                    <div class="finance-detail-section">
+                        <div class="finance-detail-section-title" data-i18n="finance.totalDebt">总债务</div>
+                        <div id="finance-detail-debt-total" class="finance-detail-debt-total">...</div>
+                        <div class="finance-detail-list" id="finance-detail-debt-list"></div>
+                    </div>
+
+                    <div class="finance-detail-section">
+                        <div class="finance-detail-section-title" data-i18n="finance.repay">偿还</div>
+                        <div class="finance-detail-repay">
+                            <input type="number" id="finance-detail-repay-input" min="0" step="1"
+                                data-i18n="ui_static.finance_detail.repay_placeholder" placeholder="输入偿还金额">
+                            <button id="finance-detail-repay-btn" class="primary-button" data-i18n="finance.repay">偿还</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="news-detail-modal" class="modal-overlay hidden">
             <div class="modal-content glass-panel" style="max-width: 500px;">
                 <button id="close-news-detail" class="close-button">×</button>
@@ -669,7 +705,7 @@
                         </div>
 
                         <!-- Row 4: Money (Full Width) -->
-                        <div class="finance-item finance-item-full">
+                        <div class="finance-item finance-item-full clickable" id="finance-card-container">
                             <div class="finance-card-header" style="margin-bottom: 0;">
                                 <span class="status-icon">💰</span>
                                 <span class="status-label" data-i18n="ui_static.game_header.money">存款</span>
@@ -677,6 +713,7 @@
                             <div class="finance-value-container">
                                 <span class="status-value money" id="money-value">$15,000</span>
                                 <span id="investment-value" class="finance-sub-value">...</span>
+                                <span id="debt-value" class="finance-sub-value debt">...</span>
                             </div>
                         </div>
                     </div>

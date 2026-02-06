@@ -559,6 +559,24 @@ export const I18n = {
                 },
             },
 
+            finance: {
+                debt: '债务',
+                totalDebt: '总债务',
+                pendingInstallment: '待结转分期',
+                repay: '偿还',
+                repaySuccess: (amount) => `成功偿还 $${amount}`,
+                repayEmpty: '当前没有可偿还的债务',
+                newDebtNotice: (amount, source) => `新增债务 $${amount} (${source})`,
+                interestNotice: (amount) => `债务产生利息 $${amount}`,
+                interest: '累计利息',
+                medical: '医疗',
+                commute: '通勤',
+                daily: '日常',
+                fine: '罚款',
+                overflow: '超支',
+                other: '其他'
+            },
+
             // ========== game.js 文本 ==========
             game: {
                 // 任务名称列表
@@ -781,6 +799,13 @@ export const I18n = {
                     wait: '天',
                     not_prepared: '未备',
                     investment: '投资',
+                },
+                finance_detail: {
+                    title: '💼 财务详情',
+                    cash_title: '现金资产',
+                    noInvestments: '暂无持仓',
+                    noDebt: '暂无债务',
+                    repay_placeholder: '输入偿还金额'
                 },
                 bill_detail: {
                     title: '🧾 账单详情',
@@ -1375,7 +1400,7 @@ export const I18n = {
                     title: '🤧 身体不适',
                     description: '你感觉喉咙痛，头也昏昏沉沉的。可能是感冒了。',
                     choices: {
-                        clinic: { text: '去分钟诊所 (Minute Clinic)', hint: (cost, success, fail) => `-$${cost}，健康+${success}或-${fail}` },
+                        clinic: { text: '去分钟诊所 (Minute Clinic)', hint: (cost, success, fail, insurancePays, baseCost) => `-$${cost} (原价 $${baseCost}, 保险赔付 $${insurancePays})，健康+${success}或-${fail}` },
                         otc: { text: '吃非处方药 (OTC)', hint: (cost, diff) => `-$${cost}，健康+${diff}或-${diff}` },
                         urgentCare: { text: '去急救中心 (Urgent Care)', hint: (cost) => `-$${cost}` },
                         ignore: { text: '硬扛', hint: (health, mental) => `健康-${health}，精神-${mental}` },
@@ -1418,9 +1443,9 @@ export const I18n = {
                     title: '🤒 症状加重',
                     description: '之前的病没好利索，现在发起了高烧，咳嗽不止。你必须做点什么了。',
                     choices: {
-                        urgentCare: { text: '急救中心 (Urgent Care)', hint: (cost, health) => `预计 -$${cost}，健康+${health}` },
+                        urgentCare: { text: '急救中心 (Urgent Care)', hint: (cost, health, insurancePays, baseCost) => `预计 -$${cost} (原价 $${baseCost}, 保险赔付 $${insurancePays})，健康+${health}` },
                         pcp: { text: '预约家庭医生 (PCP)', hint: (wait) => `预计等待${wait}天` },
-                        er: { text: '去急诊室 (ER)', hint: (healthDelta, cost) => `健康${healthDelta}，预计 -$${cost}，最快但也最贵` }
+                        er: { text: '去急诊室 (ER)', hint: (healthDelta, cost, insurancePays, baseCost) => `健康${healthDelta}，预计 -$${cost} (原价 $${baseCost}, 保险赔付 $${insurancePays})，最快但也最贵` }
                     },
                     messages: {
                         urgentCareTreated: (cost) => `治疗费 $${cost}。`,
@@ -1437,15 +1462,16 @@ export const I18n = {
                     title: '🚑 医疗紧急情况',
                     description: '你倒在了地上，呼吸困难。如果不马上去急诊室，可能会死。',
                     choices: {
-                        ambulance: { text: '叫救护车去ER', hint: (healthDelta, mental, cost) => `健康${healthDelta}，精神-${mental}，预计 -$${cost}` },
-                        uber: { text: '叫 Uber 去ER', hint: (cost, deathChance, healthDelta) => `预计 -$${cost}，${deathChance}%途中死亡，健康${healthDelta}` },
+                        ambulance: { text: '叫救护车去ER', hint: (healthDelta, mental, cost, insurancePays, baseCost) => `健康${healthDelta}，精神-${mental}，预计 -$${cost} (原价 $${baseCost}, 保险赔付 $${insurancePays})` },
+                        uber: { text: '叫 Uber 去ER', hint: (cost, deathChance, healthDelta, insurancePays, baseCost) => `预计 -$${cost} (原价 $${baseCost}, 保险赔付 $${insurancePays})，${deathChance}%途中死亡，健康${healthDelta}` },
                         giveUp: { text: '放弃', hint: (healthLoss) => `健康-${healthLoss}，游戏结束` }
                     },
                     messages: {
                         ambulanceSaved: (bill, days) => `捡回一条命，但情况严重需住院治疗。\nER账单: $${bill} (已付)\n预计住院: ${days}天`,
                         uberDied: '不管用了...你在Uber后座失去了意识...',
                         uberSaved: (bill, days) => `勉强没死在车上。ER账单 $${bill}。\n医生要求立即住院治疗 (${days}天)。`,
-                        died: '你闭上了眼睛...'
+                        died: '你闭上了眼睛...',
+                        surgeryCancelled: '\n⚠️ 由于进行了紧急手术，之前的择期手术审批已取消。'
                     }
                 },
 
@@ -1748,8 +1774,8 @@ export const I18n = {
                     title: '🚨 紧急送医',
                     description: '你突然胸口剧痛倒下。急救人员问：送哪家医院？',
                     choices: {
-                        nearest: { text: '🏥 最近的医院！', hint: (chance, health, mental, oonCost, inCost) => `${chance}%网外(自付-$${oonCost})，健康+${health}，网外精神-${mental}，网内自付-$${inCost}` },
-                        inNetwork: { text: '📍 先找网内医院', hint: (health, mental, cost) => `健康-${health}，精神-${mental}，自付-$${cost}` }
+                        nearest: { text: '🏥 最近的医院！', hint: (chance, health, mental, oonCost, inCost, insurancePays, baseCost) => `${chance}%网外(自付-$${oonCost}, 精神-${mental})，健康+${health}，网内自付-$${inCost} (原价 $${baseCost}, 保险赔付 $${insurancePays})` },
+                        inNetwork: { text: '📍 先找网内医院', hint: (health, mental, cost, insurancePays, baseCost) => `健康-${health}，精神-${mental}，自付-$${cost} (原价 $${baseCost}, 保险赔付 $${insurancePays})` }
                     },
                     messages: {
                         oon: (cost) => `命是救回来了！但是网外医院，自付 $${cost}`,
@@ -1763,9 +1789,9 @@ export const I18n = {
                     title: '🏥 需要手术',
                     description: '医生说你需要做个小手术，不是急诊但很紧急。',
                     choices: {
-                        urgent: { text: '💉 立即手术', hint: (cost, health, mental) => `-$${cost}，健康+${health}，精神-${mental}` },
+                        urgent: { text: '💉 立即手术', hint: (cost, health, mental, insurancePays, baseCost) => `-$${cost} (原价 $${baseCost}, 保险赔付 $${insurancePays})，健康+${health}，精神-${mental}` },
                         wait: { text: '📝 等待审批 (常规流程)', hint: (health, mental, minDays, maxDays) => `健康-${health}，精神-${mental}，需等待${minDays}-${maxDays}天` },
-                        fight: { text: '⚔️ 紧急申诉 (要求立即手术)', hint: (mental, health, chance, successCost, failCost) => `-${mental}精神，健康-${health}，${chance}%成功(成功自付$${successCost}，失败自付$${failCost})` }
+                        fight: { text: '⚔️ 紧急申诉 (要求立即手术)', hint: (mental, health, chance, successCost, failCost, successInsurancePays, successBaseCost) => `-${mental}精神，健康-${health}，${chance}%成功(成功自付$${successCost} [原价 $${successBaseCost}, 保险赔付 $${successInsurancePays}]，失败自付$${failCost})` }
                     },
                     messages: {
                         denied: (cost) => `未获事前审批(Prior Authorization)，保险拒赔。自付 $${cost}`,
@@ -1779,7 +1805,7 @@ export const I18n = {
                     title: '🏥 手术审批结果',
                     description: '医院通知你，手术审批结果出来了。',
                     choices: {
-                        check: { text: '📨 查看结果', hint: (chance, successCost, successHealth, failHealth, failMental) => `审批通过率 ${chance}%（通过自付$${successCost}，健康+${successHealth}；失败健康+${failHealth}，精神-${failMental}）` }
+                        check: { text: '📨 查看结果', hint: (chance, successCost, successHealth, failHealth, failMental, successInsurancePays, successBaseCost) => `审批通过率 ${chance}%（通过自付$${successCost} [原价 $${successBaseCost}, 保险赔付 $${successInsurancePays}]，健康+${successHealth}；失败健康+${failHealth}，精神-${failMental}）` }
                     },
                     messages: {
                         approved: (cost, health) => `审批通过，安排手术。自付 $${cost}，健康+${health}`,

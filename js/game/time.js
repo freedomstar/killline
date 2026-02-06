@@ -49,8 +49,6 @@ export const TimeMixin = {
 
         // V2.23 油箱系统: 处理汽车相关通勤选择（油箱逻辑）
         // 使用保存的 previousCommute 来判断
-        // V2.XX Intercept state for artifact effects (Mom Credit Card)
-        const processingState = this._getReactiveState(this.state);
 
         if (previousCommute === 'car') {
             // 有油，消耗1次
@@ -59,15 +57,13 @@ export const TimeMixin = {
         } else if (previousCommute === 'car_refuel') {
             // 加油并开车: 先扣费加满油，再消耗1次
             const cost = this.state.refuelCost || 20;
-            // Use processingState for money deduction
-            processingState.money -= cost;
+            this.deductMoney(cost, 'commute');
             this.state.fuelRemaining = (this.state.fuelCapacity || 4) - 1; // 加满后用掉1次
             console.log(`[Game] 加油 -$${cost}，剩余油量 ${this.state.fuelRemaining}/${this.state.fuelCapacity}`);
         } else if (previousCommute === 'car_repair') {
             // V2.24 修车并开车: 扣费、修复故障、消耗油量、必定迟到
             const repairCost = this.state.insurance.carPlanId === 'full_coverage' ? 500 : 1200;
-            // Use processingState for money deduction
-            processingState.money -= repairCost;
+            this.deductMoney(repairCost, 'commute');
             this.state.carBroken = false; // 修复故障
             this.state.fuelRemaining = Math.max(0, (this.state.fuelRemaining || 0) - 1);
             // 迟到惩罚由 applyCommuteEffects 或手动处理
@@ -314,7 +310,7 @@ export const TimeMixin = {
                 triggeredFine = true;
                 const fineRate = insiderConf.fineRate || 0.3;
                 const fine = Math.max(0, Math.round((this.state.money || 0) * fineRate));
-                this.state.money -= fine;
+                this.deductMoney(fine, 'fine');
 
                 if (window.UI) window.UI.triggerArtifactGlow('insider_phone');
 
@@ -538,21 +534,20 @@ export const TimeMixin = {
         }
 
         // V2.5 房租结算（每10天）- 带信用分惩罚
-        // V2.XX Intercept state for artifact effects
-        const processingState = this._getReactiveState(this.state);
-
         if (this.state.daysUntilRent <= 0) {
             const rentCost = this.state.housingCost;
-            if (this.state.money >= rentCost) {
-                // Use processingState
-                processingState.money -= rentCost;
+            const discount = this._getSpendingDiscount ? this._getSpendingDiscount(this.state) : 0;
+            const effectiveCost = Math.round(rentCost * (1 - discount));
+            const canPayCash = (this.state.money || 0) >= effectiveCost;
+
+            this.deductMoney(rentCost, 'rent');
+
+            if (canPayCash) {
                 this.state.unpaidRentMonths = 0;
                 const msg = I18n.t('game.finance.rentPaid', rentCost);
                 this.state.dailyFinancialReport.push(msg);
                 console.log(`[Game] ${msg}`);
             } else {
-                // Use processingState
-                processingState.money -= rentCost;
                 this.state.unpaidRentMonths = (this.state.unpaidRentMonths || 0) + 1;
                 const creditDrop = GameData.usaFeatures.latePenalty.creditScoreDrop;
                 this.state.creditScore = Math.max(300, this.state.creditScore - creditDrop);
@@ -561,6 +556,10 @@ export const TimeMixin = {
                 console.log(`[Game] ${msg} | 信用分 -${creditDrop} (隐藏)`);
             }
             this.state.daysUntilRent = GameData.timeCycle.monthDays; // 10天周期
+
+            // 月结：利息与医疗分期结转
+            this.applyMonthlyInterest();
+            this.processMedicalInstallments();
 
             // --- Periodic Increases (Salary & Rent) & Artifact Bonus ---
             // Triggered every cycle (10 days)
@@ -612,8 +611,7 @@ export const TimeMixin = {
         // V2.3 水电结算（每5天）
         if (this.state.daysUntilUtility <= 0) {
             const utilityCost = this.state.utilityBill;
-            // Use processingState
-            processingState.money -= utilityCost;
+            this.deductMoney(utilityCost, 'utility');
             const msg = I18n.t('game.finance.utilityPaid', utilityCost);
             this.state.dailyFinancialReport.push(msg);
             console.log(`[Game] ${msg}`);

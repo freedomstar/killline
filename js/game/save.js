@@ -197,6 +197,30 @@ export const SaveMixin = {
                 this.state.randomEventLastDay = {};
             }
 
+            // 债务系统存档迁移
+            if (typeof this.state.debt !== 'number') this.state.debt = 0;
+            if (!Array.isArray(this.state.debtItems)) this.state.debtItems = [];
+            if (typeof this.state.debtInterestAccrued !== 'number') this.state.debtInterestAccrued = 0;
+            if (!Array.isArray(this.state.pendingMedicalInstallments)) this.state.pendingMedicalInstallments = [];
+            if (typeof this.state.unpaidRentMonths !== 'number') this.state.unpaidRentMonths = 0;
+
+            if (this.state.money < 0) {
+                const overflow = Math.abs(this.state.money);
+                this.state.money = 0;
+                this.state.debt += overflow;
+                this.state.debtItems.push({ source: 'overflow', amount: Math.round(overflow), day: this.state.day || 0 });
+            }
+
+            if (this.state.medicalDebt > 0) {
+                const legacyMedical = Math.round(this.state.medicalDebt);
+                this.state.debt += legacyMedical;
+                this.state.debtItems.push({ source: 'medical', amount: legacyMedical, day: this.state.day || 0 });
+                this.state.medicalDebt = 0;
+            }
+            if (this.state.medicalDebtInstallment) {
+                this.state.medicalDebtInstallment = false;
+            }
+
             // V2.11 恢复 RNG 状态
             if (parsed.rngSeed !== undefined && parsed.rngInitialSeed !== undefined) {
                 this.rng = new SeededRNG();

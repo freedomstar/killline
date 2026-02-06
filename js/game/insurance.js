@@ -83,12 +83,9 @@ export const InsuranceMixin = {
             report.push(`租客险: -$${rentIns.monthlyPremium}`);
         }
 
-        // V2.XX Intercept state for artifact effects
-        const processingState = this._getReactiveState(this.state);
-
         // 扣款
         if (totalPremium > 0) {
-            processingState.money -= totalPremium;
+            this.deductMoney(totalPremium, 'insurance');
             this.state.carInsurancePaid = true; // 标记已支付
             const summary = `🛡️ 支付保险月费: -$${totalPremium}`;
             this.state.dailyFinancialReport.push(summary);
@@ -173,7 +170,7 @@ export const InsuranceMixin = {
      * @param {number} baseCost 原始医疗费
      * @param {boolean} isEmergency 是否为紧急情况 (ER/UrgentCare)
      * @param {object} preRolledRisk 可选，预判定的风险结果 (来自 rollMedicalRisk)
-     * @returns {object} { youPay, insurancePays, breakdown, riskFactor }
+     * @returns {object} { youPay, insurancePays, breakdown, riskFactor, deductibleDelta, oopDelta }
      */
     calculateMedicalCost(baseCost, isEmergency = false, preRolledRisk = null) {
         const plan = GameData.insuranceSystem.healthPlans[this.state.insurance.healthPlanId];
@@ -188,7 +185,9 @@ export const InsuranceMixin = {
                 youPay: 0,
                 insurancePays: baseCost,
                 breakdown: `白卡全额报销`,
-                riskFactor
+                riskFactor,
+                deductibleDelta: 0,
+                oopDelta: 0
             };
         }
 
@@ -198,7 +197,9 @@ export const InsuranceMixin = {
                 youPay: baseCost,
                 insurancePays: 0,
                 breakdown: `无保险全额自付`,
-                riskFactor
+                riskFactor,
+                deductibleDelta: 0,
+                oopDelta: 0
             };
         }
 
@@ -208,7 +209,9 @@ export const InsuranceMixin = {
                 youPay: baseCost,
                 insurancePays: 0,
                 breakdown: `保险拒赔 (${riskFactor.note})`,
-                riskFactor
+                riskFactor,
+                deductibleDelta: 0,
+                oopDelta: 0
             };
         }
 
@@ -220,7 +223,9 @@ export const InsuranceMixin = {
                 youPay: finalCost,
                 insurancePays: 0,
                 breakdown: `网外设施全额自付 ($${baseCost} -> $${finalCost})`,
-                riskFactor
+                riskFactor,
+                deductibleDelta: 0,
+                oopDelta: 0
             };
         }
 
@@ -228,8 +233,8 @@ export const InsuranceMixin = {
         let remainingCost = finalCost;
         let youPay = 0;
         let breakdown = [];
-
-        // Copay (如果有定义且适用) - 简化：此处暂不处理复杂 Copay，直接走 Deductible
+        let totalDeductiblePay = 0;
+        let totalCoinPay = 0;
 
         // Deductible (免赔额)
         const deductibleRemaining = Math.max(0, plan.deductible - this.state.insurance.healthDeductiblePaid);
@@ -237,31 +242,23 @@ export const InsuranceMixin = {
             const payToDeductible = Math.min(remainingCost, deductibleRemaining);
             youPay += payToDeductible;
             remainingCost -= payToDeductible;
+            totalDeductiblePay = payToDeductible;
 
-            // 记录到 breakdown，但不在这里修改 state (保持纯函数)
-            // 调用者负责 commit
             breakdown.push(`免赔额: $${payToDeductible}`);
         }
 
         // Coinsurance (共保)
         if (remainingCost > 0) {
             const currentOOP = this.state.insurance.healthOutOfPocketPaid + this.state.insurance.healthDeductiblePaid;
-            const oopRemaining = Math.max(0, plan.outOfPocketMax - currentOOP); // 剩余自付空间
+            const oopRemaining = Math.max(0, plan.outOfPocketMax - currentOOP);
 
-            // 如果还有自付空间
             if (oopRemaining > 0) {
-                // 本次理论共保额
                 let coinShare = remainingCost * plan.coinsurance;
-                // 但受本次已付 Deductible 影响? 不，OOP通常包含Deductible。
-                // 这里的逻辑：YouPayTotal <= OOP_Remaining + (本次Deductible已占用的空间? 不)
-                // 简化模型：YouPayTotal (Deductible + Coin) 累积不能超过 Global OOP Max
-
-                // 本次交易最多还能付多少 = Global_OOP_Max - (历史已付 + 本次已付Deductible)
                 const realCapForThisTransaction = Math.max(0, plan.outOfPocketMax - (currentOOP + youPay));
-
                 const actualCoinPay = Math.min(coinShare, realCapForThisTransaction);
-                youPay += actualCoinPay;
 
+                youPay += actualCoinPay;
+                totalCoinPay = actualCoinPay;
                 breakdown.push(`共保(${plan.coinsurance * 100}%): $${Math.round(actualCoinPay)}`);
             } else {
                 breakdown.push('已达年度上限，保险全包');
@@ -274,7 +271,27 @@ export const InsuranceMixin = {
             youPay: Math.round(youPay),
             insurancePays: Math.round(insurancePays),
             breakdown: breakdown.join(', '),
-            riskFactor
+            riskFactor,
+            deductibleDelta: Math.round(totalDeductiblePay),
+            oopDelta: Math.round(totalCoinPay)
         };
+    },
+
+    /**
+     * 实装医疗交易对保险状态的影响（免赔额、自付上限）
+     * @param {object} result calculateMedicalCost 返回的结果对象
+     */
+    commitMedicalTransaction(result) {
+        if (!result || this.isPreview) return;
+
+        const ins = this.state.insurance;
+        if (result.deductibleDelta) {
+            ins.healthDeductiblePaid = (ins.healthDeductiblePaid || 0) + result.deductibleDelta;
+        }
+        if (result.oopDelta) {
+            ins.healthOutOfPocketPaid = (ins.healthOutOfPocketPaid || 0) + result.oopDelta;
+        }
+
+        console.log(`[Insurance] 记录医疗支出: 免赔额额度占用 +$${result.deductibleDelta || 0}, 自付额度占用 +$${result.oopDelta || 0}`);
     }
 };

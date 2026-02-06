@@ -4,11 +4,17 @@
 import { I18n } from '../i18n.js';
 import { GameData } from '../data/index.js';
 
-const finalizeHospitalDischarge = (state) => {
+const finalizeHospitalDischarge = (state, context) => {
     if ((state.hospitalDaysLeft || 0) > 0) return;
     const bill = state.hospitalBill || 0;
     if (bill > 0) {
-        state.medicalDebt = (state.medicalDebt || 0) + bill;
+        if (context && context.game && context.game.addMedicalInstallment) {
+            context.game.addMedicalInstallment(bill, { state });
+        } else {
+            state.debt = (state.debt || 0) + bill;
+            if (!Array.isArray(state.debtItems)) state.debtItems = [];
+            state.debtItems.push({ source: 'medical', amount: Math.round(bill), day: state.day || 0 });
+        }
     }
     state.hospitalBill = 0;
     state.hospitalDailyCost = 0;
@@ -85,7 +91,7 @@ export const hospitalEvents = [
                     const recoveredHealth = applyHealthRecoveryAndCheckDischarge(state, context);
                     state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + hospConfig.energyRecoveryPerDay);
 
-                    finalizeHospitalDischarge(state);
+                    finalizeHospitalDischarge(state, context);
                     return { message: I18n.t('events.hospital_stay_choices.paid_leave.message', recoveredHealth), type: 'positive', ignoreLunch: true };
                 }
             },
@@ -104,7 +110,7 @@ export const hospitalEvents = [
                     const recoveredHealth = applyHealthRecoveryAndCheckDischarge(state, context);
                     state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + hospConfig.energyRecoveryRestDay);
 
-                    finalizeHospitalDischarge(state);
+                    finalizeHospitalDischarge(state, context);
                     return { message: I18n.t('events.hospital_stay_choices.rest_day.message', recoveredHealth), type: 'neutral', ignoreLunch: true };
                 }
             },
@@ -138,14 +144,14 @@ export const hospitalEvents = [
                         state.monthlyIncome = 0;
                         state.unemployedDays = 0;
                         if (state.insurance.healthPlanId === 'employer_basic' || state.insurance.healthPlanId === 'employer_premium') {
-                            finalizeHospitalDischarge(state);
+                            finalizeHospitalDischarge(state, context);
                             return { message: I18n.t('events.hospital_stay_choices.unpaid_leave.fired_no_ins'), type: 'danger', ignoreLunch: true };
                         }
-                        finalizeHospitalDischarge(state);
+                        finalizeHospitalDischarge(state, context);
                         return { message: I18n.t('events.hospital_stay_choices.unpaid_leave.fired'), type: 'danger', ignoreLunch: true };
                     }
 
-                    finalizeHospitalDischarge(state);
+                    finalizeHospitalDischarge(state, context);
                     return { message: I18n.t('events.hospital_stay_choices.unpaid_leave.message', recoveredHealth, Math.round(fireChance * 100)), type: 'negative', ignoreLunch: true };
                 }
             },
@@ -160,7 +166,7 @@ export const hospitalEvents = [
                 effect: (state, context) => {
                     state.hospitalBill = (state.hospitalBill || 0) + (state.hospitalDailyCost || 0);
                     const recoveredHealth = applyHealthRecoveryAndCheckDischarge(state, context);
-                    finalizeHospitalDischarge(state);
+                    finalizeHospitalDischarge(state, context);
                     return { message: I18n.t('events.hospital_stay_choices.out_of_pocket.message', recoveredHealth), type: 'neutral', ignoreLunch: true };
                 }
             },
@@ -181,7 +187,7 @@ export const hospitalEvents = [
                     state.hospitalDaysLeft = 0;
                     state.mental -= hospConfig.amaMentalPenalty;
                     state.hospitalBill = (state.hospitalBill || 0) + hospConfig.amaExtraCost;
-                    finalizeHospitalDischarge(state);
+                    finalizeHospitalDischarge(state, context);
                     return { message: I18n.t('events.hospital_stay_choices.ama.message'), type: 'negative', ignoreLunch: true };
                 }
             }

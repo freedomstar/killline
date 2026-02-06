@@ -16,6 +16,12 @@ export const randomEventLimits = {
     cooldownDays: 7
 };
 
+export const debtConfig = {
+    monthlyInterestRate: 0.05,
+    medicalInstallmentThreshold: 5000,
+    medicalInstallmentMonthly: 2000
+};
+
 export const initialState = {
     money: 200,            // 初始存款 (10天/月节奏)
     monthlyIncome: 1500,    // 月薪 (10天周期)
@@ -74,6 +80,11 @@ export const initialState = {
     healthStatus: 'normal', // 健康状态: normal/cold/sick/critical
     consecutiveFastFood: 0, // 连续吃快餐天数
     medicalDebt: 0,         // 医疗债务
+    debt: 0,                // 总债务
+    debtItems: [],          // 债务明细
+    debtInterestAccrued: 0, // 累计利息
+    pendingMedicalInstallments: [], // 待结转分期
+    unpaidRentMonths: 0,    // 连续欠租月数
     lastSocialWarningDay: 0, // 上次社交警告显示的天数 (防止重复弹窗)
 
     // V2.19 新增状态
@@ -279,7 +290,7 @@ export const dailyTips = {
 
 export const endingRules = {
     survivalDays: 50,                 // 存活天数胜利条件
-    debtSpiralThreshold: -3000,        // 深度破产阈值 (总资产)
+    debtSpiralThreshold: 10000,        // 深度破产阈值 (总债务)
     medicalDebtThreshold: 3000,       // 医疗债务阈值 (触发健康崩溃结局的额外条件)
     emergencyHealthRestore: 20,        // 急救后恢复的健康值
     exhaustionHealthThreshold: 30,     // 精力耗尽结局的健康判定阈值

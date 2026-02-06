@@ -532,14 +532,14 @@ export const healthConstants = {
     // 精力耗尽昏睡惩罚
     fainting: {
         maxMentalPenalty: 5,        // 精神上限永久减少值
-        minMaxMental: 10,           // 精神上限最低值
+        minMaxMental: 50,           // 精神上限最低值
         maxHealthPenalty: 5,        // 健康上限永久减少值
-        minMaxHealth: 30,           // 健康上限最低值
+        minMaxHealth: 50,           // 健康上限最低值
     },
     // 住院系统参数
     hospitalization: {
-        dailyBaseCost: 2000,        // 每日住院基础费用
-        ambulanceCost: 2500,        // 救护车费用
+        dailyBaseCost: 300,        // 每日住院基础费用
+        ambulanceCost: 1000,        // 救护车费用
         dischargeHealthMin: 70,     // 出院所需最低健康值
         healthRecoveryMin: 10,      // 住院每日健康恢复最小值
         healthRecoveryMax: 20,      // 住院每日健康恢复最大值
@@ -553,7 +553,7 @@ export const healthConstants = {
     // 医疗紧急情况参数
     medicalEmergency: {
         uberDeathChance: 0.2,       // 打车去急诊死亡概率
-        uberCost: 50,               // Uber费用
+        uberCost: 200,               // Uber费用
         erHealthRecovery: 40,       // ER后健康恢复到
         ambulanceMentalLoss: 30     // 叫救护车精神损失
     }

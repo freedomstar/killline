@@ -45,13 +45,13 @@ export const EndingMixin = {
         }
 
         // 1. 深度破产 (连锁斩杀结局)
-        if (this.state.money < GameData.endingRules.debtSpiralThreshold) {
+        if ((this.state.debt || 0) >= GameData.endingRules.debtSpiralThreshold) {
             console.log('[Game] 触发结局: 深度破产 (债务螺旋)');
             this.isRunning = false;
             return this.triggerEnding('debtSpiral');
         }
 
-        // 胜利：存活365天
+        // 胜利：存活一年
         if (this.state.day >= GameData.endingRules.survivalDays) {
             this.isRunning = false;
             return this.triggerEnding('survived');
@@ -63,6 +63,7 @@ export const EndingMixin = {
             return this.triggerEnding('financialFreedom');
         }
 
+
         // V2.5 健康归零 - 触发天价医疗费用
         if (this.state.health <= GameData.endingRules.criticalHealth) {
             // 计算基础医疗费用
@@ -72,11 +73,13 @@ export const EndingMixin = {
             // V2.6 使用新的保险计算逻辑
             const costResult = this.calculateMedicalCost ? this.calculateMedicalCost(baseCost) : { youPay: baseCost, planName: 'None', breakdown: 'Basic' };
 
-            // 产生医疗债务/扣款
-            this.state.money -= costResult.youPay;
-            if (this.state.money < 0) {
-                this.state.medicalDebt += costResult.youPay; // 欠款
+            // V2.XX 实装保险额度累积 (免赔额/自付上限)
+            if (this.commitMedicalTransaction) {
+                this.commitMedicalTransaction(costResult);
             }
+
+            // 产生医疗债务/扣款
+            this.deductMoney(costResult.youPay, 'medical', { allowInstallment: true });
 
             // 急救后恢复一点健康，但代价惨重
             this.state.health = GameData.endingRules.emergencyHealthRestore;
@@ -88,7 +91,7 @@ export const EndingMixin = {
             this.state.dailyFinancialReport.push(`🚑 紧急送医自付: -$${costResult.youPay}`);
 
             // 如果医疗费导致严重负债，才触发结局
-            if (this.state.money < GameData.endingRules.debtSpiralThreshold && this.state.medicalDebt > GameData.endingRules.medicalDebtThreshold) { // 稍微放宽一点
+            if ((this.state.debt || 0) >= GameData.endingRules.debtSpiralThreshold && (this.state.debt || 0) > GameData.endingRules.medicalDebtThreshold) {
                 this.isRunning = false;
                 return this.triggerEnding('healthCollapse');
             }

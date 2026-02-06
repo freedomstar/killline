@@ -70,14 +70,21 @@ export class Game {
 
         // V2.XX Fix: Set fainted flag BEFORE clamping to minEnergy if it dropped to <= 0
         // Only trigger if NOT in preview mode (isPreview is property of game instance, not state)
-        if (this.state.energy <= 0 && !this.isPreview) {
+        if (this.state.energy <= 0 && !this.isPreview && minEnergy === 0) {
             this.state.faintedToday = true;
         }
 
         this.state.energy = Math.max(minEnergy, Math.min(maxEnergy, this.state.energy));
         this.state.mental = Math.max(0, Math.min(maxMental, this.state.mental));
         this.state.health = Math.max(0, Math.min(maxHealth, this.state.health));
-        this.state.money = Math.max(-10000, this.state.money);
+        if (this.state.money < 0) {
+            const overflow = Math.abs(this.state.money);
+            if (this.addDebt) {
+                this.addDebt(overflow, 'overflow', { silent: true });
+            }
+            this.state.money = 0;
+        }
+        this.state.money = Math.max(0, this.state.money);
         this.state.creditScore = Math.max(300, Math.min(850, this.state.creditScore));
     }
 

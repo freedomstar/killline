@@ -453,7 +453,7 @@ export const EventsMixin = {
                     tipAmount = Math.round(lunchOpt.cost * GameData.usaFeatures.tipRate);
                     totalCost += tipAmount;
                 }
-                state.money -= totalCost;
+                this.deductMoney(totalCost, 'daily', { state: baseState });
 
                 // Apply all effects
                 if (lunchOpt.healthEffect) state.health = Math.max(0, Math.min(state.maxHealth || 100, state.health + lunchOpt.healthEffect));
@@ -507,7 +507,7 @@ export const EventsMixin = {
             const commuteConfig = GameData.commuteOptions[commuteId];
             if (commuteConfig) {
                 if (commuteConfig.cost > 0) {
-                    state.money -= commuteConfig.cost;
+                    this.deductMoney(commuteConfig.cost, 'commute', { state: baseState });
                     const commuteName = typeof commuteConfig.name === 'function' ? commuteConfig.name() : commuteConfig.name;
                     result.message += `\n🚌 ${commuteName}：-$${commuteConfig.cost}`;
                 }

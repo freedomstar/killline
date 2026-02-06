@@ -99,7 +99,7 @@ export const financialEvents = [
         // 触发条件：极低信用分且负债
         condition: (state) => {
             const conf = GameData.eventConfigs.financial_crisis.credit_collapse;
-            return state.creditScore < conf.scoreThreshold && state.money < 0 && !state.creditCrisisToday;
+            return state.creditScore < conf.scoreThreshold && (state.debt || 0) > 0 && !state.creditCrisisToday;
         },
         choices: [
             {
@@ -134,11 +134,12 @@ export const financialEvents = [
                 hintType: 'money',
                 condition: (state) => {
                     const conf = GameData.eventConfigs.financial_crisis.credit_collapse;
-                    return state.money >= conf.fixMinDebt; // 欠太多没法修
+                    const maxDebt = Math.abs(conf.fixMinDebt || 0);
+                    return (state.debt || 0) <= maxDebt; // 欠太多没法修
                 },
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.credit_collapse.fix;
-                    state.money -= conf.cost;
+                    context.game.deductMoney(conf.cost, 'daily', { state: context.game.state });
                     state.energy = Math.max(0, state.energy - conf.energyCost);
                     state.creditScore += conf.creditGain;
                     state.mental -= conf.mentalLoss;

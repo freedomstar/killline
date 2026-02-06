@@ -9,6 +9,7 @@ import { TimeMixin } from './time.js';
 import { EndingMixin } from './ending.js';
 import { EventsMixin } from './events.js';
 import { SaveMixin } from './save.js';
+import { DebtMixin } from './debt.js';
 
 // 将所有 Mixin 方法合并到 Game.prototype
 Object.assign(
@@ -19,7 +20,8 @@ Object.assign(
     TimeMixin,
     EndingMixin,
     EventsMixin,
-    SaveMixin
+    SaveMixin,
+    DebtMixin
 );
 
 export { Game };

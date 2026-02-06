@@ -195,6 +195,11 @@
     /* No wrapping */
 }
 
+.finance-sub-value.debt {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
 .finance-value-container .finance-sub-value {
     transform: translateY(8px);
 }
