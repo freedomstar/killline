@@ -64,40 +64,11 @@ export const EndingMixin = {
         }
 
 
-        // V2.5 健康归零 - 触发天价医疗费用
+        // V2.5 健康归零 - 直接触发结局
         if (this.state.health <= GameData.endingRules.criticalHealth) {
-            // 计算基础医疗费用
-            const medCosts = GameData.usaFeatures.medicalCosts;
-            const baseCost = medCosts.ambulance + medCosts.emergencyRoom;
-
-            // V2.6 使用新的保险计算逻辑
-            const costResult = this.calculateMedicalCost ? this.calculateMedicalCost(baseCost) : { youPay: baseCost, planName: 'None', breakdown: 'Basic' };
-
-            // V2.XX 实装保险额度累积 (免赔额/自付上限)
-            if (this.commitMedicalTransaction) {
-                this.commitMedicalTransaction(costResult);
-            }
-
-            // 产生医疗债务/扣款
-            this.deductMoney(costResult.youPay, 'medical', { allowInstallment: true });
-
-            // 急救后恢复一点健康，但代价惨重
-            this.state.health = GameData.endingRules.emergencyHealthRestore;
-
-            console.log(`[Game] 🚑 紧急送医！总费: $${baseCost}`);
-            console.log(`[Game] 保险: ${costResult.planName} | 自付: $${costResult.youPay} (${costResult.breakdown})`);
-
-            if (!this.state.dailyFinancialReport) this.state.dailyFinancialReport = [];
-            this.state.dailyFinancialReport.push(`🚑 紧急送医自付: -$${costResult.youPay}`);
-
-            // 如果医疗费导致严重负债，才触发结局
-            if ((this.state.debt || 0) >= GameData.endingRules.debtSpiralThreshold && (this.state.debt || 0) > GameData.endingRules.medicalDebtThreshold) {
-                this.isRunning = false;
-                return this.triggerEnding('healthCollapse');
-            }
-
-            // 否则只是产生巨额负债，游戏继续
-            return null;
+            console.log('[Game] 触发结局: 健康崩溃');
+            this.isRunning = false;
+            return this.triggerEnding('healthCollapse');
         }
 
         // 精神崩溃
@@ -106,11 +77,7 @@ export const EndingMixin = {
             return this.triggerEnding('mentalBreakdown');
         }
 
-        // 精力长期为0 + 健康低
-        if (this.state.energy <= GameData.endingRules.criticalEnergy && this.state.health < GameData.endingRules.exhaustionHealthThreshold) {
-            this.isRunning = false;
-            return this.triggerEnding('exhaustion');
-        }
+
 
         // 破产 + 无收入
         if (this.state.money <= GameData.endingRules.noMoney &&

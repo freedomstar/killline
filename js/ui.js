@@ -29,6 +29,10 @@ export const UI = {
         if (typeof value === 'function') {
             return value(...args);
         }
+        if (typeof value === 'string' && /^(data|game|ui|ui_static|finance)\./.test(value)) {
+            const translated = I18n.t(value, ...args);
+            return translated === value ? value : translated;
+        }
         return value;
     },
 
@@ -1346,25 +1350,93 @@ export const UI = {
             }
         }
 
-        const rng = new SeededRNG(seed);
-        const options = getRandomArtifacts(3, rng);
+        this.showHousingSelectionModal((selectedHousingId) => {
+            const rng = new SeededRNG(seed);
+            const options = getRandomArtifacts(3, rng);
 
-        if (options.length > 0) {
-            this.showArtifactSelectionModal(options, (selectedArtifactId) => {
-                this._finishStartNewGame(slotId, selectedArtifactId, seed);
-            });
-        } else {
-            this._finishStartNewGame(slotId, null, seed);
-        }
+            if (options.length > 0) {
+                this.showArtifactSelectionModal(options, (selectedArtifactId) => {
+                    this._finishStartNewGame(slotId, selectedArtifactId, seed, selectedHousingId);
+                });
+            } else {
+                this._finishStartNewGame(slotId, null, seed, selectedHousingId);
+            }
+        });
     },
 
-    _finishStartNewGame(slotId, artifactId, seed) {
+    /**
+     * 开局住所选择模态框
+     */
+    showHousingSelectionModal(onSelect) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        overlay.id = 'housing-selection-overlay';
+
+        const content = document.createElement('div');
+        content.className = 'modal-content glass-panel';
+        content.style.maxWidth = '900px';
+
+        const list = Object.entries(GameData.housingTypes || {});
+        const cards = list.map(([id, house]) => {
+            const name = this.resolveText(house.name);
+            const icon = house.icon || '🏠';
+            const desc = this.resolveText(house.description) || I18n.t(`data.housing.${id}.description`) || '';
+            const cost = Math.floor((house.cost || 0));
+            const energy = Number(house.energyRecovery || 0);
+            const mental = Number(house.mentalBonus || 0);
+            const health = Number(house.healthBonus || 0);
+
+            const fmt = (v) => `${v > 0 ? '+' : ''}${v}`;
+
+            return `
+                <button class="plan-option-card housing-select-card" data-housing-id="${id}" style="text-align: left; width: 100%;">
+                    <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+                        <div>
+                            <div style="font-weight:700; font-size:1.1rem;">${icon} ${name}</div>
+                            <div style="margin-top:6px; color:var(--color-text-secondary); font-size:0.9rem; line-height:1.45;">${desc}</div>
+                        </div>
+                        <div class="money danger" style="white-space:nowrap; font-weight:700;">$${cost.toLocaleString()}</div>
+                    </div>
+                    <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; font-size:0.85rem; color:var(--color-text-secondary);">
+                        <span>⚡ ${fmt(energy)}</span>
+                        <span>🧠 ${fmt(mental)}</span>
+                        <span>❤️ ${fmt(health)}</span>
+                    </div>
+                </button>
+            `;
+        }).join('');
+
+        content.innerHTML = `
+            <div class="modal-header">
+                <h3>${I18n.t('game.housing.pickTitle') || '选择你的住所'}</h3>
+            </div>
+            <div class="modal-body" style="display:grid; gap:12px; max-height:65vh; overflow:auto;">
+                <div style="font-size:0.9rem; color:var(--color-text-secondary);">
+                    ${I18n.t('game.housing.pickSubtitle') || '开局先选住所，再选择神器。'}
+                </div>
+                ${cards}
+            </div>
+        `;
+
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+
+        content.querySelectorAll('[data-housing-id]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const selectedId = btn.dataset.housingId;
+                overlay.remove();
+                if (typeof onSelect === 'function') onSelect(selectedId);
+            });
+        });
+    },
+
+    _finishStartNewGame(slotId, artifactId, seed, housingId = null) {
         // 优先使用传入的 seed，确保与 artifact 选择时的 RNG 一致
         if (!seed && this.elements.seedInput) {
             seed = this.elements.seedInput.value.trim();
         }
 
-        game.init(seed || null, artifactId);
+        game.init(seed || null, artifactId, housingId);
 
         // 记住当前使用的槽位
         game.getState().currentSlotId = slotId;
@@ -2078,7 +2150,24 @@ export const UI = {
             effectsHtml = `<div style="margin-top: 15px; color: var(--color-text-muted);">${I18n.t('ui.status.noEffect')}</div>`;
         }
 
-        const desc = I18n.t(`data.housing.${houseId}.description`) || '';
+        const desc = this.resolveText(houseInfo.description) || I18n.t(`data.housing.${houseId}.description`) || '';
+
+        const pendingHousingId = state.pendingHousing;
+        let pendingHtml = '';
+        let actionHtml = '';
+
+        if (pendingHousingId && GameData.housingTypes[pendingHousingId]) {
+            const pendingInfo = GameData.housingTypes[pendingHousingId];
+            const pendingName = this.resolveText(pendingInfo.name);
+            pendingHtml = `
+                <div style="margin-top: 12px; padding: 10px; border-radius: 8px; background: rgba(255, 206, 86, 0.12); color: var(--color-warning);">
+                    🚚 ${I18n.t('game.housing.pendingTo', pendingName) || `搬家申请中：${pendingName}`}
+                </div>
+            `;
+            actionHtml = `<button class="action-btn" id="cancel-housing-change-btn">${I18n.t('game.housing.cancelChange') || '撤销申请'}</button>`;
+        } else {
+            actionHtml = `<button class="primary-button" id="request-housing-change-btn">${I18n.t('game.housing.requestChange') || '更换住所'}</button>`;
+        }
 
         content.innerHTML = `
             <div class="modal-header">
@@ -2091,9 +2180,11 @@ export const UI = {
                     <span class="money danger">$${cost.toLocaleString()}</span>
                 </div>
                 ${effectsHtml}
-                 ${desc ? `<div style="margin-top: 15px; font-size: 0.9em; line-height: 1.4; color: var(--color-text-secondary);">${desc}</div>` : ''}
+                ${desc ? `<div style="margin-top: 15px; font-size: 0.9em; line-height: 1.4; color: var(--color-text-secondary);">${desc}</div>` : ''}
+                ${pendingHtml}
             </div>
-             <div class="modal-footer" style="margin-top: 20px; text-align: right;">
+             <div class="modal-footer" style="margin-top: 20px; text-align: right; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+                ${actionHtml}
                 <button class="primary-button" id="close-housing-btn-bottom">关闭</button>
             </div>
         `;
@@ -2106,9 +2197,96 @@ export const UI = {
 
         content.querySelector('#close-housing-modal').onclick = close;
         content.querySelector('#close-housing-btn-bottom').onclick = close;
+
+        const requestBtn = content.querySelector('#request-housing-change-btn');
+        if (requestBtn) {
+            requestBtn.onclick = () => {
+                close();
+                this.showHousingChangeModal();
+            };
+        }
+
+        const cancelBtn = content.querySelector('#cancel-housing-change-btn');
+        if (cancelBtn) {
+            cancelBtn.onclick = () => {
+                const ok = game.cancelHousingChange ? game.cancelHousingChange() : false;
+                if (ok) {
+                    this.showToast(I18n.t('game.housing.changeCanceled') || '已撤销搬家申请', 'neutral');
+                    this.updateStatusBar(game.getStatusDescription());
+                }
+                close();
+            };
+        }
+
         overlay.onclick = (e) => {
             if (e.target === overlay) close();
         };
+
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+    },
+
+    showHousingChangeModal() {
+        const state = game.getState();
+        const currentHousing = state.housing;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+
+        const content = document.createElement('div');
+        content.className = 'modal-content glass-panel';
+        content.style.maxWidth = '680px';
+
+        const options = Object.entries(GameData.housingTypes || {})
+            .filter(([id]) => id !== currentHousing)
+            .map(([id, house]) => {
+                const icon = house.icon || '🏠';
+                const name = this.resolveText(house.name);
+                const baseCost = Math.floor((house.cost || 0) * (state.rentIndex || 1));
+                const desc = this.resolveText(house.description) || I18n.t(`data.housing.${id}.description`) || '';
+                return `
+                    <button class="plan-option-card housing-change-card" data-housing-id="${id}" style="text-align:left; width:100%;">
+                        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+                            <div>
+                                <div style="font-weight:700;">${icon} ${name}</div>
+                                <div style="margin-top:4px; font-size:0.9em; color:var(--color-text-secondary);">${desc}</div>
+                            </div>
+                            <div class="money danger" style="white-space:nowrap;">$${baseCost.toLocaleString()}</div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+        content.innerHTML = `
+            <div class="modal-header">
+                <h3>${I18n.t('game.housing.requestChange') || '更换住所'}</h3>
+                <button id="close-housing-change-modal">❌</button>
+            </div>
+            <div class="modal-body" style="display:grid; gap:10px; max-height:65vh; overflow:auto;">
+                <div style="font-size:0.9rem; color:var(--color-text-secondary);">
+                    ${I18n.t('game.housing.nextCycleEffective') || '变更将在付完本期房租后的下一个周期生效。'}
+                </div>
+                ${options || `<div style="color:var(--color-text-secondary);">${I18n.t('game.housing.noAlternative') || '暂无可选住所'}</div>`}
+            </div>
+        `;
+
+        const close = () => overlay.remove();
+        content.querySelector('#close-housing-change-modal').onclick = close;
+        overlay.onclick = (e) => {
+            if (e.target === overlay) close();
+        };
+
+        content.querySelectorAll('[data-housing-id]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.housingId;
+                const ok = game.requestHousingChange ? game.requestHousingChange(targetId) : false;
+                if (ok) {
+                    this.showToast(I18n.t('game.housing.nextCycleEffective') || '搬家申请已提交，下个周期生效', 'positive');
+                    this.updateStatusBar(game.getStatusDescription());
+                }
+                close();
+            });
+        });
 
         overlay.appendChild(content);
         document.body.appendChild(overlay);
@@ -2504,7 +2682,8 @@ export const UI = {
         }
 
         // 住所
-        this.elements.housingValue.textContent = status.housing;
+        const pendingTag = state.pendingHousing ? ' 🚚' : '';
+        this.elements.housingValue.textContent = `${status.housing}${pendingTag}`;
 
         // 工作
         this.elements.jobValue.textContent = status.job;
@@ -4025,7 +4204,9 @@ export const UI = {
 
             // 1. Insider Tip
             if (hasInsiderPhone && insider && insider.text) {
-                const fullText = insider.details ? `${insider.text} ⚡ ${insider.details}` : insider.text;
+                const insiderText = this.resolveText(insider.text);
+                const insiderDetails = this.resolveText(insider.details || '');
+                const fullText = insiderDetails ? `${insiderText} ⚡ ${insiderDetails}` : insiderText;
                 messages.push({ type: 'insider', text: fullText, data: insider });
             }
 
@@ -4143,12 +4324,14 @@ export const UI = {
             const insiderTitle = I18n.t('game.artifactDaily.modal_insider_title');
             if (hasInsiderPhone) {
                 if (insider) {
+                    const insiderText = this.resolveText(insider.text || '');
+                    const insiderDetails = this.resolveText(insider.details || '');
                     html += `
                     <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
                         <h3 style="color: #ff7675; margin-bottom: 8px; font-size: 0.9em;">${insiderTitle}</h3>
-                        <p style="font-size: 1.1em; font-weight: bold; margin-bottom: 5px;">${insider.text}</p>
+                        <p style="font-size: 1.1em; font-weight: bold; margin-bottom: 5px;">${insiderText}</p>
                         <p style="font-size: 0.85em; color: var(--color-text-secondary); line-height: 1.4;">
-                            ${insider.details || ''}
+                            ${insiderDetails}
                         </p>
                     </div>`;
                 } else {

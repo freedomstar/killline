@@ -270,7 +270,7 @@ export const eventConfigs = {
             ignore: { healthLoss: 20, mentalLoss: 20 }
         },
         rent_due: {
-            negotiate: { successChance: 0.5, creditLoss: 20, mentalLoss: 45 },
+            negotiate: { successChance: 0.5, creditLoss: 20, mentalLoss: 20 },
             moveOut: { mentalLoss: 30 }
         },
         friend_help: {

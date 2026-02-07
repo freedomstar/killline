@@ -21,7 +21,7 @@ export class Game {
     /**
      * 初始化新游戏
      */
-    init(seed, artifactId = null) {
+    init(seed, artifactId = null, housingId = null) {
         // V2.11 初始化 RNG
         this.rng = new SeededRNG(seed);
         console.log(`[Game] 初始化, 种子: ${this.rng.originalSeed || this.rng.initialSeed}`);
@@ -30,6 +30,14 @@ export class Game {
         // V2.XX: 保存原始种子字符串，确保复制后可复现
         this.state.seed = this.rng.originalSeed || this.rng.initialSeed;
         this.state.artifacts = Array.isArray(this.state.artifacts) ? this.state.artifacts : [];
+        this.state.pendingHousing = this.state.pendingHousing || null;
+
+        if (housingId && GameData.housingTypes[housingId]) {
+            this.state.housing = housingId;
+        }
+
+        const baseHousingCost = GameData.housingTypes[this.state.housing]?.cost || GameData.initialState.housingCost || 1000;
+        this.state.housingCost = Math.floor(baseHousingCost * (this.state.rentIndex || 1));
         if (artifactId) {
             this.addArtifact(artifactId);
             console.log(`[Game] Artifact Equip: ${artifactId}`);
@@ -49,6 +57,35 @@ export class Game {
 
         // V2.7 初始化工作任务
         this.assignNewTask();
+    }
+
+    /**
+     * 提交搬家申请（下个房租周期生效）
+     */
+    requestHousingChange(newHousingId) {
+        if (!newHousingId || !GameData.housingTypes[newHousingId]) {
+            return false;
+        }
+
+        if (newHousingId === this.state.housing) {
+            this.state.pendingHousing = null;
+            return false;
+        }
+
+        this.state.pendingHousing = newHousingId;
+        const houseName = this.getStatusDescriptionForState({ ...this.state, housing: newHousingId }).housing;
+        this.addLog(`已提交搬家申请：${houseName}（付完本期房租后生效）`, 'info', '住所');
+        return true;
+    }
+
+    /**
+     * 撤销搬家申请
+     */
+    cancelHousingChange() {
+        if (!this.state.pendingHousing) return false;
+        this.state.pendingHousing = null;
+        this.addLog('已撤销搬家申请', 'neutral', '住所');
+        return true;
     }
 
     /**

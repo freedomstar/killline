@@ -743,6 +743,17 @@ export const I18n = {
                     deleted: (id) => `[Game] 槽位 ${id} 存档已删除`,
                     readFailed: (id) => `[Game] 读取存档槽 ${id} 失败:`,
                 },
+                housing: {
+                    pickTitle: '选择你的住所',
+                    pickSubtitle: '开局先选住所，再选择神器。',
+                    requestChange: '更换住所',
+                    cancelChange: '撤销申请',
+                    nextCycleEffective: '搬家申请已提交，下个周期生效',
+                    pendingTo: (name) => `搬家申请中：${name}`,
+                    changeCanceled: '已撤销搬家申请',
+                    moveCompleted: (name) => `搬家完成！新住所：${name}`,
+                    noAlternative: '暂无可选住所'
+                }
             },
 
             ui_static: {
@@ -2212,8 +2223,23 @@ export const I18n = {
                         continue: '深夜过去了。',
                     },
                 },
+                },
+
             },
-        },
+
+            game: {
+                artifactDaily: {
+                    ticker_news_title: '市场快讯',
+                    ticker_rumor_label: '🔍 市场传闻',
+                    modal_insider_title: '线人情报',
+                    modal_no_insider: '今日暂无可用内幕。',
+                    modal_news_title: '公开新闻',
+                    modal_news_sentiment: '市场情绪影响',
+                    modal_no_news: '当前没有已确认新闻。',
+                    insider_phone_tip: '你收到一条匿名爆料短信，某资产可能在近日异动。',
+                    insider_phone_detail: '线人电话：下一个周期该资产波动权重提高，消息准确率受伪消息干扰影响。'
+                }
+            },
     },
 
     /**

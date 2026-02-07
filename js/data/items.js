@@ -349,6 +349,8 @@ export const periods = {
 export const housingTypes = {
     apartment: {
         name: () => I18n.t('data.housing.apartment.name'),
+        icon: '🏢',
+        description: () => I18n.t('data.housing.apartment.description'),
         cost: 1000,              // 10天周期
         energyRecovery: 40,
         mentalBonus: 2,
@@ -356,22 +358,28 @@ export const housingTypes = {
     },
     cheapRoom: {
         name: () => I18n.t('data.housing.cheapRoom.name'),
+        icon: '🛏️',
+        description: () => I18n.t('data.housing.cheapRoom.description'),
         cost: 500,              // 10天周期
-        energyRecovery: 30,
+        energyRecovery: 25,
         mentalBonus: -3,
         healthBonus: -2
     },
     car: {
         name: () => I18n.t('data.housing.car.name'),
+        icon: '🚗',
+        description: () => I18n.t('data.housing.car.description'),
         cost: 0,
-        energyRecovery: 20,
+        energyRecovery: 15,
         mentalBonus: -10,
         healthBonus: -8
     },
     homeless: {
         name: () => I18n.t('data.housing.homeless.name'),
+        icon: '🌉',
+        description: () => I18n.t('data.housing.homeless.description'),
         cost: 0,
-        energyRecovery: 10,
+        energyRecovery: 5,
         mentalBonus: -15,
         healthBonus: -12
     },

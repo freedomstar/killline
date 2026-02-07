@@ -27,6 +27,7 @@ export const initialState = {
     monthlyIncome: 1500,    // 月薪 (10天周期)
     housing: 'apartment',   // 住所类型
     housingCost: 1000,       // 月租 (10天周期)
+    pendingHousing: null,    // 待生效住所（下个房租周期）
     job: 'fulltime',        // 工作状态
     energy: 90,             // 精力值
     maxEnergy: 100,         // 精力上限
@@ -289,13 +290,13 @@ export const dailyTips = {
 };
 
 export const endingRules = {
-    survivalDays: 50,                 // 存活天数胜利条件
-    debtSpiralThreshold: 10000,        // 深度破产阈值 (总债务)
-    medicalDebtThreshold: 3000,       // 医疗债务阈值 (触发健康崩溃结局的额外条件)
+    survivalDays: 100,                 // 存活天数胜利条件
+    debtSpiralThreshold: 5000,        // 深度破产阈值 (总债务)
+    medicalDebtThreshold: 2000,       // 医疗债务阈值 (触发健康崩溃结局的额外条件)
     emergencyHealthRestore: 20,        // 急救后恢复的健康值
     exhaustionHealthThreshold: 30,     // 精力耗尽结局的健康判定阈值
     bankruptCreditScore: 500,          // 破产结局信用分阈值
-    homelessUnemployedDays: 20,        // 流浪结局失业天数阈值
+    homelessUnemployedDays: 30,        // 流浪结局失业天数阈值
     criticalHealth: 0,                 // 健康崩溃阈值
     criticalMental: 0,                 // 精神崩溃阈值
     criticalEnergy: 0,                 // 精力耗尽阈值

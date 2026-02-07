@@ -3,6 +3,7 @@
  */
 import { EventManager as GameEvents } from '../events/index.js';
 import { SeededRNG } from '../rng.js';
+import { GameData } from '../data/index.js';
 
 /**
  * 存档相关方法的 Mixin
@@ -195,6 +196,16 @@ export const SaveMixin = {
             }
             if (!this.state.randomEventLastDay) {
                 this.state.randomEventLastDay = {};
+            }
+
+            if (!('pendingHousing' in this.state)) {
+                this.state.pendingHousing = null;
+            }
+
+            if (!this.state.housing || typeof this.state.housingCost !== 'number' || this.state.housingCost < 0) {
+                this.state.housing = this.state.housing || 'apartment';
+                const baseCost = GameData.housingTypes?.[this.state.housing]?.cost || 1000;
+                this.state.housingCost = Math.floor(baseCost * (this.state.rentIndex || 1));
             }
 
             // 债务系统存档迁移

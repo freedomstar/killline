@@ -329,8 +329,13 @@ export const TimeMixin = {
                 const tipChance = insiderConf.tipChance || 0.5;
                 if (this.rng.random() < tipChance) {
                     const newsList = GameData.marketNews || [];
-                    // 筛选包含上涨效果的新闻
-                    const bullNews = newsList.filter(n => n.effect && Object.values(n.effect).some(v => v > 0));
+                    const getPositiveAssetIds = (effect = {}) => Object.keys(effect).filter((key) => (
+                        typeof effect[key] === 'number'
+                        && effect[key] > 0
+                        && !!GameData.assetTypes[key]
+                    ));
+                    // 仅筛选“存在有效资产上涨”的新闻，排除布尔标记等非资产字段
+                    const bullNews = newsList.filter((n) => n.effect && getPositiveAssetIds(n.effect).length > 0);
 
                     if (bullNews.length > 0) {
                         const selectedNews = bullNews[Math.floor(this.rng.random() * bullNews.length)];
@@ -340,9 +345,12 @@ export const TimeMixin = {
                         this.state.marketRumorConfirmDay = this.state.day + 1; // 明早生效
                         this.state.isInsiderRumor = true; // 神器保证 100% 准确
 
-                        const assetId = Object.keys(selectedNews.effect).find(k => selectedNews.effect[k] > 0);
-                        const item = GameData.assetTypes[assetId];
-                        const assetName = item ? (typeof item.name === 'function' ? item.name() : item.name) : assetId;
+                        const positiveAssetIds = getPositiveAssetIds(selectedNews.effect);
+                        const assetId = positiveAssetIds[Math.floor(this.rng.random() * positiveAssetIds.length)];
+                        const item = assetId ? GameData.assetTypes[assetId] : null;
+                        const assetName = item
+                            ? (typeof item.name === 'function' ? item.name() : item.name)
+                            : (assetId || '某资产');
 
                         const tipMsg = I18n.t('game.artifactDaily.insider_phone_tip', assetName);
 
@@ -592,17 +600,26 @@ export const TimeMixin = {
             const oldIndex = this.state.rentIndex || 1;
             this.state.rentIndex = oldIndex * (1 + rentRaisePct);
 
+            // 3. Pending housing change applies only after current-cycle rent settlement.
+            if (this.state.pendingHousing && GameData.housingTypes[this.state.pendingHousing]) {
+                this.state.housing = this.state.pendingHousing;
+                this.state.pendingHousing = null;
+                const houseName = GameData.housingTypes[this.state.housing]?.name;
+                const houseText = typeof houseName === 'function' ? houseName() : (houseName || this.state.housing);
+                const moveMsg = I18n.t('game.housing.moveCompleted', houseText) || `搬家完成！新住所：${houseText}`;
+                this.state.dailyFinancialReport.push(moveMsg);
+                console.log(`[Game] ${moveMsg}`);
+            }
+
+            const oldRent = this.state.housingCost;
+            const baseCost = GameData.housingTypes[this.state.housing]?.cost || 1000;
+            this.state.housingCost = Math.floor(baseCost * this.state.rentIndex);
+
             if (this.state.housing !== 'homeless' && this.state.housing !== 'car' && this.state.housingCost > 0) {
-                const oldRent = this.state.housingCost;
-                // Update current housing cost based on new index
-                const baseCost = GameData.housingTypes[this.state.housing]?.cost || 1000;
-                this.state.housingCost = Math.floor(baseCost * this.state.rentIndex);
-
                 const actualIncrease = this.state.housingCost - oldRent;
-
                 this.state.dailyFinancialReport.push(I18n.t('game.finance.rentIncrease', actualIncrease, this.state.housingCost));
 
-                // 3. Trigger Artifact Bonus Event
+                // 4. Trigger Artifact Bonus Event
                 if (!this.state.eventQueue) this.state.eventQueue = [];
                 this.state.eventQueue.unshift(rentIncreaseBonusEvent);
             }
