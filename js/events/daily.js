@@ -157,15 +157,60 @@ export const dailyEvents = [
                     return { message: I18n.t('events.day_rest.messages.hangout'), type: 'positive' };
                 }
             },
+            {
+                id: 'deep_sleep',
+                text: I18n.t('events.day_rest.choices.deep_sleep.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.routine_events.day_rest.deep_sleep;
+                    return I18n.t('events.day_rest.choices.deep_sleep.hint', conf.socialLoss);
+                },
+                hintType: 'positive',
+                effect: (state, context) => {
+                    const conf = GameData.eventConfigs.routine_events.day_rest.deep_sleep;
+                    state.energy = GameData.initialState.maxEnergy;
+
+                    state.maxHealth = Math.min(GameData.initialState.maxHealth, (state.maxHealth || 100) + conf.healthMaxGain);
+
+                    state.socialValue = Math.max(0, (state.socialValue || 0) - conf.socialLoss);
+
+                    return { message: I18n.t('events.day_rest.messages.deep_sleep'), type: 'positive', ignoreLunch: true };
+                }
+            },
+            {
+                id: 'massage',
+                text: I18n.t('events.day_rest.choices.massage.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.routine_events.day_rest.massage;
+                    return I18n.t('events.day_rest.choices.massage.hint', conf.cost, conf.healthGain, conf.healthMaxGain, conf.energyCost);
+                },
+                hintType: 'positive',
+                effect: (state, context) => {
+                    const conf = GameData.eventConfigs.routine_events.day_rest.massage;
+
+                    if (context.game && context.game.deductMoney) {
+                        context.game.deductMoney(conf.cost, 'daily');
+                    } else {
+                        state.money -= conf.cost;
+                    }
+
+                    state.energy = Math.max(0, state.energy - conf.energyCost);
+
+                    state.maxHealth = Math.min(GameData.initialState.maxHealth, (state.maxHealth || 100) + conf.healthMaxGain);
+
+                    state.health = Math.min(state.maxHealth, state.health + conf.healthGain);
+
+                    return { message: I18n.t('events.day_rest.messages.massage'), type: 'positive', ignoreLunch: true };
+                }
+            },
             // Mental Restoration Options
             {
                 id: 'psychotherapy',
-                text: I18n.t('events.mental_restoration.psychotherapy.title'),
+                text: I18n.t('data.mental_restoration.psychotherapy.title'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.mental_restoration.psychotherapy;
                     const insuranceCovered = state.insurance && state.insurance.healthPlanId !== 'none';
                     const cost = insuranceCovered ? conf.costInsurance : conf.costNoInsurance;
-                    return I18n.t('events.mental_restoration.psychotherapy.hint', cost, conf.maxMentalGain, conf.mentalGain);
+                    return I18n.t('data.mental_restoration.psychotherapy.hint', cost, conf.maxMentalGain, conf.mentalGain);
                 },
                 hintType: 'positive',
                 effect: (state, context) => {
@@ -185,15 +230,15 @@ export const dailyEvents = [
                     const maxGain = state.maxMental - oldMax;
                     state.mental = Math.min(state.maxMental, state.mental + conf.mentalGain);
 
-                    return { message: I18n.t('events.mental_restoration.psychotherapy.messages.success', maxGain), type: 'positive', ignoreLunch: true };
+                    return { message: I18n.t('data.mental_restoration.psychotherapy.messages.success', maxGain), type: 'positive', ignoreLunch: true };
                 }
             },
             {
                 id: 'nature_retreat',
-                text: I18n.t('events.mental_restoration.nature_retreat.title'),
+                text: I18n.t('data.mental_restoration.nature_retreat.title'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.mental_restoration.nature_retreat;
-                    return I18n.t('events.mental_restoration.nature_retreat.hint', conf.cost, conf.energyCost, conf.maxMentalGain, conf.mentalGain);
+                    return I18n.t('data.mental_restoration.nature_retreat.hint', conf.cost, conf.energyCost, conf.maxMentalGain, conf.mentalGain);
                 },
                 hintType: 'positive',
                 // Weekends only
@@ -215,15 +260,15 @@ export const dailyEvents = [
                     state.mental = Math.min(state.maxMental, state.mental + conf.mentalGain);
                     state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
 
-                    return { message: I18n.t('events.mental_restoration.nature_retreat.messages.success', maxGain), type: 'positive', ignoreLunch: true };
+                    return { message: I18n.t('data.mental_restoration.nature_retreat.messages.success', maxGain), type: 'positive', ignoreLunch: true };
                 }
             },
             {
                 id: 'volunteer_work',
-                text: I18n.t('events.mental_restoration.volunteer_work.title'),
+                text: I18n.t('data.mental_restoration.volunteer_work.title'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.mental_restoration.volunteer_work;
-                    return I18n.t('events.mental_restoration.volunteer_work.hint', conf.energyCost, conf.maxMentalGain, conf.socialGain);
+                    return I18n.t('data.mental_restoration.volunteer_work.hint', conf.energyCost, conf.maxMentalGain, conf.socialGain);
                 },
                 hintType: 'social',
                 effect: (state, context) => {
@@ -236,7 +281,7 @@ export const dailyEvents = [
 
                     state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.socialGain);
 
-                    return { message: I18n.t('events.mental_restoration.volunteer_work.messages.success', maxGain), type: 'positive', ignoreLunch: true };
+                    return { message: I18n.t('data.mental_restoration.volunteer_work.messages.success', maxGain), type: 'positive', ignoreLunch: true };
                 }
             }
         ]

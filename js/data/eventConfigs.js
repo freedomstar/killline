@@ -129,8 +129,8 @@ export const eventConfigs = {
         ignore: { healthLoss: 20, mentalLoss: 20 }
     },
     apartment_accident: {
-        insurance: { deductible: 2000, notCoveredCost: 800, insuredMentalLoss: 15, uninsuredMentalLoss: 25 },
-        unlucky: { cost: 800, mentalLoss: 20 }
+        insurance: { deductible: 250, notCoveredCost: 0, insuredMentalLoss: 10, uninsuredMentalLoss: 20 },
+        unlucky: { cost: 700, mentalLoss: 15 }
     },
 
     // 交通意外配置
@@ -266,7 +266,9 @@ export const eventConfigs = {
             shop: { cost: 30, energyCost: 30, ingredientsGain: 5 },
             delivery: { cost: 200, energyCost: 45 },
             walk: { cost: 20, mentalGain: 5, luckyMoney: 50, luckyChance: 0.2 },
-            hangout: { cost: 30, energyCost: 45, socialGain: 5, mentalGain: 5 }
+            hangout: { cost: 30, energyCost: 45, socialGain: 5, mentalGain: 5 },
+            deep_sleep: { healthMaxGain: 1, socialLoss: 5 },
+            massage: { cost: 50, energyCost: 20, healthMaxGain: 3, healthGain: 10 }
         },
         day_jobless: {
             apply: { energyCost: 40, mentalLossFail: 20, successMod: 0.45 },

@@ -224,39 +224,37 @@ export const accidentEvents = [
         period: 'any',
         isRandom: true,
         weight: GameData.eventWeights.apartment_accident,
-        condition: (state) => (state.housing === 'apartment' || state.housing === 'cheapRoom'),
+        condition: (state) => state.day > GameData.newbieProtectionDays && (state.housing === 'apartment' || state.housing === 'cheapRoom'),
         choices: [
             {
-                text: I18n.t('events.apartment_accident.choices.insurance.text'),
+                text: I18n.t('events.apartment_accident.choices.repair.text'),
                 hint: (state) => {
-                    const conf = GameData.eventConfigs.apartment_accident.insurance;
+                    const conf = GameData.eventConfigs.apartment_accident;
+                    if (state.insurance.hasRentersInsurance) {
+                        return I18n.t(
+                            'events.apartment_accident.choices.repair.hintInsured',
+                            conf.insurance.deductible,
+                            conf.insurance.insuredMentalLoss
+                        );
+                    }
                     return I18n.t(
-                        'events.apartment_accident.choices.insurance.hint',
-                        conf.deductible,
-                        conf.insuredMentalLoss
+                        'events.apartment_accident.choices.repair.hintUninsured',
+                        conf.unlucky.cost,
+                        conf.unlucky.mentalLoss
                     );
                 },
-                hintType: 'positive',
-                condition: (state) => state.insurance.hasRentersInsurance,
+                hintType: 'neutral',
                 effect: (state, context) => {
-                    const conf = GameData.eventConfigs.apartment_accident.insurance;
-                    state.money -= conf.deductible;
-                    state.mental -= conf.insuredMentalLoss;
-                    return { message: I18n.t('events.apartment_accident.messages.covered', conf.deductible), type: 'positive' };
-                }
-            },
-            {
-                text: I18n.t('events.apartment_accident.choices.unlucky.text'),
-                hint: (state) => {
-                    const conf = GameData.eventConfigs.apartment_accident.unlucky;
-                    return I18n.t('events.apartment_accident.choices.unlucky.hint', conf.cost, conf.mentalLoss);
-                },
-                hintType: 'negative',
-                effect: (state, context) => {
-                    const conf = GameData.eventConfigs.apartment_accident.unlucky;
-                    state.money -= conf.cost;
-                    state.mental -= conf.mentalLoss;
-                    return { message: I18n.t('events.apartment_accident.messages.unlucky', conf.cost), type: 'negative' };
+                    const conf = GameData.eventConfigs.apartment_accident;
+                    if (state.insurance.hasRentersInsurance) {
+                        state.money -= conf.insurance.deductible;
+                        state.mental -= conf.insurance.insuredMentalLoss;
+                        return { message: I18n.t('events.apartment_accident.messages.insured', conf.insurance.deductible), type: 'neutral' };
+                    } else {
+                        state.money -= conf.unlucky.cost;
+                        state.mental -= conf.unlucky.mentalLoss;
+                        return { message: I18n.t('events.apartment_accident.messages.uninsured', conf.unlucky.cost), type: 'negative' };
+                    }
                 }
             }
         ]

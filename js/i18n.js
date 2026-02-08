@@ -1204,6 +1204,8 @@ export const I18n = {
                         gig: { text: '🛵 送外卖兼职', hint: (m, e) => `+$${m}，-${e}精力` },
                         walk: { text: '🌳 城市漫游', hint: (c, m, chance, luckyMoney) => `-$${c}，+${m}精神（${chance}%概率捡到$${luckyMoney}）` },
                         hangout: { text: '🎉 约朋友聚会', hint: (c, e, s, m) => `-$${c}，-${e}精力，+${s}社交，+${m}精神` },
+                        deep_sleep: { text: '🛌 深度补觉', hint: (m) => `精力回满，健康上限+1，社交-${m}` },
+                        massage: { text: '💆 中医推拿', hint: (c, h, maxH, e) => `-$${c}，健康+${h}，健康上限+${maxH}，精力-${e}` },
                     },
                     messages: {
                         sleep: '睡到自然醒，元气满满！错过午顿也值得',
@@ -1213,6 +1215,8 @@ export const I18n = {
                         walkLucky: (money) => `逛街时捡到$${money}！今天运气真好`,
                         walk: '在城市中漫无目的地闲逛，放松身心',
                         hangout: '虽然花了点钱，但和朋友们吐槽一番后，感觉活过来了！',
+                        deep_sleep: '睡得昏天黑地，醒来时虽然错过了几个电话，但感觉身体轻盈了不少。(健康上限+1)',
+                        massage: '老师傅的手法极其凶残，但按完之后你的颈椎终于感觉是自己的了。(健康上限+3)',
                     },
                 },
 
@@ -1997,15 +2001,15 @@ export const I18n = {
                     title: '🔥 公寓意外',
                     description: '你的公寓发生了意外！邻居的电线短路引发小火灾，你的一些物品被损坏了。',
                     choices: {
-                        insurance: {
-                            text: '📞 联系保险公司',
-                            hint: (amount, insuredMental) => `-$${amount} 免赔额，精神-${insuredMental}`
-                        },
-                        unlucky: { text: '😢 自认倒霉', hint: (loss, mental) => `-$${loss} 损失，精神-${mental}` }
+                        repair: {
+                            text: '🛠️ 处理事故',
+                            hintInsured: (deductible, mental) => `有租客保险：支付免赔额 $${deductible}，精神-${mental}`,
+                            hintUninsured: (loss, mental) => `无保险：全额承担损失 $${loss}，精神-${mental}`
+                        }
                     },
                     messages: {
-                        covered: (amount) => `支付免赔额 $${amount}，其余损失由保险承担`,
-                        unlucky: (loss) => `损失了价值 $${loss} 的物品，心情很糟`
+                        insured: (amount) => `幸好有租客保险，只支付了免赔额 $${amount}。`,
+                        uninsured: (loss) => `因为没有租客保险，你不得不承担全部损失 $${loss}。`
                     }
                 },
 
