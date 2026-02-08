@@ -290,7 +290,7 @@ export const dailyTips = {
 };
 
 export const endingRules = {
-    survivalDays: 100,                 // 存活天数胜利条件
+    survivalDays: 60,                 // 存活天数胜利条件
     debtSpiralThreshold: 5000,        // 深度破产阈值 (总债务)
     medicalDebtThreshold: 2000,       // 医疗债务阈值 (触发健康崩溃结局的额外条件)
     emergencyHealthRestore: 20,        // 急救后恢复的健康值
@@ -301,7 +301,7 @@ export const endingRules = {
     criticalMental: 0,                 // 精神崩溃阈值
     criticalEnergy: 0,                 // 精力耗尽阈值
     noMoney: 0,                        // 没钱阈值
-    wealthThreshold: 50000,            // 财务自由结局存款阈值
+    wealthThreshold: 10000,            // 财务自由结局存款阈值
 };
 
 export const endings = {
