@@ -82,19 +82,29 @@ export const nightChoices = {
         ),
         effect: (state, context) => {
             const cfg = GameData.eventConfigs.night_choice_hints.overtime;
-            state.money += cfg.money;
+            if (context.game && context.game.deductMoney) {
+                // earning money, so standard addition is fine, but maybe we want to log it?
+                // actually overtime earns money, so we don't need deductMoney.
+                // But we definitely need context.game for work progress.
+                state.money += cfg.money;
+            } else {
+                state.money += cfg.money;
+            }
             state.mental = Math.max(0, (state.mental || 0) - cfg.stress);
             state.sleptWell = false;
 
             // 任务进度 (需 context.game 支持)
             let extraMsg = "";
-            if (context && context.game) {
+            if (context && context.game && typeof context.game.checkTaskProgress === 'function') {
                 const progressGain = 10;
                 context.game.checkTaskProgress(progressGain);
                 extraMsg = I18n.t('game.nightResults.overtimeProgress', state.workTask.progress, progressGain);
                 if (state.workTask.progress >= 100) {
                     extraMsg += I18n.t('game.nightResults.overtimeComplete');
                 }
+            } else if (state.workTask) {
+                // Fallback if function missing but we have state
+                state.workTask.progress = Math.min(100, (state.workTask.progress || 0) + 10);
             }
 
             return {
@@ -113,7 +123,11 @@ export const nightChoices = {
         ),
         effect: (state, context) => {
             const cfg = GameData.eventConfigs.night_choice_hints.entertainment;
-            state.money -= cfg.money;
+            if (context.game && context.game.deductMoney) {
+                context.game.deductMoney(cfg.money, 'daily');
+            } else {
+                state.money -= cfg.money;
+            }
             state.mental = Math.min(state.maxMental, (state.mental || 0) + cfg.mental);
             state.sleptWell = false;
             return {
@@ -158,7 +172,11 @@ export const nightChoices = {
         ),
         effect: (state, context) => {
             const cfg = GameData.eventConfigs.night_choice_hints.grocery;
-            state.money -= cfg.money;
+            if (context.game && context.game.deductMoney) {
+                context.game.deductMoney(cfg.money, 'daily');
+            } else {
+                state.money -= cfg.money;
+            }
             state.ingredients = (state.ingredients || 0) + cfg.ingredients;
             return {
                 message: I18n.t('game.nightResults.grocery'),

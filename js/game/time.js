@@ -155,7 +155,8 @@ export const TimeMixin = {
      * V2.35 准备傍晚随机事件队列
      */
     prepareEveningEvents() {
-        this.state.eventQueue = [];
+        const existingQueue = Array.isArray(this.state.eventQueue) ? [...this.state.eventQueue] : [];
+        this.state.eventQueue = existingQueue;
 
         // 重置侧边行动锁定状态
         this.state.sideActionsLocked = false;
@@ -166,7 +167,14 @@ export const TimeMixin = {
 
         // 排除掉已经包含在强制事件中的ID (虽然 condition 应该控制了，但双重保险)
         // 实际上 getMandatoryEvents 已经检查了 conditions
-        this.state.eventQueue.push(...mandatoryEvents);
+        // 保留已有队列，避免入夜时覆盖白天/结算阶段已排队的事件
+        const queuedIds = new Set(this.state.eventQueue.map(e => e.id));
+        mandatoryEvents.forEach((event) => {
+            if (!queuedIds.has(event.id)) {
+                this.state.eventQueue.push(event);
+                queuedIds.add(event.id);
+            }
+        });
 
         // 2. 随机事件判定 (30%)
         // 只有当没有强制事件，或者我们允许强制+随机混发？
@@ -187,7 +195,6 @@ export const TimeMixin = {
             // 获取可用随机事件 (排除 mandatory，因为它们已经单独处理了)
             const allNightEvents = GameEvents.getAvailableEvents(this.state, 'night', this.rng);
             // 过滤掉已经在队列中的
-            const queuedIds = new Set(this.state.eventQueue.map(e => e.id));
             const availableRandom = allNightEvents.filter(e => !e.mandatory && !queuedIds.has(e.id));
 
             // 注意：这里需要排除掉 'night_choice' 等特殊事件
@@ -205,6 +212,7 @@ export const TimeMixin = {
             const randomEvent = GameEvents.selectRandomEvent(validRandom, this.rng);
             if (randomEvent) {
                 this.state.eventQueue.push(randomEvent);
+                queuedIds.add(randomEvent.id);
             }
         }
 

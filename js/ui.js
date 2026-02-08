@@ -2691,6 +2691,21 @@ export const UI = {
         // 精力条
         const effectiveEnergy = Math.max(0, Math.min(state.maxEnergy || 100, state.energy + offset('energy')));
         this.elements.energyBar.style.width = `${effectiveEnergy}%`;
+
+        // V2.XX: 显示上限削减 (Energy)
+        const maxEnergy = state.maxEnergy || 100;
+        const BASE_MAX_ENERGY = 100;
+
+        let energyCap = this.elements.energyBar.parentElement.querySelector('.progress-cap');
+        if (energyCap) energyCap.remove();
+
+        if (Math.round(maxEnergy) < BASE_MAX_ENERGY) {
+            const capPercent = BASE_MAX_ENERGY - Math.round(maxEnergy);
+            energyCap = document.createElement('div');
+            energyCap.className = 'progress-cap';
+            energyCap.style.width = `${capPercent}%`;
+            this.elements.energyBar.parentElement.appendChild(energyCap);
+        }
         if (this.elements.energyVal) {
             const maxEnergy = state.maxEnergy || 100;
             this.elements.energyVal.textContent = `${Math.round(effectiveEnergy)}/${Math.round(maxEnergy)}`;
@@ -2706,6 +2721,21 @@ export const UI = {
         // 精神条
         const effectiveMental = Math.max(0, Math.min(state.maxMental || 100, state.mental + offset('mental')));
         this.elements.mentalBar.style.width = `${effectiveMental}%`;
+
+        // V2.XX: 显示上限削减 (Mental)
+        const maxMental = state.maxMental || 100;
+        const BASE_MAX_MENTAL = 100;
+
+        let mentalCap = this.elements.mentalBar.parentElement.querySelector('.progress-cap');
+        if (mentalCap) mentalCap.remove();
+
+        if (Math.round(maxMental) < BASE_MAX_MENTAL) {
+            const capPercent = BASE_MAX_MENTAL - Math.round(maxMental);
+            mentalCap = document.createElement('div');
+            mentalCap.className = 'progress-cap';
+            mentalCap.style.width = `${capPercent}%`;
+            this.elements.mentalBar.parentElement.appendChild(mentalCap);
+        }
         if (this.elements.mentalVal) {
             const maxMental = state.maxMental || 100;
             this.elements.mentalVal.textContent = `${Math.round(effectiveMental)}/${maxMental}`;
@@ -2714,6 +2744,21 @@ export const UI = {
         // 健康条
         const effectiveHealth = Math.max(0, Math.min(state.maxHealth || 100, state.health + offset('health')));
         this.elements.healthBar.style.width = `${effectiveHealth}%`;
+
+        // V2.XX: 显示上限削减 (Health)
+        const maxHealth = state.maxHealth || 100;
+        const BASE_MAX_HEALTH = 100;
+
+        let healthCap = this.elements.healthBar.parentElement.querySelector('.progress-cap');
+        if (healthCap) healthCap.remove();
+
+        if (Math.round(maxHealth) < BASE_MAX_HEALTH) {
+            const capPercent = BASE_MAX_HEALTH - Math.round(maxHealth);
+            healthCap = document.createElement('div');
+            healthCap.className = 'progress-cap';
+            healthCap.style.width = `${capPercent}%`;
+            this.elements.healthBar.parentElement.appendChild(healthCap);
+        }
         if (this.elements.healthVal) {
             const hStatus = state.healthStatus || 'normal';
             const statusText = I18n.t(`data.healthStatuses.${hStatus}`);

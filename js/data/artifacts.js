@@ -197,8 +197,19 @@ export function processArtifactReactions(state, initialDelta, sourceId) {
     }
 
     // 3. Apply Final Delta to State
-    // 3. Apply Final Delta to State
     // V2.XX: Ensure final values are rounded to 1 decimal
+    // Apply Max Stat Changes First
+    if (delta.maxHealth !== undefined) {
+        state.maxHealth = (state.maxHealth || 100) + delta.maxHealth;
+    }
+    if (delta.maxMental !== undefined) {
+        state.maxMental = (state.maxMental || 100) + delta.maxMental;
+    }
+    if (delta.maxEnergy !== undefined) {
+        state.maxEnergy = (state.maxEnergy || 100) + delta.maxEnergy;
+    }
+
+    // Apply Current Stat Changes
     if (delta.health !== undefined) {
         const newVal = (state.health || 0) + delta.health;
         state.health = Math.min(state.maxHealth || 100, Math.max(0, Math.round(newVal * 10) / 10));
@@ -575,6 +586,42 @@ export const artifacts = {
             const actualGain = Math.round(gain * 10) / 10;
             delta.mental = (delta.mental || 0) + actualGain;
             return { message: I18n.t('game.artifactTriggers.super_vitamin', actualGain) };
+        }
+    },
+
+    // 治愈流 (Healing)
+    stray_cat: {
+        id: 'stray_cat',
+        name: () => I18n.t('data.artifacts.stray_cat.name'),
+        description: () => I18n.t('data.artifacts.stray_cat.description', artifactConfig.stray_cat.dailyCost, artifactConfig.stray_cat.dailyMentalGain, artifactConfig.stray_cat.interval, artifactConfig.stray_cat.maxMentalGain),
+        icon: '🐱',
+        rarity: 'uncommon',
+        onDaily: (state) => {
+            const { dailyCost, dailyMentalGain, interval, maxMentalGain } = artifactConfig.stray_cat;
+            const delta = {
+                money: -dailyCost,
+                mental: dailyMentalGain
+            };
+
+            // Periodic max mental gain
+            if (state.day > 0 && state.day % interval === 0) {
+                delta.maxMental = maxMentalGain;
+            }
+
+            const { logs, triggeredIds, layers } = processArtifactReactions(state, delta, 'stray_cat');
+
+            let log = I18n.t('data.artifacts.stray_cat.log', dailyCost, dailyMentalGain);
+            if (delta.maxMental) {
+                log += '\n' + I18n.t('data.artifacts.stray_cat.log_max', maxMentalGain);
+            }
+
+            return {
+                triggered: true,
+                log: log,
+                secondaryTriggers: triggeredIds,
+                layers: layers,
+                delta: delta
+            };
         }
     }
 };

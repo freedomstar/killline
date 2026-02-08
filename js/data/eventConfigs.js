@@ -165,6 +165,32 @@ export const eventConfigs = {
         gym: { moneyCost: 20, energyCost: 20, energyRecoveryTomorrow: 10, healthGain: 0 }
     },
 
+    // Mental Restoration Events
+    mental_restoration: {
+        psychotherapy: {
+            costInsurance: 40,
+            costNoInsurance: 200,
+            energyCost: 30,
+            maxMentalGain: 5, // Capped restoration
+            mentalGain: 20
+        },
+        nature_retreat: {
+            cost: 100,
+            energyCost: 80,
+            maxMentalGain: 2, // Nerfed from 10 per user feedback
+            mentalGain: 30,
+            healthGain: 5
+        },
+        meditation_insight: {
+            maxMentalGain: 3
+        },
+        volunteer_work: {
+            energyCost: 40,
+            maxMentalGain: 2,
+            socialGain: 10
+        }
+    },
+
     // Phase 2: Unemployment
     unemployment: {
         benefit: { amount: 400, weeks: 4 },

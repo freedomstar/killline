@@ -50,8 +50,7 @@ export const EventManager = {
             'hospital_stay',
             'rent_due',
             'credit_collapse',
-            'medical_debt_collection',
-            'medical_debt_installment'
+            'medical_debt_collection'
         ]);
 
         return this.events.filter(event => {

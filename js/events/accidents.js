@@ -117,25 +117,38 @@ export const accidentEvents = [
         period: 'any',
         isRandom: true,
         // 只有公寓或廉价房会发生，廉价房概率更高
-        condition: (state, context) => state.insurance.hasRentersInsurance && state.day > GameData.newbieProtectionDays && (state.housing === 'apartment' || state.housing === 'cheapRoom') && context && context.rng && context.rng.random() < (state.housing === 'cheapRoom' ? GameData.eventConfigs.probabilities.burglary.cheapRoom : GameData.eventConfigs.probabilities.burglary.apartment),
+        condition: (state, context) => state.day > GameData.newbieProtectionDays && (state.housing === 'apartment' || state.housing === 'cheapRoom') && context && context.rng && context.rng.random() < (state.housing === 'cheapRoom' ? GameData.eventConfigs.probabilities.burglary.cheapRoom : GameData.eventConfigs.probabilities.burglary.apartment),
         weight: GameData.eventWeights.burglary,
         choices: [
             {
                 text: I18n.t('events.burglary.choices.report.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.random_events_cleanup.burglary.report;
-                    return I18n.t('events.burglary.choices.report.hintInsured', conf.insuredDeductible, conf.insuredMentalLoss);
+                    if (state.insurance.hasRentersInsurance) {
+                        return I18n.t('events.burglary.choices.report.hintInsured', conf.insuredDeductible, conf.insuredMentalLoss);
+                    }
+                    return I18n.t('events.burglary.choices.report.hintUninsured', conf.uninsuredLoss, conf.uninsuredMentalLoss);
                 },
                 hintType: 'neutral',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.random_events_cleanup.burglary.report;
-                    const deductible = conf.insuredDeductible;
-                    state.money -= deductible;
-                    state.mental -= conf.insuredMentalLoss;
-                    return {
-                        message: I18n.t('events.burglary.messages.insured', deductible),
-                        type: 'neutral'
-                    };
+                    if (state.insurance.hasRentersInsurance) {
+                        const deductible = conf.insuredDeductible;
+                        state.money -= deductible;
+                        state.mental -= conf.insuredMentalLoss;
+                        return {
+                            message: I18n.t('events.burglary.messages.insured', deductible),
+                            type: 'neutral'
+                        };
+                    } else {
+                        const loss = conf.uninsuredLoss;
+                        state.money -= loss;
+                        state.mental -= conf.uninsuredMentalLoss;
+                        return {
+                            message: I18n.t('events.burglary.messages.uninsured', loss),
+                            type: 'negative'
+                        };
+                    }
                 }
             }
         ]
@@ -150,21 +163,34 @@ export const accidentEvents = [
         period: 'night',
         isRandom: true,
         // 极低概率
-        condition: (state, context) => state.insurance.hasRentersInsurance && state.day > GameData.newbieProtectionDays && (state.housing === 'apartment' || state.housing === 'cheapRoom') && context && context.rng && context.rng.random() < GameData.eventConfigs.probabilities.apartment_fire,
+        condition: (state, context) => state.day > GameData.newbieProtectionDays && (state.housing === 'apartment' || state.housing === 'cheapRoom') && context && context.rng && context.rng.random() < GameData.eventConfigs.probabilities.apartment_fire,
         weight: GameData.eventWeights.apartment_fire, // 罕见
         choices: [
             {
                 text: I18n.t('events.apartment_fire.choices.escape.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.random_events_cleanup.apartment_fire.escape;
-                    return I18n.t('events.apartment_fire.choices.escape.hintInsured', conf.insuredDeductible, conf.insuredMentalLoss);
+                    if (state.insurance.hasRentersInsurance) {
+                        return I18n.t('events.apartment_fire.choices.escape.hintInsured', conf.insuredDeductible, conf.insuredMentalLoss);
+                    }
+                    return I18n.t('events.apartment_fire.choices.escape.hintUninsured', conf.uninsuredLoss, conf.uninsuredMentalLoss);
                 },
                 hintType: 'neutral',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.random_events_cleanup.apartment_fire.escape;
-                    const deductible = conf.insuredDeductible;
-                    state.money -= deductible;
-                    state.mental -= conf.insuredMentalLoss;
+
+                    if (state.insurance.hasRentersInsurance) {
+                        const deductible = conf.insuredDeductible;
+                        state.money -= deductible;
+                        state.mental -= conf.insuredMentalLoss;
+                    } else {
+                        const loss = conf.uninsuredLoss;
+                        state.money -= loss;
+                        state.mental -= conf.uninsuredMentalLoss;
+                        if (conf.uninsuredHealthLoss) {
+                            state.health -= conf.uninsuredHealthLoss;
+                        }
+                    }
 
                     const rehousingType = conf.rehousingType;
                     if (rehousingType && GameData.housingTypes[rehousingType]) {
@@ -173,10 +199,17 @@ export const accidentEvents = [
                         state.daysUntilRent = GameData.timeCycle.monthDays;
                     }
 
-                    return {
-                        message: I18n.t('events.apartment_fire.messages.insured', deductible),
-                        type: 'neutral'
-                    };
+                    if (state.insurance.hasRentersInsurance) {
+                        return {
+                            message: I18n.t('events.apartment_fire.messages.insured', conf.insuredDeductible),
+                            type: 'neutral'
+                        };
+                    } else {
+                        return {
+                            message: I18n.t('events.apartment_fire.messages.uninsured', conf.uninsuredLoss),
+                            type: 'negative'
+                        };
+                    }
                 }
             }
         ]
@@ -191,7 +224,7 @@ export const accidentEvents = [
         period: 'any',
         isRandom: true,
         weight: GameData.eventWeights.apartment_accident,
-        condition: (state) => state.insurance.hasRentersInsurance && (state.housing === 'apartment' || state.housing === 'cheapRoom'),
+        condition: (state) => (state.housing === 'apartment' || state.housing === 'cheapRoom'),
         choices: [
             {
                 text: I18n.t('events.apartment_accident.choices.insurance.text'),
@@ -204,6 +237,7 @@ export const accidentEvents = [
                     );
                 },
                 hintType: 'positive',
+                condition: (state) => state.insurance.hasRentersInsurance,
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.apartment_accident.insurance;
                     state.money -= conf.deductible;

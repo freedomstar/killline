@@ -129,11 +129,14 @@ export const MarketMixin = {
         const foreseeing = GameData.foreseeingConfig || {};
         let newsEffect = {};
         let isRumorStage = false;
+        let confirmedInsiderRumor = false;
+        let shouldClearInsiderFlag = false;
 
         // 1. 传闻转实锤 (结算)
         if (this.state.marketRumorId && this.state.marketRumorConfirmDay <= this.state.day) {
             const rumorNews = this.getMarketNewsById(this.state.marketRumorId);
             const isInsider = this.state.isInsiderRumor;
+            confirmedInsiderRumor = !!isInsider;
 
             if (rumorNews) {
                 // 如果不是内幕消息，有 50% 几率辟谣
@@ -164,7 +167,7 @@ export const MarketMixin = {
             }
             this.state.marketRumorId = null;
             this.state.marketRumorConfirmDay = 0;
-            this.state.isInsiderRumor = false;
+            shouldClearInsiderFlag = true;
         } else {
             // 2. 60% 几率触发新闻 (使用 RNG)
             if (!this.state.marketRumorId && this.rng.random() < 0.60) {
@@ -178,7 +181,7 @@ export const MarketMixin = {
 
         // V2.35 市场反常机制：20% 几率市场走势与新闻相反
         let isDefiant = false;
-        if (this.state.currentNews && !isRumorStage && this.rng.random() < 0.20) {
+        if (this.state.currentNews && !isRumorStage && !confirmedInsiderRumor && this.rng.random() < 0.20) {
             isDefiant = true;
             // 反转所有效果
             const invertedEffect = {};
@@ -193,6 +196,10 @@ export const MarketMixin = {
             const defianceMsg = I18n.t('game.log.marketDefiance', this.state.currentNews.title);
             this.state.dailyFinancialReport.push(defianceMsg);
             console.log(`[Market] 🤯 DEFICANCE TRIGGERED! News: ${this.state.currentNews.id}`);
+        }
+
+        if (shouldClearInsiderFlag) {
+            this.state.isInsiderRumor = false;
         }
 
         // 3. 更新每个资产价格

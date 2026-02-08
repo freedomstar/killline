@@ -202,6 +202,13 @@ export const SaveMixin = {
                 this.state.pendingHousing = null;
             }
 
+            // 内幕电话/市场传闻兼容字段（旧存档迁移）
+            if (!('marketRumorId' in this.state)) this.state.marketRumorId = null;
+            if (typeof this.state.marketRumorConfirmDay !== 'number') this.state.marketRumorConfirmDay = 0;
+            if (typeof this.state.isInsiderRumor !== 'boolean') this.state.isInsiderRumor = false;
+            if (!('dailyInsiderTip' in this.state)) this.state.dailyInsiderTip = null;
+            if (typeof this.state.insiderPhoneCD !== 'number') this.state.insiderPhoneCD = 0;
+
             if (!this.state.housing || typeof this.state.housingCost !== 'number' || this.state.housingCost < 0) {
                 this.state.housing = this.state.housing || 'apartment';
                 const baseCost = GameData.housingTypes?.[this.state.housing]?.cost || 1000;

@@ -80,3 +80,26 @@
 .low-energy .energy-bar {
     animation: lowEnergyPulse 1.5s ease-in-out infinite;
 }
+
+/* 属性上限削减指示器 - 高对比度版 */
+.progress-cap {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    /* 背景稍微深一点，让条纹更明显 */
+    background-color: rgba(20, 20, 20, 0.6);
+    background-image: repeating-linear-gradient(45deg,
+            transparent,
+            transparent 5px,
+            rgba(255, 82, 82, 0.5) 5px,
+            rgba(255, 82, 82, 0.5) 10px);
+    z-index: 2;
+    pointer-events: none;
+    /* 左侧边界线更亮 */
+    border-left: 1px solid rgba(255, 82, 82, 0.8);
+    /* 内阴影 */
+    box-shadow: inset 1px 0 3px rgba(0, 0, 0, 0.3);
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}

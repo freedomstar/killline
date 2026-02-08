@@ -346,6 +346,49 @@ export const I18n = {
                     grocery: { text: '🛒 去超市采购食材', hint: (cost, ingredients, energyBonus) => `-$${cost}，+${ingredients}食材，明天精力${energyBonus > 0 ? `+${energyBonus}` : energyBonus}` },
                 },
 
+                // 精神恢复事件
+                mental_restoration: {
+                    psychotherapy: {
+                        title: '心理咨询',
+                        description: '你决定寻求专业帮助。在这个疯狂的城市里，承认自己需要帮助是一种勇气。',
+                        hint: (cost, maxGain, gain) => `-$${cost}，精神上限+${maxGain}，精神+${gain}`,
+                        messages: {
+                            tooPoor: '你也想看心理医生，但看了看银行余额，你觉得还是自己扛着吧。',
+                            success: '治疗师的话让你意识到，那些压垮你的并不是重担本身，而是你背负它们的方式。(精神上限 +{0})'
+                        }
+                    },
+                    nature_retreat: {
+                        title: '逃离城市',
+                        description: '开车去最近的国家公园，关掉手机，只听风声和鸟鸣。',
+                        hint: (cost, energy, maxGain, gain) => `-$${cost}，精力-${energy}，精神上限+${maxGain}，精神+${gain}`,
+                        messages: {
+                            tooPoor: '你想去旅行，但油费和住宿费让你打消了这个念头。',
+                            success: '当你站在山顶俯瞰渺小的城市时，那些让你焦虑的KPI和账单似乎也变得微不足道了。(精神上限 +{0})'
+                        }
+                    },
+                    meditation_insight: {
+                        title: '顿悟时刻',
+                        description: '在深长的呼吸中，你突然想通了一直困扰你的问题。',
+                        choices: {
+                            embrace: {
+                                text: '拥抱这份平静',
+                                hint: (gain) => `精神上限 +${gain}`
+                            }
+                        },
+                        messages: {
+                            success: '执念消散了，你的内心变得更加坚韧。(精神上限 +{0})'
+                        }
+                    },
+                    volunteer_work: {
+                        title: '社区志愿者',
+                        description: '参与食物银行的分发工作。看到那些比你更艰难的人依然在努力生活，你感到了一种力量。',
+                        hint: (energy, maxGain, social) => `精力-${energy}，精神上限+${maxGain}，社交+${social}`,
+                        messages: {
+                            success: '帮助他人是治愈自己最好的方式。(精神上限 +{0})'
+                        }
+                    }
+                },
+
                 // 结局
                 endings: {
                     bankrupt: {
@@ -541,6 +584,12 @@ export const I18n = {
                     super_vitamin: {
                         name: '超级维他命',
                         description: '健康的身体带来健康的心灵。每恢复 {1} 点健康，同时恢复 {0} 点精神。',
+                    },
+                    stray_cat: {
+                        name: '流浪猫',
+                        description: '一只高冷的橘猫。虽然每天要花 ${0} 买猫粮，但它每天能治愈你 {1} 点精神。每 {2} 天额外自愈 {3} 点精神上限。',
+                        log: (cost, mental) => `🐱 喂猫消耗 $${cost}，获得精神 +${mental}。`,
+                        log_max: (gain) => `🐱 猫咪若即若离的陪伴治愈了你的内心深处 (精神上限 +${gain})。`
                     },
                     rent_increase_bonus: {
                         title: '🏠 租金溢价补偿',
@@ -2223,23 +2272,23 @@ export const I18n = {
                         continue: '深夜过去了。',
                     },
                 },
-                },
-
             },
 
-            game: {
-                artifactDaily: {
-                    ticker_news_title: '市场快讯',
-                    ticker_rumor_label: '🔍 市场传闻',
-                    modal_insider_title: '线人情报',
-                    modal_no_insider: '今日暂无可用内幕。',
-                    modal_news_title: '公开新闻',
-                    modal_news_sentiment: '市场情绪影响',
-                    modal_no_news: '当前没有已确认新闻。',
-                    insider_phone_tip: '你收到一条匿名爆料短信，某资产可能在近日异动。',
-                    insider_phone_detail: '线人电话：下一个周期该资产波动权重提高，消息准确率受伪消息干扰影响。'
-                }
-            },
+        },
+
+        game: {
+            artifactDaily: {
+                ticker_news_title: '市场快讯',
+                ticker_rumor_label: '🔍 市场传闻',
+                modal_insider_title: '线人情报',
+                modal_no_insider: '今日暂无可用内幕。',
+                modal_news_title: '公开新闻',
+                modal_news_sentiment: '市场情绪影响',
+                modal_no_news: '当前没有已确认新闻。',
+                insider_phone_tip: '你收到一条匿名爆料短信，某资产可能在近日异动。',
+                insider_phone_detail: '线人电话：下一个周期该资产波动权重提高，消息准确率受伪消息干扰影响。'
+            }
+        },
     },
 
     /**

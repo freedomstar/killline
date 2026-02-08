@@ -127,5 +127,13 @@ export const artifactConfig = {
     streamer_mic: {
         unit: 1,
         moneyPerMental: 2 // $2 per unit Mental
+    },
+
+    // 治愈流 (Healing)
+    stray_cat: {
+        dailyCost: 5,
+        dailyMentalGain: 1,
+        interval: 3,
+        maxMentalGain: 2
     }
 };

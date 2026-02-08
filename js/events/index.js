@@ -12,3 +12,5 @@ export { rentIncreaseBonusEvent } from './random.js';
 export * from './night.js';
 export * from './nightChoices.js';
 export * from './financial.js';
+export * from './mental_restoration.js';
+
