@@ -829,7 +829,7 @@ export function getAvailableLunchOptions(state, context) {
         for (const key of allowed) {
             if (base[key]) {
                 const opt = { ...base[key], key: key };
-                opt.name = I18n.t(`data.lunch.${key}.name`) || opt.name;
+                opt.name = I18n.t(`data.lunch.${key}.name`);
                 if (key === 'hospital_cafeteria') {
                     opt.name = I18n.t('data.lunch.hospital_cafeteria.name');
                     opt.hint = I18n.t('data.lunch.hospital_cafeteria.hint', opt);

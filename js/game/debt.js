@@ -15,18 +15,18 @@ export const DebtMixin = {
 
     _getDebtSourceLabel(source) {
         const labelMap = {
-            rent: I18n.t('ui_static.bill_detail.rent') || '房租',
-            utility: I18n.t('ui_static.bill_detail.utility') || '水电',
-            insurance: I18n.t('ui_static.bill_detail.insurance') || '保险',
-            medical: I18n.t('finance.medical') || '医疗',
-            commute: I18n.t('finance.commute') || '通勤',
-            daily: I18n.t('finance.daily') || '日常',
-            fine: I18n.t('finance.fine') || '罚款',
-            interest: I18n.t('finance.interest') || '利息',
-            overflow: I18n.t('finance.overflow') || '超支',
-            other: I18n.t('finance.other') || '其他'
+            rent: I18n.t('ui_static.bill_detail.rent'),
+            utility: I18n.t('ui_static.bill_detail.utility'),
+            insurance: I18n.t('ui_static.bill_detail.insurance'),
+            medical: I18n.t('finance.medical'),
+            commute: I18n.t('finance.commute'),
+            daily: I18n.t('finance.daily'),
+            fine: I18n.t('finance.fine'),
+            interest: I18n.t('finance.interest'),
+            overflow: I18n.t('finance.overflow'),
+            other: I18n.t('finance.other')
         };
-        return labelMap[source] || source || (I18n.t('finance.other') || '其他');
+        return labelMap[source] || source || I18n.t('finance.other');
     },
 
     _getSpendingDiscount(state) {
@@ -93,9 +93,16 @@ export const DebtMixin = {
 
         if (!silent) {
             const sourceLabel = this._getDebtSourceLabel(source);
-            if (!state.dailyFinancialReport) state.dailyFinancialReport = [];
-            state.dailyFinancialReport.push(I18n.t('finance.newDebtNotice', rounded, sourceLabel) || `新增债务 $${rounded} (${sourceLabel})`);
-            this.addLog && this.addLog(I18n.t('finance.newDebtNotice', rounded, sourceLabel) || `新增债务 $${rounded} (${sourceLabel})`, 'warning', sourceLabel);
+            this.pushDailyReport && this.pushDailyReport({
+                key: 'finance.newDebtNotice',
+                args: [rounded, sourceLabel],
+                fallback: I18n.t('finance.newDebtNotice', rounded, sourceLabel)
+            }, state);
+            this.addLog && this.addLog(
+                { key: 'finance.newDebtNotice', args: [rounded, sourceLabel], fallback: I18n.t('finance.newDebtNotice', rounded, sourceLabel) },
+                'warning',
+                { fallback: sourceLabel }
+            );
         }
 
         return rounded;
@@ -180,8 +187,11 @@ export const DebtMixin = {
         state.debtInterestAccrued = Math.max(0, (state.debtInterestAccrued || 0) + interest);
         this.addDebt(interest, 'interest', { state, silent: true });
 
-        if (!state.dailyFinancialReport) state.dailyFinancialReport = [];
-        state.dailyFinancialReport.push(I18n.t('finance.interestNotice', interest) || `债务产生利息 $${interest}`);
+        this.pushDailyReport && this.pushDailyReport({
+            key: 'finance.interestNotice',
+            args: [interest],
+            fallback: I18n.t('finance.interestNotice', interest)
+        }, state);
 
         return interest;
     },
@@ -206,10 +216,17 @@ export const DebtMixin = {
         if (!result || !result.success || result.paid <= 0) return { success: false, paid: 0 };
 
         const msg = I18n.t('finance.autoRepay.dailyLog', result.paid, keepCash);
-        if (!state.dailyFinancialReport) state.dailyFinancialReport = [];
-        state.dailyFinancialReport.push(msg || `自动还款 -$${result.paid} (保留现金 $${keepCash})`);
+        this.pushDailyReport && this.pushDailyReport({
+            key: 'finance.autoRepay.dailyLog',
+            args: [result.paid, keepCash],
+            fallback: msg
+        }, state);
         if (this.addLog) {
-            this.addLog(msg || `自动还款 -$${result.paid} (保留现金 $${keepCash})`, 'info', I18n.t('finance.autoRepay.title'));
+            this.addLog(
+                { key: 'finance.autoRepay.dailyLog', args: [result.paid, keepCash], fallback: msg },
+                'info',
+                { key: 'finance.autoRepay.title', fallback: I18n.t('finance.autoRepay.title') }
+            );
         }
 
         return { success: true, paid: result.paid };

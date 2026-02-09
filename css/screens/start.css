@@ -82,6 +82,45 @@
     z-index: 2000;
 }
 
+.lang-switch-container {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    z-index: 2000;
+}
+
+.lang-switch-btn {
+    min-width: 64px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(8px);
+}
+
+.lang-switch-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.lang-switch-btn:active {
+    transform: translateY(0);
+}
+
+.lang-switch-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.7);
+    outline-offset: 2px;
+}
+
 .help-button {
     width: 64px;
     height: 64px;
@@ -180,4 +219,17 @@
 .dev-tools-link:hover {
     color: #aaa;
     border-color: #666;
+}
+
+@media (max-width: 768px) {
+    .lang-switch-container {
+        top: 20px;
+        left: 16px;
+    }
+
+    .lang-switch-btn {
+        min-width: 56px;
+        height: 36px;
+        font-size: 0.8rem;
+    }
 }

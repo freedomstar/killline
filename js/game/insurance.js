@@ -25,7 +25,7 @@ export const InsuranceMixin = {
 
             const healthPlanName = typeof GameData.insuranceSystem.healthPlans[newPlanId].name === 'function' ? GameData.insuranceSystem.healthPlans[newPlanId].name() : GameData.insuranceSystem.healthPlans[newPlanId].name;
             const msg = `📋 保险计划已变更为: ${healthPlanName}`;
-            this.state.dailyFinancialReport.push(msg);
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.insurancePlanChanged', args: [healthPlanName], fallback: msg });
             console.log(`[Game] ${msg}`);
         }
 
@@ -37,7 +37,7 @@ export const InsuranceMixin = {
                 this.state.insurance.carPlanId = newPlanId;
                 const carPlanName = typeof GameData.insuranceSystem.carPlans[newPlanId].name === 'function' ? GameData.insuranceSystem.carPlans[newPlanId].name() : GameData.insuranceSystem.carPlans[newPlanId].name;
                 const msg = `🚗 车险计划已变更为: ${carPlanName}`;
-                this.state.dailyFinancialReport.push(msg);
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.carInsuranceChanged', args: [carPlanName], fallback: msg });
                 console.log(`[Game] ${msg}`);
             }
             this.state.insurance.pendingCarPlanId = null;
@@ -49,7 +49,7 @@ export const InsuranceMixin = {
             if (newStatus !== this.state.insurance.hasRentersInsurance) {
                 this.state.insurance.hasRentersInsurance = newStatus;
                 const msg = newStatus ? `🏠 租客保险已生效` : `🏠 租客保险已退订`;
-                this.state.dailyFinancialReport.push(msg);
+                this.pushDailyReport && this.pushDailyReport({ key: newStatus ? 'game.finance.rentersInsuranceActive' : 'game.finance.rentersInsuranceCancelled', fallback: msg });
                 console.log(`[Game] ${msg}`);
             }
             this.state.insurance.pendingRentersStatus = null;
@@ -88,7 +88,7 @@ export const InsuranceMixin = {
             this.deductMoney(totalPremium, 'insurance');
             this.state.carInsurancePaid = true; // 标记已支付
             const summary = `🛡️ 支付保险月费: -$${totalPremium}`;
-            this.state.dailyFinancialReport.push(summary);
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.insurancePaid', args: [totalPremium], fallback: summary });
             console.log(`[Game] ${summary}`, report);
         }
     },

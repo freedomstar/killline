@@ -97,8 +97,10 @@ const GameController = {
 
         const formatDelta = (v) => (v > 0 ? `+${v}` : `${v}`);
         const getEnergyRecoveryText = () => {
-            if (energyDelta === 0) return '⚡ 精力不变';
-            return `⚡ 精力${energyDelta > 0 ? '恢复' : '变化'}：${formatDelta(energyDelta)}`;
+            if (energyDelta === 0) return I18n.t('ui.dayToast.energyUnchanged');
+            return energyDelta > 0
+                ? I18n.t('ui.dayToast.energyRecovered', formatDelta(energyDelta))
+                : I18n.t('ui.dayToast.energyChanged', formatDelta(energyDelta));
         };
         const getHousingBonusText = () => {
             const housingInfo = GameData.housingTypes[game.state.housing];
@@ -107,10 +109,10 @@ const GameController = {
             const mental = Number(housingInfo.mentalBonus || 0);
             const health = Number(housingInfo.healthBonus || 0);
             const parts = [];
-            if (mental !== 0) parts.push(`精神 ${formatDelta(mental)}`);
-            if (health !== 0) parts.push(`健康 ${formatDelta(health)}`);
+            if (mental !== 0) parts.push(I18n.t('ui.dayToast.mentalPart', formatDelta(mental)));
+            if (health !== 0) parts.push(I18n.t('ui.dayToast.healthPart', formatDelta(health)));
             if (parts.length === 0) return null;
-            return `🏠 住所加成：${parts.join('，')}`;
+            return I18n.t('ui.dayToast.housingBonus', parts.join(', '));
         };
 
         const housingBonusText = getHousingBonusText();
@@ -119,7 +121,10 @@ const GameController = {
         // V2.4 优先显示财务报告（发薪、房租、水电）
         if (status.dailyFinancialReport && status.dailyFinancialReport.length > 0) {
             // 合并显示多条财务信息
-            const reportMsg = status.dailyFinancialReport.join(' | ');
+            const reportLines = game.resolveDailyReportEntries
+                ? game.resolveDailyReportEntries(status.dailyFinancialReport)
+                : status.dailyFinancialReport;
+            const reportMsg = reportLines.join(' | ');
             const segs = [energyRecoveryText];
             if (housingBonusText) segs.push(housingBonusText);
             segs.push(reportMsg);
@@ -127,48 +132,48 @@ const GameController = {
             // 延迟一点显示，以免覆盖可能的事件结束提示
             setTimeout(() => {
                 // 如果有投资情绪，强制使用对应 Mood 颜色，否则沿用发薪判定
-                const type = moodToastType || (finalMsg.includes('发薪') ? 'positive' : 'neutral');
+                const type = moodToastType || (/发薪|Payday/.test(finalMsg) ? 'positive' : 'neutral');
                 UI.showToast(finalMsg, type);
-                game.addLog(finalMsg, type, I18n.t('ui.messageHistory.dailySummary'));
+                game.addLog(finalMsg, type, { key: 'ui.messageHistory.dailySummary', fallback: I18n.t('ui.messageHistory.dailySummary') });
             }, 500);
             return;
         }
 
         // 无特殊财务事件，显示常规提示
         if (game.state.day % 5 === 0) {
-            const base = '🎉 休息日！好好享受吧';
+            const base = I18n.t('ui.dayToast.restDay');
             const segs = [base, energyRecoveryText];
             if (housingBonusText) segs.push(housingBonusText);
             const msg = segs.join(' | ');
             UI.showToast(msg, moodToastType || 'positive');
-            game.addLog(msg, moodToastType || 'positive', I18n.t('ui.messageHistory.dailySummary'));
+            game.addLog(msg, moodToastType || 'positive', { key: 'ui.messageHistory.dailySummary', fallback: I18n.t('ui.messageHistory.dailySummary') });
             return;
         }
 
         if (game.state.jobId === 'unemployed' || game.state.jobId === 'fired') {
             // 失业状态不显示发薪日
-            let dayTitle = '☀️ 新的一天';
-            if (moodToastType === 'positive') dayTitle = '🚀 充满希望的一天';
-            if (moodToastType === 'danger') dayTitle = '📉 艰难的一天';
+            let dayTitle = I18n.t('ui.dayToast.newDayNeutral');
+            if (moodToastType === 'positive') dayTitle = I18n.t('ui.dayToast.newDayPositive');
+            if (moodToastType === 'danger') dayTitle = I18n.t('ui.dayToast.newDayHard');
 
             const segs = [dayTitle, energyRecoveryText];
             if (housingBonusText) segs.push(housingBonusText);
             const msg = segs.join(' | ');
             UI.showToast(msg, moodToastType || 'neutral');
-            game.addLog(msg, moodToastType || 'neutral', '每日总结'); // V2.XX Record Log
+            game.addLog(msg, moodToastType || 'neutral', { key: 'ui.messageHistory.dailySummary', fallback: I18n.t('ui.messageHistory.dailySummary') }); // V2.XX Record Log
             return;
         }
 
-        let dayTitle = '☀️ 新的一天';
-        if (moodToastType === 'positive') dayTitle = '🚀 充满希望的一天';
-        if (moodToastType === 'danger') dayTitle = '📉 艰难的一天';
+        let dayTitle = I18n.t('ui.dayToast.newDayNeutral');
+        if (moodToastType === 'positive') dayTitle = I18n.t('ui.dayToast.newDayPositive');
+        if (moodToastType === 'danger') dayTitle = I18n.t('ui.dayToast.newDayHard');
 
         const segs = [dayTitle, energyRecoveryText];
         if (housingBonusText) segs.push(housingBonusText);
-        segs.push(`距发薪 ${game.state.daysUntilPayday} 天`);
+        segs.push(I18n.t('ui.dayToast.paydayIn', game.state.daysUntilPayday));
         const msg = segs.join(' | ');
         UI.showToast(msg, moodToastType || 'neutral');
-        game.addLog(msg, moodToastType || 'neutral', '每日总结'); // V2.XX Record Log
+        game.addLog(msg, moodToastType || 'neutral', { key: 'ui.messageHistory.dailySummary', fallback: I18n.t('ui.messageHistory.dailySummary') }); // V2.XX Record Log
     },
 
     showNextEvent() {
@@ -501,7 +506,10 @@ const GameController = {
                             // V2.XX: 获取神器名称作为来源
                             const art = getArtifact(trigger.id);
                             const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '神器');
-                            game.addLog(trigger.message, 'positive', artName); // V2.XX Record Log
+                            game.addLog(trigger.message, 'positive', {
+                                key: `data.artifacts.${trigger.id}.name`,
+                                fallback: artName
+                            }); // V2.XX Record Log
                         }
                     }, initialDelay + index * legacyInterval);
                 });
@@ -540,9 +548,9 @@ const GameController = {
 
             // V2.3 强制睡眠检测（进入夜间但濒死状态）
             if (status.period === 'night' && (status.energy <= GameData.exhaustionConfig.energyThreshold)) {
-                const faintMsg = '😵 体力透支，直接昏睡过去...';
+                const faintMsg = I18n.t('ui.dayToast.forcedSleep');
                 UI.showToast(faintMsg, 'negative');
-                game.addLog(faintMsg, 'negative'); // V2.XX Record Log
+                game.addLog({ key: 'ui.dayToast.forcedSleep', fallback: faintMsg }, 'negative'); // V2.XX Record Log
                 // 强制睡眠，恢复减半
                 const faintEnergy = GameData.exhaustionConfig.faintEnergyRecovery || 20;
                 const faintHealth = GameData.exhaustionConfig.faintHealthRecovery || 5;

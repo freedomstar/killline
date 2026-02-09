@@ -217,7 +217,10 @@ export const healthEvents = [
                         if (state.eventQueue) {
                             state.eventQueue = state.eventQueue.filter(e => e.id !== 'surgery_approval');
                         }
-                        context.game.dailyFinancialReport.push(I18n.t('events.medical_emergency.messages.surgeryCancelled'));
+                        context.game.pushDailyReport && context.game.pushDailyReport({
+                            key: 'events.medical_emergency.messages.surgeryCancelled',
+                            fallback: I18n.t('events.medical_emergency.messages.surgeryCancelled')
+                        }, state);
                     }
 
                     return { message: I18n.t('events.medical_emergency.messages.ambulanceSaved', result.youPay, state.hospitalDaysLeft), type: 'negative' };
@@ -271,7 +274,10 @@ export const healthEvents = [
                         if (state.eventQueue) {
                             state.eventQueue = state.eventQueue.filter(e => e.id !== 'surgery_approval');
                         }
-                        context.game.dailyFinancialReport.push(I18n.t('events.medical_emergency.messages.surgeryCancelled'));
+                        context.game.pushDailyReport && context.game.pushDailyReport({
+                            key: 'events.medical_emergency.messages.surgeryCancelled',
+                            fallback: I18n.t('events.medical_emergency.messages.surgeryCancelled')
+                        }, state);
                     }
 
                     return { message: I18n.t('events.medical_emergency.messages.uberSaved', result.youPay, state.hospitalDaysLeft), type: 'neutral' };

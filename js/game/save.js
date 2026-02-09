@@ -4,6 +4,7 @@
 import { EventManager as GameEvents } from '../events/index.js';
 import { SeededRNG } from '../rng.js';
 import { GameData } from '../data/index.js';
+import { I18n } from '../i18n.js';
 
 /**
  * 存档相关方法的 Mixin
@@ -277,6 +278,60 @@ export const SaveMixin = {
             }
 
             this.currentEvent = rehydrateEvent(savedCurrentEvent);
+
+            // V2.XX 读档后按当前语言重建市场新闻/内幕提示，避免跨语言存档出现旧语言文本
+            const rebuildNewsForCurrentLang = (savedNews) => {
+                if (!savedNews || !savedNews.id) return savedNews;
+
+                // 辟谣新闻
+                if (savedNews.id.startsWith('denial_')) {
+                    const baseId = savedNews.id.replace('denial_', '');
+                    const baseNews = this.getMarketNewsById ? this.getMarketNewsById(baseId) : null;
+                    const assetName = baseNews && baseNews.assetId
+                        ? I18n.t(`data.assetNames.${baseNews.assetId}`)
+                        : '';
+                    return {
+                        id: savedNews.id,
+                        title: I18n.t('game.artifactDaily.ticker_news_title'),
+                        description: I18n.t('game.log.marketDenial', assetName),
+                        type: 'news',
+                        stage: 'denied',
+                        effect: {},
+                        sentiment: 0
+                    };
+                }
+
+                const baseNews = this.getMarketNewsById ? this.getMarketNewsById(savedNews.id) : null;
+                if (!baseNews) return savedNews;
+
+                if ((savedNews.stage === 'rumor' || savedNews.stage === 'confirmed') && this.createStagedNews) {
+                    return this.createStagedNews(baseNews, savedNews.stage);
+                }
+
+                return {
+                    id: baseNews.id,
+                    title: baseNews.title,
+                    description: baseNews.description || '',
+                    effect: baseNews.effect,
+                    sentiment: baseNews.sentiment,
+                    stage: savedNews.stage,
+                    type: savedNews.type
+                };
+            };
+
+            if (this.state.currentNews) {
+                this.state.currentNews = rebuildNewsForCurrentLang(this.state.currentNews);
+            }
+
+            if (this.state.dailyInsiderTip && this.state.dailyInsiderTip.assetId) {
+                const assetId = this.state.dailyInsiderTip.assetId;
+                const assetName = I18n.t(`data.assetNames.${assetId}`);
+                this.state.dailyInsiderTip = {
+                    ...this.state.dailyInsiderTip,
+                    text: I18n.t('game.artifactDaily.insider_phone_tip', assetName),
+                    details: I18n.t('game.artifactDaily.insider_phone_detail', assetName)
+                };
+            }
 
             console.log(`[Game] 已从槽位 ${slotId} 加载存档, 第 ${this.state.day} 天`);
             return true;

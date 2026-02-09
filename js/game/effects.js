@@ -154,8 +154,8 @@ export const EffectsMixin = {
             this.state.workEfficiency = Math.max(0, this.state.workEfficiency - workPen);
 
             // Log events
-            this.state.dailyFinancialReport.push(I18n.t('game.finance.socialDeath', healthPen, mentalPen));
-            this.state.dailyFinancialReport.push(I18n.t('game.finance.socialJobImpact', workPen));
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.socialDeath', args: [healthPen, mentalPen], fallback: I18n.t('game.finance.socialDeath', healthPen, mentalPen) });
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.socialJobImpact', args: [workPen], fallback: I18n.t('game.finance.socialJobImpact', workPen) });
 
             console.log(`[Social] CRITICAL: Social value ${social}. Triggering chain reaction.`);
 
@@ -164,7 +164,7 @@ export const EffectsMixin = {
             const mentalPen = social < 10 ? config.warningSevereMentalPen : config.warningMentalPen;
             this.state.mental = Math.max(0, this.state.mental - mentalPen);
 
-            this.state.dailyFinancialReport.push(I18n.t('game.finance.socialIsolation', mentalPen));
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.socialIsolation', args: [mentalPen], fallback: I18n.t('game.finance.socialIsolation', mentalPen) });
             console.log(`[Social] Warning: Social value ${social}. Isolation penalty applied.`);
         }
     }

@@ -41,6 +41,7 @@ export const UI = {
      */
     init() {
         this.translatePage(); // V2.35 自动翻译页面静态文本
+        document.documentElement.lang = I18n.currentLang === 'zh' ? 'zh-CN' : 'en';
         // 背景
         this.elements.gameBackground = document.getElementById('game-background');
 
@@ -151,7 +152,7 @@ export const UI = {
         this.elements.debtAutoRepayBtn = document.getElementById('debt-auto-repay-btn');
 
         if (this.elements.financeDetailRepayInput) {
-            this.elements.financeDetailRepayInput.placeholder = I18n.t('ui_static.finance_detail.repay_placeholder') || '输入偿还金额';
+            this.elements.financeDetailRepayInput.placeholder = I18n.t('ui_static.finance_detail.repay_placeholder');
         }
 
         // V2.1 储备信息
@@ -263,9 +264,11 @@ export const UI = {
 
         // V2.12 游戏说明 (Manual Screen)
         this.elements.helpContainer = document.querySelector('.help-container');
+        this.elements.langSwitchContainer = document.querySelector('.lang-switch-container');
         this.elements.helpButton = document.getElementById('help-button');
         this.elements.manualBackBtn = document.getElementById('manual-back-btn');
         this.elements.manualCloseHeader = document.getElementById('manual-close-header');
+        this.elements.languageSwitch = document.getElementById('language-switch');
 
         // V2.13 交易模态框
         this.elements.tradeModal = document.getElementById('trade-modal');
@@ -369,6 +372,12 @@ export const UI = {
         if (this.elements.manualCloseHeader) {
             this.elements.manualCloseHeader.addEventListener('click', () => {
                 this.switchScreen('start');
+            });
+        }
+        if (this.elements.languageSwitch) {
+            this.updateLanguageSwitchLabel();
+            this.elements.languageSwitch.addEventListener('click', async () => {
+                await this.toggleLanguage();
             });
         }
 
@@ -574,12 +583,31 @@ export const UI = {
             const text = I18n.t(key);
 
             // 如果是 input 的 placeholder
-            if (el.tagName === 'INPUT' && el.type === 'text') {
+            if (el.tagName === 'INPUT' && el.hasAttribute('placeholder')) {
                 el.placeholder = text;
             } else {
                 el.innerHTML = text; // 使用 innerHTML 以支持 <b> 等标签
             }
         });
+    },
+
+    updateLanguageSwitchLabel() {
+        if (!this.elements.languageSwitch) return;
+
+        const isZh = I18n.currentLang === 'zh';
+        this.elements.languageSwitch.textContent = isZh ? 'EN' : '中';
+        this.elements.languageSwitch.setAttribute('aria-label', isZh ? 'Switch to English' : '切换到中文');
+    },
+
+    async toggleLanguage() {
+        const nextLang = I18n.currentLang === 'zh' ? 'en' : 'zh';
+        const switched = await I18n.setLang(nextLang);
+        if (!switched) {
+            console.warn('[UI] Failed to switch language:', nextLang);
+            return;
+        }
+
+        window.location.reload();
     },
 
     /**
@@ -607,6 +635,10 @@ export const UI = {
         } else if (this.elements.helpButton) {
             // Fallback old behavior just in case
             this.elements.helpButton.style.display = screenName === 'start' ? 'flex' : 'none';
+        }
+
+        if (this.elements.langSwitchContainer) {
+            this.elements.langSwitchContainer.style.display = screenName === 'start' ? 'block' : 'none';
         }
 
         // 显示目标屏幕
@@ -741,15 +773,26 @@ export const UI = {
                     periodName = typeof period.name === 'function' ? period.name() : (period.name || log.period);
                 }
                 const timeStr = periodName;
+                const resolveLogField = (text, key, args) => {
+                    if (key && typeof key === 'string') {
+                        const translated = I18n.t(key, ...(Array.isArray(args) ? args : []));
+                        if (translated && translated !== key) {
+                            return this.localizeLegacyLogText(translated);
+                        }
+                    }
+                    return this.localizeLegacyLogText(text);
+                };
 
-                const sourceHtml = log.source ? `<div class="log-source">${log.source}</div>` : '';
+                const localizedSource = resolveLogField(log.source, log.sourceKey, log.sourceArgs) || '';
+                const localizedMessage = resolveLogField(log.message, log.messageKey, log.messageArgs) || '';
+                const sourceHtml = localizedSource ? `<div class="log-source">${localizedSource}</div>` : '';
 
                 entryDiv.innerHTML = `
                     <div class="log-info">
                         <div class="log-time">${timeStr}</div>
                         ${sourceHtml}
                     </div>
-                    <div class="log-content">${log.message}</div>
+                    <div class="log-content">${localizedMessage}</div>
                 `;
 
                 if (groupContainer) {
@@ -759,6 +802,119 @@ export const UI = {
         }
 
         this.elements.modalMessageHistory.classList.remove('hidden');
+    },
+
+    localizeLegacyLogText(text) {
+        if (typeof text !== 'string') {
+            return text;
+        }
+
+        const lang = I18n.currentLang;
+        if (lang !== 'en' && lang !== 'zh') {
+            return text;
+        }
+
+        const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        let out = text;
+        const zhToEnMap = {
+            '深夜食堂': 'Late-Night Craving',
+            '运动时间': 'Workout Time',
+            '工作日': 'Workday',
+            '夜幕降临': 'Night Falls',
+            '项目开发': 'Project Dev',
+            '报告撰写': 'Report',
+            '数据分析': 'Data Analysis',
+            '客户方案': 'Client',
+            '系统维护': 'Maintenance',
+            '代码审查': 'Review',
+            '买快餐': 'Fast Food',
+            '便利店三明治': 'Sandwich',
+            '下楼散步': 'Take a Short Walk',
+            '办公室八卦': 'Office Gossip',
+            '成功摸鱼': 'Slacked off successfully',
+            '与同事协作': 'Collaborated with coworkers',
+            '与同事配合完成了一项任务,感觉不错': 'Worked with coworkers and finished a task. Feeling good.',
+            '与同事配合完成了项任务': 'Worked with coworkers and completed a task',
+            '听到了不少八卦消息, 心情愉悦': 'Heard plenty of gossip and felt entertained',
+            '听到了不少小道消息,心情愉悦': 'Heard plenty of insider gossip and felt entertained',
+            '坐公交': 'Bus',
+            '听到了不少公司秘闻': 'You heard plenty of company rumors',
+            '吃饱喝足，心满意足地睡去': 'You go to bed full and satisfied.'
+        };
+
+        if (lang === 'en') {
+            Object.entries(zhToEnMap).forEach(([zh, en]) => {
+                out = out.replace(new RegExp(escapeRegExp(zh), 'g'), en);
+            });
+
+            out = out.replace(/你睡了个好觉，明天将恢复\s*(\d+)\s*点精力/g, 'You slept well. Recover $1 energy tomorrow.');
+            out = out.replace(/任务进度\s*\+\s*(\d+)%\s*[，,]\s*当前\s*(\d+)%/g, 'Task progress +$1%, now $2%');
+            out = out.replace(/你决定保存精力/g, 'You decided to conserve energy.');
+            out = out.replace(/你下楼散了个步[，,]?呼吸新鲜空气[。.]?/g, 'A quick walk clears your head.');
+            out = out.replace(/量子冥想垫/g, 'Quantum Meditation Mat');
+            out = out.replace(/与同事配合完成了?一?项任务[，,]\s*感觉不错/g, 'Worked with coworkers and finished a task. Feeling good.');
+            out = out.replace(/听到了不少小道消息[，,]\s*心情愉悦/g, 'Heard plenty of insider gossip and felt entertained');
+            out = out.replace(/长期疲劳[:：]/g, 'Chronic fatigue:');
+            out = out.replace(/每日总结/g, I18n.t('ui.messageHistory.dailySummary'));
+            out = out.replace(/午餐[:：]/g, 'Lunch:');
+            out = out.replace(/通勤[:：]/g, 'Commute:');
+            out = out.replace(/任务加成[:：]/g, 'Task bonus:');
+            out = out.replace(/精力不变/g, 'Energy unchanged');
+            out = out.replace(/精力恢复[:：]/g, 'Energy recovery:');
+            out = out.replace(/精力变化[:：]/g, 'Energy change:');
+            out = out.replace(/体力力竭[:：]/g, 'Exhaustion:');
+            out = out.replace(/体力透支[:：]/g, 'Exhaustion:');
+            out = out.replace(/住所加成[:：]/g, 'Housing bonus:');
+            out = out.replace(/大病疲劳[:：]/g, 'Severe illness fatigue:');
+            out = out.replace(/发薪日[:：]/g, 'Payday:');
+            out = out.replace(/精神/g, 'Mental');
+            out = out.replace(/健康/g, 'Health');
+            out = out.replace(/账面\s*\$([\d,.]+)/g, '$$$1');
+            out = out.replace(/实到\s*\$([\d,.]+)/g, '->$$$1');
+            out = out.replace(/税-\$([\d,.]+)/g, 'tax $$$1');
+            out = out.replace(/距发薪\s*(\d+)\s*天/g, 'Payday in $1d');
+            out = out.replace(/[，、]/g, ', ');
+            return out;
+        }
+
+        // zh: convert legacy English logs back to Chinese
+        const enToZhMap = Object.fromEntries(
+            Object.entries(zhToEnMap)
+                .sort((a, b) => b[1].length - a[1].length)
+                .map(([zh, en]) => [en, zh])
+        );
+
+        Object.entries(enToZhMap).forEach(([en, zh]) => {
+            out = out.replace(new RegExp(escapeRegExp(en), 'g'), zh);
+        });
+
+        out = out.replace(/You slept well\. Recover\s*(\d+)\s*energy tomorrow\./g, '你睡了个好觉，明天将恢复 $1 点精力');
+        out = out.replace(/Task progress\s*\+\s*(\d+)%\s*,\s*now\s*(\d+)%/g, '任务进度 +$1%，当前 $2%');
+        out = out.replace(/Worked with coworkers and finished a task\. Feeling good\./g, '与同事配合完成了一项任务，感觉不错');
+        out = out.replace(/Heard plenty of insider gossip and felt entertained/g, '听到了不少小道消息，心情愉悦');
+        out = out.replace(/You hear useful company rumors\./g, '听到了不少公司秘闻');
+        out = out.replace(/Task\s*"([^"]+)"\s*completed\.\s*New assignment generated\./g, '任务"$1"完成。新任务已生成。');
+        out = out.replace(/You left a strong impression\.\s*\(Work\+?(\d+),\s*M\+?(\d+),\s*S\+?(\d+)\)/g, '你给人留下了深刻印象。(工作+$1，精神+$2，社交+$3)');
+        out = out.replace(/Task progress\s*\+\s*(\d+)%\s*,\s*now\s*(\d+)%/g, '任务进度 +$1%，当前 $2%');
+        out = out.replace(/Chronic fatigue:/g, '长期疲劳:');
+        out = out.replace(/Daily/g, I18n.t('ui.messageHistory.dailySummary'));
+        out = out.replace(/Lunch:/g, '午餐：');
+        out = out.replace(/Commute:/g, '通勤：');
+        out = out.replace(/Task bonus:/g, '任务加成：');
+        out = out.replace(/Energy unchanged/g, '精力不变');
+        out = out.replace(/Energy recovery:/g, '精力恢复：');
+        out = out.replace(/Energy change:/g, '精力变化：');
+        out = out.replace(/Exhaustion:/g, '体力力竭：');
+        out = out.replace(/Housing bonus:/g, '住所加成：');
+        out = out.replace(/Severe illness fatigue:/g, '大病疲劳：');
+        out = out.replace(/Payday in\s*(\d+)\s*d/g, '距发薪 $1 天');
+        out = out.replace(/Payday:\s*\$([\d,.]+)\s*->\$?([\d,.]+)\s*\(tax\s*\$([\d,.]+)\)/g, '发薪日：账面 $$$1 | 实到 $$$2 (税-$$$3)');
+        out = out.replace(/\bMental\b/g, '精神');
+        out = out.replace(/\bHealth\b/g, '健康');
+
+        return out;
+
     },
 
     /**
@@ -977,8 +1133,8 @@ export const UI = {
  
         // 更新UI
         this.elements.tradeModalTitle.textContent = action === 'buy'
-            ? I18n.t('ui_static.trade_modal.buy_title') || "买入资产"
-            : I18n.t('ui_static.trade_modal.sell_title') || "卖出资产";
+            ? I18n.t('ui_static.trade_modal.buy_title')
+            : I18n.t('ui_static.trade_modal.sell_title');
  
         this.elements.tradeAssetIcon.textContent = this.resolveText(assetConfig.icon);
         this.elements.tradeAssetName.textContent = this.resolveText(assetConfig.name);
@@ -1012,7 +1168,7 @@ export const UI = {
     executeAssetTrade() {
         const qty = parseFloat(this.elements.tradeQuantityInput.value);
         if (isNaN(qty) || qty <= 0) {
-            this.showToast(I18n.t('ui.toast.invalidQuantity') || "请输入有效数量", "negative");
+            this.showToast(I18n.t('ui.toast.invalidQuantity'), "negative");
             return;
         }
  
@@ -1093,7 +1249,7 @@ export const UI = {
         }
         if (this.elements.statusUnemployedDays) {
             const days = state.unemployedDays || 0;
-            this.elements.statusUnemployedDays.textContent = `${days}天`;
+            this.elements.statusUnemployedDays.textContent = I18n.t('ui.status.dayCount', days);
             this.elements.statusUnemployedDays.className = 'stat-val' + (days > 30 ? ' danger' : '');
         }
 
@@ -1109,9 +1265,9 @@ export const UI = {
             const houseInfo = GameData.housingTypes[state.housing];
             if (houseInfo) {
                 let effects = [];
-                if (houseInfo.energyRecovery > 0) effects.push(`精力恢复+${houseInfo.energyRecovery}`);
-                if (houseInfo.mentalBonus > 0) effects.push(`精神+${houseInfo.mentalBonus}`);
-                if (houseInfo.healthBonus > 0) effects.push(`健康+${houseInfo.healthBonus}`);
+                if (houseInfo.energyRecovery > 0) effects.push(I18n.t('ui.status.energyRecovery', houseInfo.energyRecovery));
+                if (houseInfo.mentalBonus > 0) effects.push(I18n.t('ui.status.mentalBonus', houseInfo.mentalBonus));
+                if (houseInfo.healthBonus > 0) effects.push(I18n.t('ui.status.healthBonus', houseInfo.healthBonus));
                 if (effects.length === 0) effects.push(I18n.t('ui.status.noEffect'));
                 this.elements.statusHousingEffect.textContent = effects.join(', ');
             }
@@ -1125,7 +1281,7 @@ export const UI = {
                 this.elements.statusTransportType.textContent = cName;
                 this.elements.statusTransportType.style.color = '';
             } else {
-                this.elements.statusTransportType.textContent = '🚌 公共交通';
+                this.elements.statusTransportType.textContent = I18n.t('ui.status.publicTransitLabel');
                 this.elements.statusTransportType.style.color = 'var(--color-text-muted)';
             }
         }
@@ -1133,7 +1289,7 @@ export const UI = {
             if (state.hasCar) {
                 const fuel = state.fuelRemaining || 0;
                 const capacity = state.fuelCapacity || 4;
-                this.elements.statusGasCost.textContent = `${fuel}/${capacity} 次`;
+                this.elements.statusGasCost.textContent = I18n.t('ui.status.commuteUses', fuel, capacity);
             } else {
                 this.elements.statusGasCost.textContent = '-';
             }
@@ -1142,7 +1298,7 @@ export const UI = {
             if (state.hasCar) {
                 const carPlan = GameData.insuranceSystem.carPlans[state.insurance.carPlanId];
                 const premium = carPlan ? carPlan.monthlyPremium : 0;
-                this.elements.statusCarInsurance.textContent = `$${premium}/月`;
+                this.elements.statusCarInsurance.textContent = I18n.t('ui.status.perMonthMoney', premium);
             } else {
                 this.elements.statusCarInsurance.textContent = '-';
             }
@@ -1161,7 +1317,7 @@ export const UI = {
         }
 
         // 6. 统计
-        if (this.elements.statusDaysSurvived) this.elements.statusDaysSurvived.textContent = `${state.day}天`;
+        if (this.elements.statusDaysSurvived) this.elements.statusDaysSurvived.textContent = I18n.t('ui.status.dayCount', state.day);
         if (this.elements.statusMaxWealth) {
             const maxWealth = (state.stats && state.stats.maxWealth) ? state.stats.maxWealth : state.money;
             this.elements.statusMaxWealth.textContent = game.formatMoney(maxWealth);
@@ -1357,7 +1513,7 @@ export const UI = {
                     try {
                         return !!choice.condition(state);
                     } catch (err) {
-                        console.warn('[UI] 读档后选项条件检查失败，按可选处理:', err);
+                        console.warn('[UI] Choice condition check failed after load, treated as selectable:', err);
                         return true;
                     }
                 });
@@ -1390,10 +1546,10 @@ export const UI = {
             if (hasRenderableChoices(event, state)) {
                 this.showEvent(event, state);
             } else {
-                console.warn('[UI] 读档后未能恢复可交互事件，保留当前状态等待下一次推进');
+                console.warn('[UI] No interactive event restored after load; keeping current state.');
             }
 
-            this.showToast(`已加载槽位 ${slotId} 的存档`);
+            this.showToast(I18n.t('ui.toast.loadSuccess', slotId));
         } else {
             this.showToast(I18n.t('ui.toast.loadFailed'));
         }
@@ -1443,7 +1599,7 @@ export const UI = {
         const cards = list.map(([id, house]) => {
             const name = this.resolveText(house.name);
             const icon = house.icon || '🏠';
-            const desc = this.resolveText(house.description) || I18n.t(`data.housing.${id}.description`) || '';
+            const desc = this.resolveText(house.description) || I18n.t(`data.housing.${id}.description`);
             const cost = Math.floor((house.cost || 0));
             const energy = Number(house.energyRecovery || 0);
             const mental = Number(house.mentalBonus || 0);
@@ -1471,11 +1627,11 @@ export const UI = {
 
         content.innerHTML = `
             <div class="modal-header">
-                <h3>${I18n.t('game.housing.pickTitle') || '选择你的住所'}</h3>
+                <h3>${I18n.t('game.housing.pickTitle')}</h3>
             </div>
             <div class="modal-body" style="display:grid; gap:12px; max-height:65vh; overflow:auto;">
                 <div style="font-size:0.9rem; color:var(--color-text-secondary);">
-                    ${I18n.t('game.housing.pickSubtitle') || '开局先选住所，再选择神器。'}
+                    ${I18n.t('game.housing.pickSubtitle')}
                 </div>
                 ${cards}
             </div>
@@ -1517,7 +1673,7 @@ export const UI = {
 
         if (!state.autoRepaySetupPrompted) {
             state.autoRepaySetupPrompted = true;
-            this.showToast(I18n.t('finance.autoRepay.setupPrompt') || '已解锁自动还款：可随时点主界面存款卡片进行设置。', 'info');
+            this.showToast(I18n.t('finance.autoRepay.setupPrompt'), 'info');
             this.showFinanceDetailModal({ onlyAutoRepay: true });
         }
 
@@ -1588,7 +1744,7 @@ export const UI = {
                     <div class="artifact-card-rarity" style="color: ${rarityColor}; border-color: ${rarityColor}">${art.rarity}</div>
                     <p class="artifact-card-desc">${art.description()}</p>
                 </div>
-                <div class="artifact-card-action">点击选择</div>
+                <div class="artifact-card-action">${I18n.t('ui_static.modals.artifact_select_action')}</div>
             `;
 
             card.onclick = () => {
@@ -1798,7 +1954,10 @@ export const UI = {
                             // V2.XX: 同时记录到消息历史，并标注来源神器名称
                             const art = getArtifact(trigger.id);
                             const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '神器');
-                            game.addLog(trigger.message, 'positive', artName);
+                            game.addLog(trigger.message, 'positive', {
+                                key: `data.artifacts.${trigger.id}.name`,
+                                fallback: artName
+                            });
                         }
                     }, triggerTime);
 
@@ -1959,11 +2118,11 @@ export const UI = {
 
         content.innerHTML = `
             <div class="modal-header">
-                <h3>选择健康保险计划</h3>
+                <h3>${I18n.t('ui.modal.selectHealthPlan')}</h3>
                 <button id="close-modal-btn">❌</button>
             </div>
             <div style="padding: 10px; background: rgba(255, 165, 2, 0.1); border-radius: 8px; margin-bottom: 10px; font-size: 0.9em; color: #ffa502;">
-                ⏳ <strong>下月生效</strong>：申请将于下一个账单日生效。在此之前维持原计划。
+                ${I18n.t('ui.insurance.healthPlanNotice')}
             </div>
             <div class="modal-body" id="plan-list"></div>
         `;
@@ -1989,10 +2148,10 @@ export const UI = {
             card.className = `plan-option-card ${id === currentId ? 'active' : ''}`;
             card.innerHTML = `
                 <h4>${this.resolveText(plan.name)}</h4>
-                <div class="plan-price">保费: $${plan.monthlyPremium}/月</div>
+                <div class="plan-price">${I18n.t('ui.insurance.premiumHint')} $${plan.monthlyPremium}/mo</div>
                 <div class="plan-details">
-                    <span>免赔: $${plan.deductible}</span>
-                    <span>共保: ${(plan.coinsurance * 100).toFixed(0)}%</span>
+                    <span>${I18n.t('ui.insurance.deductibleHint')} $${plan.deductible}</span>
+                    <span>${I18n.t('ui.insurance.coinsuranceHint')} ${(plan.coinsurance * 100).toFixed(0)}%</span>
                 </div>
                 <div class="plan-desc">${this.resolveText(plan.description, plan.monthlyPremium, plan.deductible)}</div>
             `;
@@ -2115,11 +2274,11 @@ export const UI = {
 
         content.innerHTML = `
             <div class="modal-header">
-                <h3>选择汽车保险方案</h3>
+                <h3>${I18n.t('ui.modal.selectCarPlan')}</h3>
                 <button id="close-modal-btn">❌</button>
             </div>
             <div style="padding: 10px; background: rgba(46, 213, 115, 0.1); border-radius: 8px; margin-bottom: 10px; font-size: 0.9em; color: #2ed573;">
-                ⏳ <strong>下月生效</strong>：切换方案后，将于下一个账单日生效。维修费用按出险时的即时计划结算。
+                ${I18n.t('ui.insurance.carPlanNotice')}
             </div>
             <div class="modal-body" id="plan-list"></div>
         `;
@@ -2135,7 +2294,7 @@ export const UI = {
             card.className = `plan-option-card ${id === currentId ? 'active' : ''}`;
             card.innerHTML = `
                 <h4>${this.resolveText(plan.name)}</h4>
-                <div class="plan-price">保费: $${plan.monthlyPremium}/月</div>
+                <div class="plan-price">${I18n.t('ui.insurance.premiumHint')} $${plan.monthlyPremium}/mo</div>
                 <div class="plan-desc">${I18n.t('data.carInsuranceDescriptions.' + id, plan.deductible)}</div>
             `;
 
@@ -2205,7 +2364,7 @@ export const UI = {
         let effectsHtml = '';
         if (effects.length > 0) {
             effectsHtml = `
-                <div style="margin-top: 15px; margin-bottom: 5px; font-weight: bold; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;">效果加成</div>
+                <div style="margin-top: 15px; margin-bottom: 5px; font-weight: bold; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;">${I18n.t('ui.status.effectsTitle')}</div>
                 <div class="stat-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
                     ${effects.map(e => `
                         <div class="stat-item">
@@ -2219,7 +2378,7 @@ export const UI = {
             effectsHtml = `<div style="margin-top: 15px; color: var(--color-text-muted);">${I18n.t('ui.status.noEffect')}</div>`;
         }
 
-        const desc = this.resolveText(houseInfo.description) || I18n.t(`data.housing.${houseId}.description`) || '';
+        const desc = this.resolveText(houseInfo.description) || I18n.t(`data.housing.${houseId}.description`);
 
         const pendingHousingId = state.pendingHousing;
         let pendingHtml = '';
@@ -2230,12 +2389,12 @@ export const UI = {
             const pendingName = this.resolveText(pendingInfo.name);
             pendingHtml = `
                 <div style="margin-top: 12px; padding: 10px; border-radius: 8px; background: rgba(255, 206, 86, 0.12); color: var(--color-warning);">
-                    🚚 ${I18n.t('game.housing.pendingTo', pendingName) || `搬家申请中：${pendingName}`}
+                    🚚 ${I18n.t('game.housing.pendingTo', pendingName)}
                 </div>
             `;
-            actionHtml = `<button class="action-btn" id="cancel-housing-change-btn">${I18n.t('game.housing.cancelChange') || '撤销申请'}</button>`;
+            actionHtml = `<button class="action-btn" id="cancel-housing-change-btn">${I18n.t('game.housing.cancelChange')}</button>`;
         } else {
-            actionHtml = `<button class="primary-button" id="request-housing-change-btn">${I18n.t('game.housing.requestChange') || '更换住所'}</button>`;
+            actionHtml = `<button class="primary-button" id="request-housing-change-btn">${I18n.t('game.housing.requestChange')}</button>`;
         }
 
         content.innerHTML = `
@@ -2245,7 +2404,7 @@ export const UI = {
             </div>
             <div class="modal-body">
                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                    <span>每月房租</span>
+                    <span>${I18n.t('ui_static.status_page.monthly_rent')}</span>
                     <span class="money danger">$${cost.toLocaleString()}</span>
                 </div>
                 ${effectsHtml}
@@ -2254,7 +2413,7 @@ export const UI = {
             </div>
              <div class="modal-footer" style="margin-top: 20px; text-align: right; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
                 ${actionHtml}
-                <button class="primary-button" id="close-housing-btn-bottom">关闭</button>
+                <button class="primary-button" id="close-housing-btn-bottom">${I18n.t('ui.status.close')}</button>
             </div>
         `;
 
@@ -2280,7 +2439,7 @@ export const UI = {
             cancelBtn.onclick = () => {
                 const ok = game.cancelHousingChange ? game.cancelHousingChange() : false;
                 if (ok) {
-                    this.showToast(I18n.t('game.housing.changeCanceled') || '已撤销搬家申请', 'neutral');
+                    this.showToast(I18n.t('game.housing.changeCanceled'), 'neutral');
                     this.updateStatusBar(game.getStatusDescription());
                 }
                 close();
@@ -2313,7 +2472,7 @@ export const UI = {
                 const name = this.resolveText(house.name);
                 const baseCost = Math.floor((house.cost || 0) * (state.rentIndex || 1));
                 const affordable = (state.money || 0) >= baseCost;
-                const desc = this.resolveText(house.description) || I18n.t(`data.housing.${id}.description`) || '';
+                const desc = this.resolveText(house.description) || I18n.t(`data.housing.${id}.description`);
                 return `
                     <button class="plan-option-card housing-change-card" data-housing-id="${id}" style="text-align:left; width:100%;" ${affordable ? '' : 'disabled aria-disabled="true"'}>
                         <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
@@ -2323,7 +2482,7 @@ export const UI = {
                             </div>
                             <div style="text-align:right; white-space:nowrap;">
                                 <div class="money danger">$${baseCost.toLocaleString()}</div>
-                                ${affordable ? '' : `<div style="margin-top:4px; font-size:0.75em; color:var(--color-danger);">${I18n.t('game.housing.insufficientCashShort', baseCost) || '现金不足'}</div>`}
+                                ${affordable ? '' : `<div style="margin-top:4px; font-size:0.75em; color:var(--color-danger);">${I18n.t('game.housing.insufficientCashShort', baseCost)}</div>`}
                             </div>
                         </div>
                     </button>
@@ -2332,14 +2491,14 @@ export const UI = {
 
         content.innerHTML = `
             <div class="modal-header">
-                <h3>${I18n.t('game.housing.requestChange') || '更换住所'}</h3>
+                <h3>${I18n.t('game.housing.requestChange')}</h3>
                 <button id="close-housing-change-modal">❌</button>
             </div>
             <div class="modal-body" style="display:grid; gap:10px; max-height:65vh; overflow:auto;">
                 <div style="font-size:0.9rem; color:var(--color-text-secondary);">
-                    ${I18n.t('game.housing.nextCycleEffective') || '变更将在付完本期房租后的下一个周期生效。'}
+                    ${I18n.t('game.housing.nextCycleEffective')}
                 </div>
-                ${options || `<div style="color:var(--color-text-secondary);">${I18n.t('game.housing.noAlternative') || '暂无可选住所'}</div>`}
+                ${options || `<div style="color:var(--color-text-secondary);">${I18n.t('game.housing.noAlternative')}</div>`}
             </div>
         `;
 
@@ -2354,7 +2513,7 @@ export const UI = {
                 const targetId = btn.dataset.housingId;
                 const ok = game.requestHousingChange ? game.requestHousingChange(targetId) : false;
                 if (ok) {
-                    this.showToast(I18n.t('game.housing.nextCycleEffective') || '搬家申请已提交，下个周期生效', 'positive');
+                    this.showToast(I18n.t('game.housing.nextCycleEffective'), 'positive');
                     this.updateStatusBar(game.getStatusDescription());
                 }
                 close();
@@ -2377,12 +2536,12 @@ export const UI = {
             // 如果之前有 pending，说明想撤销
             if (state.insurance.pendingCarPlanId) {
                 state.insurance.pendingCarPlanId = null;
-                this.showToast('已撤销变更申请，维持当前计划');
+                this.showToast(I18n.t('ui.toast.undoChangeRequest'));
                 this.renderInsurancePage();
                 this.updateStatusBar(game.getStatusDescription());
                 return;
             } else {
-                this.showToast('这是你当前的方案');
+                this.showToast(I18n.t('ui.toast.isCurrentOption'));
                 return;
             }
         }
@@ -2390,7 +2549,7 @@ export const UI = {
         // 设置待变更
         state.insurance.pendingCarPlanId = planId;
         const plan = GameData.insuranceSystem.carPlans[planId];
-        this.showToast(`申请已提交: ${this.resolveText(plan.name)} (下月生效)`);
+        this.showToast(I18n.t('ui.toast.changeSubmitted', this.resolveText(plan.name)));
         this.renderInsurancePage();
         this.updateStatusBar(game.getStatusDescription());
     },
@@ -2507,7 +2666,7 @@ export const UI = {
 
         if (this.elements.financeDetailInvestmentList) {
             if (investmentRows.length === 0) {
-                this.elements.financeDetailInvestmentList.innerHTML = `<div class="finance-detail-empty">${I18n.t('ui_static.finance_detail.noInvestments') || '暂无持仓'}</div>`;
+                this.elements.financeDetailInvestmentList.innerHTML = `<div class="finance-detail-empty">${I18n.t('ui_static.finance_detail.noInvestments')}</div>`;
             } else {
                 investmentRows.forEach(row => {
                     const item = document.createElement('div');
@@ -2536,12 +2695,12 @@ export const UI = {
             const pendingTotal = (state.pendingMedicalInstallments || [])
                 .reduce((sum, item) => sum + (item.remaining || 0), 0);
             if (pendingTotal > 0) {
-                addDebtItem(I18n.t('finance.pendingInstallment') || '待结转分期', pendingTotal);
+                addDebtItem(I18n.t('finance.pendingInstallment'), pendingTotal);
             }
 
             const interestTotal = Math.max(0, state.debtInterestAccrued || 0);
             if (interestTotal > 0) {
-                addDebtItem(I18n.t('finance.interest') || '累计利息', interestTotal);
+                addDebtItem(I18n.t('finance.interest'), interestTotal);
             }
 
             const sourceTotals = {};
@@ -2557,7 +2716,7 @@ export const UI = {
             });
 
             if (this.elements.financeDetailDebtList.children.length === 0) {
-                this.elements.financeDetailDebtList.innerHTML = `<div class="finance-detail-empty">${I18n.t('ui_static.finance_detail.noDebt') || '暂无债务'}</div>`;
+                this.elements.financeDetailDebtList.innerHTML = `<div class="finance-detail-empty">${I18n.t('ui_static.finance_detail.noDebt')}</div>`;
             }
         }
 
@@ -2644,18 +2803,18 @@ export const UI = {
         if (!this.elements.financeDetailRepayInput) return;
         const raw = parseFloat(this.elements.financeDetailRepayInput.value);
         if (!raw || raw <= 0) {
-            this.showToast(I18n.t('ui.toast.invalidQuantity') || '请输入有效数量', 'negative');
+            this.showToast(I18n.t('ui.toast.invalidQuantity'), 'negative');
             return;
         }
 
         const result = game.repayDebt(raw);
         if (!result || !result.success) {
-            this.showToast(I18n.t('finance.repayEmpty') || '当前没有可偿还的债务', 'warning');
+            this.showToast(I18n.t('finance.repayEmpty'), 'warning');
             return;
         }
 
         this.elements.financeDetailRepayInput.value = '';
-        this.showToast(I18n.t('finance.repaySuccess', result.paid) || `成功偿还 $${result.paid}`, 'positive');
+        this.showToast(I18n.t('finance.repaySuccess', result.paid), 'positive');
         this.updateStatusBar(game.getStatusDescription());
         this.renderStatusPage();
         this.showFinanceDetailModal();
@@ -2824,7 +2983,7 @@ export const UI = {
 
         if (this.elements.debtValue) {
             const debtAmount = Math.max(0, state.debt || 0);
-            const label = I18n.t('finance.debt') || '债务';
+            const label = I18n.t('finance.debt');
             this.elements.debtValue.textContent = `${label}: $${debtAmount.toLocaleString()}`;
             this.elements.debtValue.style.opacity = debtAmount > 0 ? '1' : '0.6';
         }
@@ -2951,7 +3110,7 @@ export const UI = {
                 this.elements.paydayCountdown.textContent = '';
                 this.elements.paydayCountdown.className = 'finance-sub';
             } else {
-                this.elements.paydayCountdown.textContent = `${status.daysUntilPayday}天`;
+                this.elements.paydayCountdown.textContent = I18n.t('ui_static.finance.day_count', status.daysUntilPayday);
                 this.elements.paydayCountdown.className = 'finance-sub' + (status.daysUntilPayday <= 3 ? ' danger' : (status.daysUntilPayday <= 7 ? ' warning' : ''));
             }
         }
@@ -3001,12 +3160,14 @@ export const UI = {
         // 更新储备信息: Merged Ingredients into Meal card logic
         if (this.elements.ingredientsCount) {
             const ingCount = status.ingredients !== undefined ? status.ingredients : 0;
-            this.elements.ingredientsCount.textContent = `食材: ${ingCount}`;
+            this.elements.ingredientsCount.textContent = I18n.t('ui_static.finance.ingredients_count', ingCount);
             // Optional: Color coding if low ingredients?
             // this.elements.ingredientsCount.className = 'finance-sub-value' + (ingCount <= 1 ? ' danger' : '');
         }
         if (this.elements.mealStatus) {
-            this.elements.mealStatus.textContent = status.hasPreparedMeal ? '✅ 已备' : '❌ 未备';
+            this.elements.mealStatus.textContent = status.hasPreparedMeal
+                ? I18n.t('ui_static.finance.prepared')
+                : I18n.t('ui_static.finance.not_prepared');
             this.elements.mealStatus.className = 'status-value' + (status.hasPreparedMeal ? ' positive' : ' warning');
         }
 
@@ -3035,9 +3196,22 @@ export const UI = {
                         this.elements.taskContainer.style.display = '';
 
                         if (label) {
-                            label.textContent = (status.workTask && status.workTask.name)
-                                ? `📋 ${status.workTask.name}`
-                                : '📋 工作任务';
+                            if (status.workTask && status.workTask.name) {
+                                const taskName = this.resolveText(status.workTask.name);
+                                const normalized = String(taskName || '');
+                                let displayTaskName = normalized;
+                                if (I18n.currentLang === 'en' && /[\u4e00-\u9fff]/.test(normalized)) {
+                                    const zhTaskNames = ['项目开发', '报告撰写', '数据分析', '客户方案', '系统维护', '代码审查'];
+                                    const enTaskNames = I18n.t('game.taskNames');
+                                    const taskIndex = zhTaskNames.indexOf(normalized);
+                                    if (taskIndex >= 0 && Array.isArray(enTaskNames) && enTaskNames[taskIndex]) {
+                                        displayTaskName = enTaskNames[taskIndex];
+                                    }
+                                }
+                                label.textContent = `📋 ${displayTaskName}`;
+                            } else {
+                                label.textContent = `📋 ${I18n.t('ui_static.finance.task')}`;
+                            }
                         }
 
                         if (this.elements.taskProgress && status.workTask) {
@@ -3061,10 +3235,10 @@ export const UI = {
                         if (this.elements.taskDeadline && status.workTask) {
                             const deadline = status.workTask.deadline;
                             if (deadline < 0) {
-                                this.elements.taskDeadline.textContent = `超时${Math.abs(deadline)}天`;
+                                this.elements.taskDeadline.textContent = I18n.t('ui_static.finance.overdue_days', Math.abs(deadline));
                                 this.elements.taskDeadline.className = 'finance-sub danger';
                             } else {
-                                this.elements.taskDeadline.textContent = `${deadline}天`;
+                                this.elements.taskDeadline.textContent = I18n.t('ui_static.finance.day_count', deadline);
                                 this.elements.taskDeadline.className = 'finance-sub' + (deadline <= 2 ? ' danger' : (deadline <= 4 ? ' warning' : ''));
                             }
                         }
@@ -3254,9 +3428,9 @@ export const UI = {
      */
     updateTimeDisplay(status) {
         // 天数
-        let dayText = `第 ${status.day} 天`;
+        let dayText = I18n.t('ui_static.game_header.day', status.day);
         if (status.day <= GameData.newbieProtectionDays) {
-            dayText += ' (新手保护期)';
+            dayText += ` (${I18n.t('ui.time.newbie_protection')})`;
         }
         this.elements.dayCount.textContent = dayText;
 
@@ -3573,7 +3747,7 @@ export const UI = {
         if (state.period === 'day' && this.elements.lunchSelector && !this.elements.lunchSelector.classList.contains('hidden')) {
             if (!state.lunchType) {
                 isValid = false;
-                missing.push('午餐');
+                missing.push(I18n.t('ui.validation.selectLunch'));
             }
         }
 
@@ -3581,7 +3755,7 @@ export const UI = {
         if (state.period === 'day' && this.elements.dailyActionSelector && !this.elements.dailyActionSelector.classList.contains('hidden')) {
             if (!state.selectedDailyAction) {
                 isValid = false;
-                missing.push('额外行动');
+                missing.push(I18n.t('ui.validation.selectAction'));
             }
         }
 
@@ -3589,7 +3763,7 @@ export const UI = {
         if (state.period === 'day' && this.elements.commuteSelector && !this.elements.commuteSelector.classList.contains('hidden')) {
             if (!state.selectedCommute) {
                 isValid = false;
-                missing.push('通勤方式');
+                missing.push(I18n.t('ui.validation.selectCommute'));
             }
         }
 
@@ -3597,16 +3771,18 @@ export const UI = {
         if (state.period === 'day' && this.elements.incidentSelector && !this.elements.incidentSelector.classList.contains('hidden')) {
             if (!state.selectedIncident) {
                 isValid = false;
-                missing.push('突发状况');
+                missing.push(I18n.t('ui.validation.selectIncident'));
             }
         }
 
         // 更新按钮状态
         // V2.38 预览模式：主选项允许点击以预览；是否可进入下一阶段由控制器决定
         this.mainChoiceValid = isValid;
+        const separator = I18n.currentLang === 'zh' ? '、' : ', ';
+        const missingText = missing.join(separator);
         choiceButtons.forEach(btn => {
             if (!isValid) {
-                btn.title = `可预览。开始时间流逝前请先选择: ${missing.join(', ')}`;
+                btn.title = I18n.t('ui.validation.previewHint', missingText);
             } else {
                 btn.title = '';
             }
@@ -3618,7 +3794,7 @@ export const UI = {
                 this.elements.choiceValidationHint.classList.remove('hidden');
                 const hintText = this.elements.choiceValidationHint.querySelector('.hint-text');
                 if (hintText) {
-                    hintText.textContent = `请先选择: ${missing.join('、')}`;
+                    hintText.textContent = `${I18n.t('ui.validation.pleaseSelectPrefix')} ${missingText}`;
                 }
             } else {
                 this.elements.choiceValidationHint.classList.add('hidden');
@@ -3902,19 +4078,19 @@ export const UI = {
         const sentiment = state.marketSentiment || 0;
 
         // 显示文字
-        let text = '中性';
+        let text = I18n.t('ui.assets.sentimentNeutral');
         let className = '';
         if (sentiment <= -30) {
-            text = '极度恐慌';
+            text = I18n.t('ui.assets.sentimentExtremeFear');
             className = 'fear';
         } else if (sentiment < -10) {
-            text = '恐慌';
+            text = I18n.t('ui.assets.sentimentFear');
             className = 'fear';
         } else if (sentiment >= 30) {
-            text = '极度贪婪';
+            text = I18n.t('ui.assets.sentimentExtremeGreed');
             className = 'greed';
         } else if (sentiment > 10) {
-            text = '贪婪';
+            text = I18n.t('ui.assets.sentimentGreed');
             className = 'greed';
         }
 
@@ -4036,19 +4212,19 @@ export const UI = {
                 <span class="price-change ${changeClass}">${changeSign}${marketData.change.toFixed(1)}%</span>
             </div>
             <div class="asset-holding">
-                <span>持仓: ${holding.quantity.toFixed(4)} ${this.resolveText(config.unit)}</span>
-                <span>价值: $${Math.round(holdingValue).toLocaleString()}</span>
+                <span>${I18n.t('ui.assets.holding')}: ${holding.quantity.toFixed(4)} ${this.resolveText(config.unit)}</span>
+                <span>${I18n.t('ui.assets.value')}: $${Math.round(holdingValue).toLocaleString()}</span>
             </div>
             ${holding.quantity > 0 ? `
             <div class="asset-profit">
-                <span class="${profitClass}">盈亏: ${profitLoss >= 0 ? '+' : ''}$${profitLoss.toFixed(2)} (${profitLoss >= 0 ? '+' : ''}${profitPercent}%)</span>
-                <span class="asset-avgcost">均价: $${holding.avgCost.toFixed(2)}</span>
+                <span class="${profitClass}">${I18n.t('ui.assets.profitLoss')}: ${profitLoss >= 0 ? '+' : ''}$${profitLoss.toFixed(2)} (${profitLoss >= 0 ? '+' : ''}${profitPercent}%)</span>
+                <span class="asset-avgcost">${I18n.t('ui.assets.avgCost')}: $${holding.avgCost.toFixed(2)}</span>
             </div>
             ` : ''}
             <div class="asset-actions">
-                <button class="asset-btn trend-btn" data-action="trend" data-type="${assetId}" style="background: var(--color-info);">${I18n.t('ui.assets.trend') || '走势'}</button>
-                <button class="asset-btn buy" data-action="buy" data-type="${assetId}">买入</button>
-                <button class="asset-btn sell" data-action="sell" data-type="${assetId}">卖出</button>
+                <button class="asset-btn trend-btn" data-action="trend" data-type="${assetId}" style="background: var(--color-info);">${I18n.t('ui.assets.trend')}</button>
+                <button class="asset-btn buy" data-action="buy" data-type="${assetId}">${I18n.t('ui.assets.buy')}</button>
+                <button class="asset-btn sell" data-action="sell" data-type="${assetId}">${I18n.t('ui.assets.sell')}</button>
             </div>
         `;
 
@@ -4072,13 +4248,7 @@ export const UI = {
      * V2.9 获取风险等级标签
      */
     getRiskLabel(riskLevel) {
-        const labels = {
-            low: '低风险',
-            medium: '中风险',
-            high: '高风险',
-            extreme: '极高风险'
-        };
-        return labels[riskLevel] || riskLevel;
+        return I18n.t(`ui.assets.riskLevel.${riskLevel}`) || riskLevel;
     },
 
     /**
@@ -4110,7 +4280,7 @@ export const UI = {
         const holding = state.holdings[assetId];
 
         if (!config || !marketData || !holding) {
-            this.showToast('资产数据加载失败', 'error');
+            this.showToast(I18n.t('ui.toast.assetLoadError'), 'error');
             return;
         }
 
@@ -4219,12 +4389,12 @@ export const UI = {
         const assetId = this.currentTradeAssetId;
 
         if (!assetId || !action) {
-            this.showToast('交易信息错误', 'error');
+            this.showToast(I18n.t('ui.toast.tradeInfoError'), 'error');
             return;
         }
 
         if (isNaN(quantity) || quantity <= 0) {
-            this.showToast('请输入有效数量', 'error');
+            this.showToast(I18n.t('ui.toast.invalidQuantity'), 'error');
             return;
         }
 
@@ -4415,7 +4585,7 @@ export const UI = {
             if (rumorId && state.marketRumorConfirmDay > state.day) {
                 const rumorNews = GameData.marketNews.find(n => n.id === rumorId);
                 if (rumorNews) {
-                    const tag = I18n.t('game.artifactDaily.ticker_rumor_label') || '[传闻]';
+                    const tag = I18n.t('game.artifactDaily.ticker_rumor_label');
                     const title = rumorNews.title || I18n.t('game.artifactDaily.ticker_news_title');
                     const fullText = rumorNews.description ? `${tag} ${title}：${rumorNews.description}` : `${tag} ${title}`;
                     messages.push({ type: 'rumor', text: fullText, data: rumorNews });
@@ -4541,7 +4711,7 @@ export const UI = {
             const newsTitle = I18n.t('game.artifactDaily.modal_news_title');
             // Only show as "Confirmed News" if it's not currently in the rumor stage
             if (news && news.stage !== 'rumor') {
-                const stageMarker = news.stage === 'confirmed' ? ` <span style="font-size: 0.7em; background: #6c5ce7; padding: 2px 4px; border-radius: 3px; vertical-align: middle;">已证实</span>` : '';
+                const stageMarker = news.stage === 'confirmed' ? ` <span style="font-size: 0.7em; background: #6c5ce7; padding: 2px 4px; border-radius: 3px; vertical-align: middle;">${I18n.t('game.artifactDaily.modal_confirmed_badge')}</span>` : '';
                 html += `
                 <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
                     <h3 style="color: #a29bfe; margin-bottom: 8px; font-size: 0.9em;">${newsTitle}${stageMarker}</h3>
@@ -4565,12 +4735,12 @@ export const UI = {
                 if (rumorNews) {
                     html += `
                     <div style="margin-bottom: 10px;">
-                        <h3 style="color: #fdcb6e; margin-bottom: 8px; font-size: 0.9em;">🔍 市场传闻 (Rumor)</h3>
+                        <h3 style="color: #fdcb6e; margin-bottom: 8px; font-size: 0.9em;">${I18n.t('game.artifactDaily.modal_rumor_title')}</h3>
                         <div style="border-left: 3px solid #fdcb6e; padding-left: 10px; background: rgba(253, 203, 110, 0.05); padding: 8px 10px; border-radius: 0 4px 4px 0;">
                             <p style="font-weight: bold; margin-bottom: 5px; font-size: 1.05em;">${rumorNews.title}</p>
                             <p style="font-size: 0.85em; line-height: 1.5; color: #eee;">${rumorNews.description || ''}</p>
                             <p style="margin-top: 8px; font-size: 0.75em; color: #fdcb6e; font-style: italic;">
-                                注意：该消息尚待证实，预计将在第 ${state.marketRumorConfirmDay} 天揭晓真相。
+                                ${I18n.t('game.artifactDaily.modal_rumor_notice', state.marketRumorConfirmDay)}
                             </p>
                         </div>
                     </div>`;

@@ -256,7 +256,10 @@ export const TimeMixin = {
             if (artifactEffect && artifactEffect.log) {
                 const art = getArtifact(artifactEffect.id);
                 const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '神器');
-                this.addLog(artifactEffect.log, 'positive', artName);
+                this.addLog(artifactEffect.log, 'positive', {
+                    key: `data.artifacts.${artifactEffect.id}.name`,
+                    fallback: artName
+                });
             }
 
             // V2.XX: Trigger shake for the source artifact effect itself
@@ -328,12 +331,16 @@ export const TimeMixin = {
 
                 const fineMsg = I18n.t('game.artifactDaily.insider_phone_fine', fine);
                 if (this.state.dailyFinancialReport) {
-                    this.state.dailyFinancialReport.push(fineMsg);
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.artifactDaily.insider_phone_fine', args: [fine], fallback: fineMsg });
                 }
 
                 const art = getArtifact('insider_phone');
                 const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '内幕电话');
-                this.addLog(fineMsg, 'negative', artName);
+                this.addLog(
+                    { key: 'game.artifactDaily.insider_phone_fine', args: [fine], fallback: fineMsg },
+                    'negative',
+                    { key: 'data.artifacts.insider_phone.name', fallback: artName }
+                );
             }
 
             // 冷却检查
@@ -367,12 +374,16 @@ export const TimeMixin = {
                         const tipMsg = I18n.t('game.artifactDaily.insider_phone_tip', assetName);
 
                         if (this.state.dailyFinancialReport) {
-                            this.state.dailyFinancialReport.push(tipMsg);
+                            this.pushDailyReport && this.pushDailyReport({ key: 'game.artifactDaily.insider_phone_tip', args: [assetName], fallback: tipMsg });
                         }
 
                         const art = getArtifact('insider_phone');
                         const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '内幕电话');
-                        this.addLog(tipMsg, 'positive', artName);
+                        this.addLog(
+                            { key: 'game.artifactDaily.insider_phone_tip', args: [assetName], fallback: tipMsg },
+                            'positive',
+                            { key: 'data.artifacts.insider_phone.name', fallback: artName }
+                        );
 
                         if (window.UI) window.UI.triggerArtifactGlow('insider_phone');
 
@@ -403,15 +414,15 @@ export const TimeMixin = {
                 // 暴涨
                 this.state.mental = Math.min(this.state.maxMental || 100, this.state.mental + moodConfig.mentalBonus);
                 this.state.pendingInvestmentEffect = { type: 'boom', percent: percent };
-                const msg = `🚀 投资大涨 ${(percent * 100).toFixed(1)}%! 精神 +${moodConfig.mentalBonus}`;
-                this.state.dailyFinancialReport.push(msg);
+                const msg = I18n.t('game.finance.investmentBoom', (percent * 100).toFixed(1), moodConfig.mentalBonus);
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.investmentBoom', args: [(percent * 100).toFixed(1), moodConfig.mentalBonus], fallback: msg });
                 console.log(`[Game] ${msg}`);
             } else if (percent <= -moodConfig.thresholdPercent) {
                 // 暴跌
                 this.state.mental = Math.max(0, this.state.mental - moodConfig.mentalPenalty);
                 this.state.pendingInvestmentEffect = { type: 'crash', percent: percent };
-                const msg = `📉 投资暴跌 ${(percent * 100).toFixed(1)}%! 精神 -${moodConfig.mentalPenalty}`;
-                this.state.dailyFinancialReport.push(msg);
+                const msg = I18n.t('game.finance.investmentCrash', (percent * 100).toFixed(1), moodConfig.mentalPenalty);
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.investmentCrash', args: [(percent * 100).toFixed(1), moodConfig.mentalPenalty], fallback: msg });
                 console.log(`[Game] ${msg}`);
             }
         }
@@ -431,7 +442,7 @@ export const TimeMixin = {
             this.state.health = Math.min(this.state.health, this.state.maxHealth);
 
             const msg = I18n.t('game.finance.fainting', faintingConfig.maxMentalPenalty, faintingConfig.maxHealthPenalty);
-            this.state.dailyFinancialReport.push(msg);
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.fainting', args: [faintingConfig.maxMentalPenalty, faintingConfig.maxHealthPenalty], fallback: msg });
             console.log(`[Game] ${msg}`);
 
             // Reset flag
@@ -455,18 +466,18 @@ export const TimeMixin = {
             const rentCost = this.state.housingCost || 0;
             if (rentCost > 0 && this.state.daysUntilRent > 0 && this.state.daysUntilRent <= reminderDays) {
                 if (this.state.daysUntilRent === 1 && this.state.money < rentCost) {
-                    report.push(I18n.t('game.foreseeing.rentWarning', rentCost));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.rentWarning', args: [rentCost], fallback: I18n.t('game.foreseeing.rentWarning', rentCost) });
                 } else {
-                    report.push(I18n.t('game.foreseeing.rentReminder', this.state.daysUntilRent, rentCost));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.rentReminder', args: [this.state.daysUntilRent, rentCost], fallback: I18n.t('game.foreseeing.rentReminder', this.state.daysUntilRent, rentCost) });
                 }
             }
 
             const utilityCost = Math.round(this.state.utilityBill || 0);
             if (utilityCost > 0 && this.state.daysUntilUtility > 0 && this.state.daysUntilUtility <= reminderDays) {
                 if (this.state.daysUntilUtility === 1 && this.state.money < utilityCost) {
-                    report.push(I18n.t('game.foreseeing.utilityWarning', utilityCost));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.utilityWarning', args: [utilityCost], fallback: I18n.t('game.foreseeing.utilityWarning', utilityCost) });
                 } else {
-                    report.push(I18n.t('game.foreseeing.utilityReminder', this.state.daysUntilUtility, utilityCost));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.utilityReminder', args: [this.state.daysUntilUtility, utilityCost], fallback: I18n.t('game.foreseeing.utilityReminder', this.state.daysUntilUtility, utilityCost) });
                 }
             }
 
@@ -475,9 +486,9 @@ export const TimeMixin = {
                 : (this.calculateMonthlyInsuranceCost ? this.calculateMonthlyInsuranceCost() : 0);
             if (insuranceCost > 0 && this.state.daysUntilInsurance > 0 && this.state.daysUntilInsurance <= reminderDays) {
                 if (this.state.daysUntilInsurance === 1 && this.state.money < insuranceCost) {
-                    report.push(I18n.t('game.foreseeing.insuranceWarning', insuranceCost));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.insuranceWarning', args: [insuranceCost], fallback: I18n.t('game.foreseeing.insuranceWarning', insuranceCost) });
                 } else {
-                    report.push(I18n.t('game.foreseeing.insuranceReminder', this.state.daysUntilInsurance, insuranceCost));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.insuranceReminder', args: [this.state.daysUntilInsurance, insuranceCost], fallback: I18n.t('game.foreseeing.insuranceReminder', this.state.daysUntilInsurance, insuranceCost) });
                 }
             }
 
@@ -487,11 +498,11 @@ export const TimeMixin = {
             const pendingInsChange = this.state.insurance
                 && (this.state.insurance.pendingHealthPlanId || this.state.insurance.pendingCarPlanId || rentersPending);
             if (this.state.daysUntilInsurance === 1 && pendingInsChange) {
-                report.push(I18n.t('game.foreseeing.insuranceChangeWindow'));
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.insuranceChangeWindow', fallback: I18n.t('game.foreseeing.insuranceChangeWindow') });
             }
 
             if (this.state.pendingPipWarning) {
-                report.push(I18n.t('game.foreseeing.pipOmen'));
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.pipOmen', fallback: I18n.t('game.foreseeing.pipOmen') });
             }
 
             const social = this.state.socialValue || 50;
@@ -499,7 +510,7 @@ export const TimeMixin = {
                 const rumors = I18n.t('game.foreseeing.rumors');
                 if (Array.isArray(rumors) && rumors.length > 0) {
                     const rumor = rumors[Math.floor(this.rng.random() * rumors.length)];
-                    report.push(I18n.t('game.foreseeing.rumorLine', rumor));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.foreseeing.rumorLine', args: [rumor], fallback: I18n.t('game.foreseeing.rumorLine', rumor) });
                 }
             }
         }
@@ -547,7 +558,7 @@ export const TimeMixin = {
 
                 this.state.money += netPay;
                 const msg = I18n.t('game.finance.payday', grossPay, netPay, totalTax);
-                this.state.dailyFinancialReport.push(msg);
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.payday', args: [grossPay, netPay, totalTax], fallback: msg });
                 console.log(`[Game] ${msg}`);
             }
             this.state.daysUntilPayday = GameData.timeCycle.monthDays; // 10天周期
@@ -565,14 +576,14 @@ export const TimeMixin = {
             if (canPayCash) {
                 this.state.unpaidRentMonths = 0;
                 const msg = I18n.t('game.finance.rentPaid', rentCost);
-                this.state.dailyFinancialReport.push(msg);
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.rentPaid', args: [rentCost], fallback: msg });
                 console.log(`[Game] ${msg}`);
             } else {
                 this.state.unpaidRentMonths = (this.state.unpaidRentMonths || 0) + 1;
                 const creditDrop = GameData.usaFeatures.latePenalty.creditScoreDrop;
                 this.state.creditScore = Math.max(300, this.state.creditScore - creditDrop);
                 const msg = I18n.t('game.finance.rentInsufficient', rentCost);
-                this.state.dailyFinancialReport.push(msg);
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.rentInsufficient', args: [rentCost], fallback: msg });
                 console.log(`[Game] ${msg} | 信用分 -${creditDrop} (隐藏)`);
             }
             this.state.daysUntilRent = GameData.timeCycle.monthDays; // 10天周期
@@ -597,9 +608,9 @@ export const TimeMixin = {
                     const oldIncome = this.state.monthlyIncome;
                     this.state.monthlyIncome += raiseAmount;
 
-                    this.state.dailyFinancialReport.push(I18n.t('game.finance.salaryIncrease', raiseAmount, this.state.monthlyIncome));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.salaryIncrease', args: [raiseAmount, this.state.monthlyIncome], fallback: I18n.t('game.finance.salaryIncrease', raiseAmount, this.state.monthlyIncome) });
                 } else {
-                    this.state.dailyFinancialReport.push(I18n.t('game.finance.salaryNoIncrease'));
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.salaryNoIncrease', fallback: I18n.t('game.finance.salaryNoIncrease') });
                 }
             }
 
@@ -618,8 +629,8 @@ export const TimeMixin = {
                 this.state.pendingHousing = null;
                 const houseName = GameData.housingTypes[this.state.housing]?.name;
                 const houseText = typeof houseName === 'function' ? houseName() : (houseName || this.state.housing);
-                const moveMsg = I18n.t('game.housing.moveCompleted', houseText) || `搬家完成！新住所：${houseText}`;
-                this.state.dailyFinancialReport.push(moveMsg);
+                const moveMsg = I18n.t('game.housing.moveCompleted', houseText);
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.housing.moveCompleted', args: [houseText], fallback: moveMsg });
                 console.log(`[Game] ${moveMsg}`);
             }
 
@@ -629,7 +640,7 @@ export const TimeMixin = {
 
             if (this.state.housing !== 'homeless' && this.state.housing !== 'car' && this.state.housingCost > 0) {
                 const actualIncrease = this.state.housingCost - oldRent;
-                this.state.dailyFinancialReport.push(I18n.t('game.finance.rentIncrease', actualIncrease, this.state.housingCost));
+                this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.rentIncrease', args: [actualIncrease, this.state.housingCost], fallback: I18n.t('game.finance.rentIncrease', actualIncrease, this.state.housingCost) });
 
                 // 4. Trigger Artifact Bonus Event
                 if (!this.state.eventQueue) this.state.eventQueue = [];
@@ -642,7 +653,7 @@ export const TimeMixin = {
             const utilityCost = this.state.utilityBill;
             this.deductMoney(utilityCost, 'utility');
             const msg = I18n.t('game.finance.utilityPaid', utilityCost);
-            this.state.dailyFinancialReport.push(msg);
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.utilityPaid', args: [utilityCost], fallback: msg });
             console.log(`[Game] ${msg}`);
             this.state.utilityBill = 0;
             this.state.daysUntilUtility = GameData.timeCycle.monthDays; // 10天周期
@@ -674,7 +685,11 @@ export const TimeMixin = {
             const msg = I18n.t('game.artifactDaily.piggy_bank', bonus);
             const art = getArtifact('piggy_bank');
             const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || '存钱罐');
-            this.addLog(msg, 'positive', artName);
+            this.addLog(
+                { key: 'game.artifactDaily.piggy_bank', args: [bonus], fallback: msg },
+                'positive',
+                { key: 'data.artifacts.piggy_bank.name', fallback: artName }
+            );
         }
         this.state.spentMoneyToday = false;
 
@@ -696,15 +711,17 @@ export const TimeMixin = {
 
         if (this.state.energy < lowEnergyThreshold) {
             let healthPenalty = 2; // 轻微过度劳累
-            let penaltyMsg = `⚠️ 长期疲劳: 健康 -${healthPenalty}`;
+            let penaltyMsg = I18n.t('game.finance.chronicFatigue', healthPenalty);
+            let penaltyKey = 'game.finance.chronicFatigue';
 
             if (this.state.energy < 10) {
                 healthPenalty += 3; // 严重过度劳累 (total 5)
-                penaltyMsg = `⚠️ 严重透支: 健康 -${healthPenalty}`;
+                penaltyMsg = I18n.t('game.finance.severeOverwork', healthPenalty);
+                penaltyKey = 'game.finance.severeOverwork';
             }
 
             this.state.health = Math.max(0, this.state.health - healthPenalty);
-            this.state.dailyFinancialReport.push(penaltyMsg);
+            this.pushDailyReport && this.pushDailyReport({ key: penaltyKey, args: [healthPenalty], fallback: penaltyMsg });
             console.log(`[Game] ${penaltyMsg}`);
         }
 
@@ -740,7 +757,7 @@ export const TimeMixin = {
                 GameData.sicknessConfig.waitingDeteriorationMax
             );
             this.state.health -= deterioration;
-            this.state.dailyFinancialReport.push(`⏳ 等待医生中: 健康 -${deterioration}`);
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.waitingForDoctor', args: [deterioration], fallback: `⏳ 等待医生中: 健康 -${deterioration}` });
 
             if (this.state.insurance.waitingForDoctor <= 0) {
                 this.state.pendingDoctorVisit = true; // 标记次日可看医生
@@ -751,7 +768,7 @@ export const TimeMixin = {
             const conf = GameData.eventConfigs.surgery_required.wait;
             this.state.surgeryApprovalDaysLeft--;
             this.state.health = Math.max(0, this.state.health - conf.dailyHealthLoss);
-            this.state.dailyFinancialReport.push(`⏳ 等待手术审批: 健康 -${conf.dailyHealthLoss}`);
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.waitingSurgeryApproval', args: [conf.dailyHealthLoss], fallback: `⏳ 等待手术审批: 健康 -${conf.dailyHealthLoss}` });
 
             if (this.state.surgeryApprovalDaysLeft <= 0) {
                 this.state.surgeryApprovalPending = true;
@@ -772,10 +789,10 @@ export const TimeMixin = {
                 // 申请完成判定
                 if (this.state.money < 2000 && (this.state.job === 'unemployed' || this.state.job === 'fired')) {
                     this.state.insurance.healthPlanId = 'medicaid';
-                    this.state.dailyFinancialReport.push(`✅ 白卡申请通过！医疗费用现已全免。`);
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.medicaidApproved', fallback: '✅ 白卡申请通过！医疗费用现已全免。' });
                 } else {
                     this.state.insurance.deniedMedicaid = true;
-                    this.state.dailyFinancialReport.push(`❌ 白卡申请被拒：资产或收入不符合条件。`);
+                    this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.medicaidDenied', fallback: '❌ 白卡申请被拒：资产或收入不符合条件。' });
                 }
             }
         }

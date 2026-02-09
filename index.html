@@ -58,7 +58,11 @@
         <!-- Wrapped in container for positioning and label -->
         <div class="help-container">
             <button id="help-button" class="help-button" aria-label="游戏说明">?</button>
-            <span class="help-label">游戏说明</span>
+            <span class="help-label" data-i18n="ui_static.start.help_label">游戏说明</span>
+        </div>
+
+        <div class="lang-switch-container">
+            <button id="language-switch" class="lang-switch-btn" type="button" aria-label="Switch language">EN</button>
         </div>
 
         <!-- SECTION: MANUAL SCREEN -->
@@ -294,9 +298,10 @@
 
         <div id="modal-artifact-selection" class="modal-overlay hidden">
             <div class="modal-content glass-panel" style="max-width: 900px;">
-                <h2 class="modal-title">📦 选择你的初始神器</h2>
+                <h2 class="modal-title" data-i18n="ui_static.modals.artifact_select_title">📦 选择你的初始神器</h2>
                 <p class="modal-subtitle"
-                    style="text-align: center; color: var(--color-text-secondary); margin-bottom: 20px;">
+                    style="text-align: center; color: var(--color-text-secondary); margin-bottom: 20px;"
+                    data-i18n="ui_static.modals.artifact_select_subtitle">
                     这就好比投胎技术活，选一个吧，它将决定你这次人生的画风。
                 </p>
                 <div id="artifact-cards-container" class="artifact-cards-container">
@@ -447,7 +452,7 @@
         <div id="news-detail-modal" class="modal-overlay hidden">
             <div class="modal-content glass-panel" style="max-width: 500px;">
                 <button id="close-news-detail" class="close-button">×</button>
-                <h2 class="modal-title">📰 市场情报</h2>
+                <h2 class="modal-title" data-i18n="ui_static.modals.news_detail">📰 市场情报</h2>
                 <div class="modal-body" id="news-detail-body" style="padding: 10px; line-height: 1.6;">
                     <!-- Dynamic Content -->
                 </div>
@@ -775,28 +780,28 @@
 
                         <!-- Selectors -->
                         <div id="commute-selector" class="lunch-selector hidden">
-                            <div class="lunch-selector-label">🚗 选择通勤方式：</div>
+                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_commute">🚗 选择通勤方式：</div>
                             <div id="commute-options" class="lunch-options"></div>
                         </div>
 
                         <div id="lunch-selector" class="lunch-selector hidden">
-                            <div class="lunch-selector-label">🍱 选择今日午餐策略：</div>
+                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_lunch">🍱 选择今日午餐策略：</div>
                             <div id="lunch-options" class="lunch-options"></div>
                         </div>
 
                         <div id="daily-action-selector" class="lunch-selector hidden">
-                            <div class="lunch-selector-label">✨ 顺带做点别的：</div>
+                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_daily_action">✨ 顺带做点别的：</div>
                             <div id="daily-action-options" class="lunch-options"></div>
                         </div>
 
                         <div id="incident-selector" class="lunch-selector hidden">
-                            <div class="lunch-selector-label">⚠️ 突发状况：</div>
+                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_incident">⚠️ 突发状况：</div>
                             <div id="incident-options" class="lunch-options"></div>
                         </div>
 
                         <div id="choice-validation-hint" class="choice-validation-hint hidden">
                             <span class="hint-icon">⚠️</span>
-                            <span class="hint-text">请先完成上方选择</span>
+                            <span class="hint-text" data-i18n="ui.validation.pleaseComplete">请先完成上方选择</span>
                         </div>
 
                         <div id="event-choices" class="event-choices">

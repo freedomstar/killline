@@ -88,14 +88,14 @@ export class Game {
         const rentIndex = this.state.rentIndex || 1;
         const requiredMonthly = Math.floor((target.cost || 0) * rentIndex);
         if ((this.state.money || 0) < requiredMonthly) {
-            const msg = I18n.t('game.housing.insufficientCash', requiredMonthly) || `现金不足：需要至少 $${requiredMonthly} 才能申请搬家`;
-            this.addLog(msg, 'warning', '住所');
+            const msg = I18n.t('game.housing.insufficientCash', requiredMonthly);
+            this.addLog({ key: 'game.housing.insufficientCash', args: [requiredMonthly], fallback: msg }, 'warning', { key: 'ui_static.game_header.housing', fallback: I18n.t('ui_static.game_header.housing') });
             return false;
         }
 
         this.state.pendingHousing = newHousingId;
         const houseName = this.getStatusDescriptionForState({ ...this.state, housing: newHousingId }).housing;
-        this.addLog(`已提交搬家申请：${houseName}（付完本期房租后生效）`, 'info', '住所');
+        this.addLog({ key: 'game.housing.nextCycleEffective', fallback: I18n.t('game.housing.nextCycleEffective') }, 'info', { key: 'ui_static.game_header.housing', fallback: I18n.t('ui_static.game_header.housing') });
         return true;
     }
 
@@ -105,7 +105,7 @@ export class Game {
     cancelHousingChange() {
         if (!this.state.pendingHousing) return false;
         this.state.pendingHousing = null;
-        this.addLog('已撤销搬家申请', 'neutral', '住所');
+        this.addLog({ key: 'game.housing.changeCanceled', fallback: I18n.t('game.housing.changeCanceled') }, 'neutral', { key: 'ui_static.game_header.housing', fallback: I18n.t('ui_static.game_header.housing') });
         return true;
     }
 
@@ -266,22 +266,29 @@ export class Game {
     }
 
     /**
-     * V2.XX 添加消息日志
-     * @param {string} message - 消息内容
+     * V2.XX 添加消息日志（支持 i18n key + args）
+     * @param {string|object} message - 字符串或 { key, args, fallback }
      * @param {string} type - 消息类型 (normal, warning, positive, etc.)
-     * @param {string} source - (可选) 来源标题, 如事件名称
+     * @param {string|object|null} source - 字符串或 { key, args, fallback }
      */
     addLog(message, type = 'normal', source = null) {
         if (!this.state.messageLog) {
             this.state.messageLog = [];
         }
 
+        const msgPayload = this._normalizeI18nPayload(message);
+        const sourcePayload = this._normalizeI18nPayload(source);
+
         const logEntry = {
             day: this.state.day,
             period: this.state.period, // 'day', 'night', etc.
-            message: message,
+            message: msgPayload.text,
+            messageKey: msgPayload.key,
+            messageArgs: msgPayload.args,
             type: type,
-            source: source,
+            source: sourcePayload.text,
+            sourceKey: sourcePayload.key,
+            sourceArgs: sourcePayload.args,
             timestamp: Date.now()
         };
 
@@ -293,5 +300,43 @@ export class Game {
         if (this.state.messageLog.length > 0 && this.state.messageLog[0].day < keepFromDay) {
             this.state.messageLog = this.state.messageLog.filter(log => log.day >= keepFromDay);
         }
+    }
+
+    _normalizeI18nPayload(payload) {
+        if (payload === null || payload === undefined) {
+            return { text: null, key: null, args: [] };
+        }
+        if (typeof payload === 'string') {
+            return { text: payload, key: null, args: [] };
+        }
+        if (typeof payload === 'object') {
+            const key = typeof payload.key === 'string' ? payload.key : null;
+            const args = Array.isArray(payload.args) ? payload.args : [];
+            const fallback = typeof payload.fallback === 'string' ? payload.fallback : null;
+            return { text: fallback, key, args };
+        }
+        return { text: String(payload), key: null, args: [] };
+    }
+
+    pushDailyReport(payload, state = this.state) {
+        if (!state) return;
+        if (!state.dailyFinancialReport) state.dailyFinancialReport = [];
+        const normalized = this._normalizeI18nPayload(payload);
+        state.dailyFinancialReport.push({
+            text: normalized.text,
+            key: normalized.key,
+            args: normalized.args
+        });
+    }
+
+    resolveDailyReportEntries(entries = []) {
+        return entries.map((entry) => {
+            const normalized = this._normalizeI18nPayload(entry);
+            if (normalized.key) {
+                const translated = I18n.t(normalized.key, ...(normalized.args || []));
+                if (translated && translated !== normalized.key) return translated;
+            }
+            return normalized.text || '';
+        }).filter(Boolean);
     }
 }

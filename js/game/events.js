@@ -34,7 +34,11 @@ export const EventsMixin = {
      * V2.7 分配新工作任务
      */
     assignNewTask() {
-        const taskNames = ['项目开发', '报告撰写', '数据分析', '客户方案', '系统维护', '代码审查'];
+        const localizedTaskNames = I18n.t('game.taskNames');
+        const fallbackTaskNames = ['项目开发', '报告撰写', '数据分析', '客户方案', '系统维护', '代码审查'];
+        const taskNames = Array.isArray(localizedTaskNames) && localizedTaskNames.length > 0
+            ? localizedTaskNames
+            : fallbackTaskNames;
         // 使用配置中的任务参数
         const taskConfig = GameData.workTaskConfig || {
             // Fallback default if config missing
@@ -463,7 +467,7 @@ export const EventsMixin = {
 
                 if (state.lunchType === 'bento') state.hasPreparedMeal = false;
                 const lunchName = typeof lunchOpt.name === 'function' ? lunchOpt.name() : lunchOpt.name;
-                result.message += `\n🍱 午餐：${lunchName}${totalCost > 0 ? ` -$${totalCost}` : ''}`;
+                result.message += `\n🍱 ${I18n.t('ui.side.lunchLabel')}: ${lunchName}${totalCost > 0 ? ` -$${totalCost}` : ''}`;
 
                 // Append effect descriptions to message
                 const parts = [];
@@ -483,7 +487,7 @@ export const EventsMixin = {
             const dailyAction = GameEvents.getDailyActionById(state.selectedDailyAction);
             if (dailyAction) {
                 const dailyRes = dailyAction.effect(state, context);
-                result.message += `\n✨ ${dailyAction.text}：${dailyRes.message}`;
+                result.message += `\n✨ ${dailyAction.text}: ${dailyRes.message}`;
             }
         }
 
@@ -495,7 +499,7 @@ export const EventsMixin = {
                 const option = incident.choices.find(c => c.id === optionId);
                 if (option) {
                     const incidentRes = option.effect(state, context);
-                    result.message += `\n⚠️ ${incident.title}：${incidentRes.message}`;
+                    result.message += `\n⚠️ ${incident.title}: ${incidentRes.message}`;
                 }
             }
         }
@@ -515,7 +519,7 @@ export const EventsMixin = {
                 if (commuteConfig.healthEffect > 0) {
                     state.health = Math.min(100, state.health + commuteConfig.healthEffect);
                     const commuteNameWalk = typeof commuteConfig.name === 'function' ? commuteConfig.name() : commuteConfig.name;
-                    result.message += `\n🚶 ${commuteNameWalk}：健康 +${commuteConfig.healthEffect}`;
+                    result.message += `\n🚶 ${commuteNameWalk}: ${I18n.t('ui.side.healthPlus', commuteConfig.healthEffect)}`;
                 }
 
                 // 预览模式：不执行通勤“迟到”随机判定，避免随机罚值影响确定性预览
@@ -523,15 +527,18 @@ export const EventsMixin = {
                     ? false
                     : (context.rng.random() < commuteConfig.lateChance);
                 if (isLate) {
-                    state.energy = Math.max(0, state.energy - 10);
-                    state.mental = Math.max(0, state.mental - 5);
+                    const lateEnergyPenalty = 10;
+                    const lateMentalPenalty = 5;
+                    state.energy = Math.max(0, state.energy - lateEnergyPenalty);
+                    state.mental = Math.max(0, state.mental - lateMentalPenalty);
                     if (state.workTask) {
                         state.workTask.progress = Math.max(0, state.workTask.progress - 5);
                     }
-                    result.message += `\n⏰ 迟到了！精力-10, 精神-5`;
+                    result.message += `\n⏰ ${I18n.t('ui.side.latePenalty', lateEnergyPenalty, lateMentalPenalty)}`;
                     if (state.pipActive) {
-                        state.pipPerformanceScore = Math.max(0, (state.pipPerformanceScore || 50) - 10);
-                        result.message += `, PIP评分-10`;
+                        const pipPenalty = 10;
+                        state.pipPerformanceScore = Math.max(0, (state.pipPerformanceScore || 50) - pipPenalty);
+                        result.message += `, ${I18n.t('ui.side.pipPenalty', pipPenalty)}`;
                     }
                 }
             }

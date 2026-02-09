@@ -159,8 +159,12 @@ export const MarketMixin = {
                     const utilityImpact = foreseeing.utilityNewsImpact && foreseeing.utilityNewsImpact[rumorNews.id];
                     if (utilityImpact) {
                         this.state.utilityBill = Math.max(0, (this.state.utilityBill || 0) + utilityImpact);
-                        if (this.state.dailyFinancialReport) {
-                            this.state.dailyFinancialReport.push(I18n.t('game.foreseeing.utilityShock', utilityImpact));
+                        if (this.pushDailyReport) {
+                            this.pushDailyReport({
+                                key: 'game.foreseeing.utilityShock',
+                                args: [utilityImpact],
+                                fallback: I18n.t('game.foreseeing.utilityShock', utilityImpact)
+                            });
                         }
                     }
                 }
@@ -194,7 +198,11 @@ export const MarketMixin = {
 
             // 记录反常日志
             const defianceMsg = I18n.t('game.log.marketDefiance', this.state.currentNews.title);
-            this.state.dailyFinancialReport.push(defianceMsg);
+            this.pushDailyReport && this.pushDailyReport({
+                key: 'game.log.marketDefiance',
+                args: [this.state.currentNews.title],
+                fallback: defianceMsg
+            });
             console.log(`[Market] 🤯 DEFICANCE TRIGGERED! News: ${this.state.currentNews.id}`);
         }
 
@@ -266,12 +274,20 @@ export const MarketMixin = {
                         if (this.state.dailyFinancialReport) {
                             const assetName = I18n.t('data.assetNames.' + assetId);
                             const msg = I18n.t('game.artifactDaily.golden_parachute', assetName, Math.round(oldPrice), Math.round(proceeds));
-                            this.state.dailyFinancialReport.push(msg);
+                            this.pushDailyReport && this.pushDailyReport({
+                                key: 'game.artifactDaily.golden_parachute',
+                                args: [assetName, Math.round(oldPrice), Math.round(proceeds)],
+                                fallback: msg
+                            });
 
                             // V2.XX: 同时记录到消息历史
                             const art = getArtifact('golden_parachute');
                             const artName = art && typeof art.name === 'function' ? art.name() : (art?.name || I18n.t('data.artifacts.golden_parachute.name'));
-                            this.addLog(msg, 'positive', artName);
+                            this.addLog(
+                                { key: 'game.artifactDaily.golden_parachute', args: [assetName, Math.round(oldPrice), Math.round(proceeds)], fallback: msg },
+                                'positive',
+                                { key: 'data.artifacts.golden_parachute.name', fallback: artName }
+                            );
                         }
                         if (window.UI && window.UI.triggerArtifactGlow) {
                             window.UI.triggerArtifactGlow('golden_parachute');

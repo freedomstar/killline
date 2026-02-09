@@ -133,7 +133,11 @@ export const hospitalEvents = [
                     const jobInfo = GameData.jobTypes[state.job];
                     const baseIncome = state.monthlyIncome || (jobInfo ? jobInfo.income : 0);
                     const dailyPay = baseIncome / 10;
-                    state.dailyFinancialReport.push(I18n.t('events.hospital_stay_choices.unpaid_leave.report', dailyPay));
+                    context.game.pushDailyReport && context.game.pushDailyReport({
+                        key: 'events.hospital_stay_choices.unpaid_leave.report',
+                        args: [dailyPay],
+                        fallback: I18n.t('events.hospital_stay_choices.unpaid_leave.report', dailyPay)
+                    }, state);
 
                     const fireChance = state.consecutiveUnpaidDays * 0.15;
 
