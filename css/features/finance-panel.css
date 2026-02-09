@@ -200,6 +200,39 @@
     font-weight: 600;
 }
 
+.debt-auto-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.debt-auto-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: inherit;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.debt-auto-btn:active {
+    transform: scale(0.96);
+}
+
+.debt-auto-btn.enabled {
+    display: inline-flex;
+    color: var(--color-success);
+    background: rgba(46, 213, 115, 0.12);
+}
+
 .finance-value-container .finance-sub-value {
     transform: translateY(8px);
 }

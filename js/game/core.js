@@ -55,6 +55,17 @@ export class Game {
             this.state.insurance = JSON.parse(JSON.stringify(GameData.initialState.insurance));
         }
 
+        if (!this.state.autoRepay || typeof this.state.autoRepay !== 'object') {
+            this.state.autoRepay = { enabled: false, keepCash: 1000, maxDaily: 0 };
+        }
+        this.state.autoRepay.enabled = !!this.state.autoRepay.enabled;
+        this.state.autoRepay.keepCash = Math.max(0, Math.round(this.state.autoRepay.keepCash || 0));
+        this.state.autoRepay.maxDaily = Math.max(0, Math.round(this.state.autoRepay.maxDaily || 0));
+
+        if (typeof this.state.autoRepaySetupPrompted !== 'boolean') {
+            this.state.autoRepaySetupPrompted = false;
+        }
+
         // V2.7 初始化工作任务
         this.assignNewTask();
     }
@@ -69,6 +80,16 @@ export class Game {
 
         if (newHousingId === this.state.housing) {
             this.state.pendingHousing = null;
+            return false;
+        }
+
+        // 现金门槛：申请搬家时，必须至少有“目标住所”的一个月房租现金
+        const target = GameData.housingTypes[newHousingId];
+        const rentIndex = this.state.rentIndex || 1;
+        const requiredMonthly = Math.floor((target.cost || 0) * rentIndex);
+        if ((this.state.money || 0) < requiredMonthly) {
+            const msg = I18n.t('game.housing.insufficientCash', requiredMonthly) || `现金不足：需要至少 $${requiredMonthly} 才能申请搬家`;
+            this.addLog(msg, 'warning', '住所');
             return false;
         }
 

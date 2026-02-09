@@ -394,7 +394,7 @@
                 <button id="close-finance-detail" class="close-button">×</button>
                 <h2 class="modal-title" data-i18n="ui_static.finance_detail.title">💼 财务详情</h2>
                 <div class="modal-body finance-detail-body">
-                    <div class="finance-detail-section">
+                    <div class="finance-detail-section" id="finance-detail-section-cash">
                         <div class="finance-detail-section-title" data-i18n="ui_static.finance_detail.cash_title">现金资产</div>
                         <div class="finance-detail-row">
                             <span class="finance-detail-label" data-i18n="ui_static.assets_page.cash_label">现金</span>
@@ -407,18 +407,37 @@
                         <div class="finance-detail-list" id="finance-detail-investment-list"></div>
                     </div>
 
-                    <div class="finance-detail-section">
+                    <div class="finance-detail-section" id="finance-detail-section-debt">
                         <div class="finance-detail-section-title" data-i18n="finance.totalDebt">总债务</div>
                         <div id="finance-detail-debt-total" class="finance-detail-debt-total">...</div>
                         <div class="finance-detail-list" id="finance-detail-debt-list"></div>
                     </div>
 
-                    <div class="finance-detail-section">
+                    <div class="finance-detail-section" id="finance-detail-section-repay">
                         <div class="finance-detail-section-title" data-i18n="finance.repay">偿还</div>
                         <div class="finance-detail-repay">
                             <input type="number" id="finance-detail-repay-input" min="0" step="1"
                                 data-i18n="ui_static.finance_detail.repay_placeholder" placeholder="输入偿还金额">
                             <button id="finance-detail-repay-btn" class="primary-button" data-i18n="finance.repay">偿还</button>
+                        </div>
+                    </div>
+
+                    <div class="finance-detail-section" id="finance-detail-section-auto-repay">
+                        <div class="finance-detail-section-title" data-i18n="finance.autoRepay.title">自动还款设置</div>
+                        <p class="finance-detail-tip" data-i18n="finance.autoRepay.tips">
+                            系统将在每日结束时，利用闲置资金自动偿还债务，优先处理高息债务。
+                        </p>
+                        <label class="finance-detail-checkbox-row" for="auto-repay-enabled">
+                            <input type="checkbox" id="auto-repay-enabled">
+                            <span data-i18n="finance.autoRepay.enable">启用每日自动还债</span>
+                        </label>
+                        <div class="finance-detail-row">
+                            <span class="finance-detail-label" data-i18n="finance.autoRepay.keepCash">保留现金 (不用于还债)</span>
+                            <input type="number" id="auto-repay-keep-cash" min="0" step="100" class="finance-detail-inline-input">
+                        </div>
+                        <div class="finance-detail-row">
+                            <span class="finance-detail-label" data-i18n="finance.autoRepay.maxDaily">每日最大还款额 (0为不限)</span>
+                            <input type="number" id="auto-repay-max-daily" min="0" step="100" class="finance-detail-inline-input">
                         </div>
                     </div>
                 </div>
@@ -713,7 +732,10 @@
                             <div class="finance-value-container">
                                 <span class="status-value money" id="money-value">$15,000</span>
                                 <span id="investment-value" class="finance-sub-value">...</span>
-                                <span id="debt-value" class="finance-sub-value debt">...</span>
+                                <span class="finance-sub-value debt debt-auto-row">
+                                    <button id="debt-auto-repay-btn" class="debt-auto-btn" type="button" aria-label="自动还款设置">⚙️</button>
+                                    <span id="debt-value">...</span>
+                                </span>
                             </div>
                         </div>
                     </div>

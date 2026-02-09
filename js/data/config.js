@@ -84,6 +84,12 @@ export const initialState = {
     debt: 0,                // 总债务
     debtItems: [],          // 债务明细
     debtInterestAccrued: 0, // 累计利息
+    autoRepay: {
+        enabled: false,
+        keepCash: 1000,
+        maxDaily: 0
+    },
+    autoRepaySetupPrompted: false,
     pendingMedicalInstallments: [], // 待结转分期
     unpaidRentMonths: 0,    // 连续欠租月数
     lastSocialWarningDay: 0, // 上次社交警告显示的天数 (防止重复弹窗)

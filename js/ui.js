@@ -140,7 +140,15 @@ export const UI = {
         this.elements.financeDetailDebtList = document.getElementById('finance-detail-debt-list');
         this.elements.financeDetailRepayInput = document.getElementById('finance-detail-repay-input');
         this.elements.financeDetailRepayBtn = document.getElementById('finance-detail-repay-btn');
+        this.elements.autoRepayEnabled = document.getElementById('auto-repay-enabled');
+        this.elements.autoRepayKeepCash = document.getElementById('auto-repay-keep-cash');
+        this.elements.autoRepayMaxDaily = document.getElementById('auto-repay-max-daily');
+        this.elements.financeDetailSectionCash = document.getElementById('finance-detail-section-cash');
+        this.elements.financeDetailSectionDebt = document.getElementById('finance-detail-section-debt');
+        this.elements.financeDetailSectionRepay = document.getElementById('finance-detail-section-repay');
+        this.elements.financeDetailSectionAutoRepay = document.getElementById('finance-detail-section-auto-repay');
         this.elements.closeFinanceDetail = document.getElementById('close-finance-detail');
+        this.elements.debtAutoRepayBtn = document.getElementById('debt-auto-repay-btn');
 
         if (this.elements.financeDetailRepayInput) {
             this.elements.financeDetailRepayInput.placeholder = I18n.t('ui_static.finance_detail.repay_placeholder') || '输入偿还金额';
@@ -401,6 +409,21 @@ export const UI = {
             }
             if (this.elements.financeDetailRepayBtn) {
                 this.elements.financeDetailRepayBtn.addEventListener('click', () => this.handleDebtRepay());
+            }
+            if (this.elements.autoRepayEnabled) {
+                this.elements.autoRepayEnabled.addEventListener('change', () => this.syncAutoRepayFromModal());
+            }
+            if (this.elements.autoRepayKeepCash) {
+                this.elements.autoRepayKeepCash.addEventListener('change', () => this.syncAutoRepayFromModal());
+            }
+            if (this.elements.autoRepayMaxDaily) {
+                this.elements.autoRepayMaxDaily.addEventListener('change', () => this.syncAutoRepayFromModal());
+            }
+            if (this.elements.debtAutoRepayBtn) {
+                this.elements.debtAutoRepayBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.showFinanceDetailModal();
+                });
             }
 
             // 绑定交易模态框事件
@@ -1320,15 +1343,55 @@ export const UI = {
     loadGameFromSlot(slotId) {
         if (game.loadGame(slotId)) {
             this.switchScreen('game');
+            this.currentTab = null;
             this.switchTab('home');
-            const state = game.getState();
-            this.updateStatusBar(game.getStatusDescription());
-            this.updateTimeDisplay(game.getStatusDescription());
+
+            const hasRenderableChoices = (event, state) => {
+                if (!event || !Array.isArray(event.choices) || event.choices.length === 0) {
+                    return false;
+                }
+
+                return event.choices.some(choice => {
+                    if (!choice || typeof choice !== 'object') return false;
+                    if (typeof choice.condition !== 'function') return true;
+                    try {
+                        return !!choice.condition(state);
+                    } catch (err) {
+                        console.warn('[UI] 读档后选项条件检查失败，按可选处理:', err);
+                        return true;
+                    }
+                });
+            };
+
+            let state = game.getState();
+            let status = game.getStatusDescription();
+            this.updateStatusBar(status);
+            this.updateTimeDisplay(status);
             this.updateBackground(state.period);
 
-            // V2.12: 使用恢复的当前事件（如果有），否则获取下一个事件
-            const event = game.currentEvent || game.getNextEvent();
-            this.showEvent(event, state);
+            // V2.XX 修复：读档后若恢复事件不可渲染（无可选项），回退到重新取事件
+            let event = game.currentEvent;
+            if (!hasRenderableChoices(event, state)) {
+                game.currentEvent = null;
+                event = game.getNextEvent();
+            }
+
+            // 深夜可能没有事件，推进到下一时段后再尝试一次
+            if (!hasRenderableChoices(event, state) && state.period === 'deep_night') {
+                game.advancePeriod();
+                state = game.getState();
+                status = game.getStatusDescription();
+                this.updateStatusBar(status);
+                this.updateTimeDisplay(status);
+                this.updateBackground(state.period);
+                event = game.getNextEvent();
+            }
+
+            if (hasRenderableChoices(event, state)) {
+                this.showEvent(event, state);
+            } else {
+                console.warn('[UI] 读档后未能恢复可交互事件，保留当前状态等待下一次推进');
+            }
 
             this.showToast(`已加载槽位 ${slotId} 的存档`);
         } else {
@@ -1451,6 +1514,12 @@ export const UI = {
 
         const event = game.getNextEvent();
         this.showEvent(event, state);
+
+        if (!state.autoRepaySetupPrompted) {
+            state.autoRepaySetupPrompted = true;
+            this.showToast(I18n.t('finance.autoRepay.setupPrompt') || '已解锁自动还款：可随时点主界面存款卡片进行设置。', 'info');
+            this.showFinanceDetailModal({ onlyAutoRepay: true });
+        }
 
         this.showToast(I18n.t('ui.toast.newGameStarted', slotId));
     },
@@ -2243,15 +2312,19 @@ export const UI = {
                 const icon = house.icon || '🏠';
                 const name = this.resolveText(house.name);
                 const baseCost = Math.floor((house.cost || 0) * (state.rentIndex || 1));
+                const affordable = (state.money || 0) >= baseCost;
                 const desc = this.resolveText(house.description) || I18n.t(`data.housing.${id}.description`) || '';
                 return `
-                    <button class="plan-option-card housing-change-card" data-housing-id="${id}" style="text-align:left; width:100%;">
+                    <button class="plan-option-card housing-change-card" data-housing-id="${id}" style="text-align:left; width:100%;" ${affordable ? '' : 'disabled aria-disabled="true"'}>
                         <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
                             <div>
                                 <div style="font-weight:700;">${icon} ${name}</div>
                                 <div style="margin-top:4px; font-size:0.9em; color:var(--color-text-secondary);">${desc}</div>
                             </div>
-                            <div class="money danger" style="white-space:nowrap;">$${baseCost.toLocaleString()}</div>
+                            <div style="text-align:right; white-space:nowrap;">
+                                <div class="money danger">$${baseCost.toLocaleString()}</div>
+                                ${affordable ? '' : `<div style="margin-top:4px; font-size:0.75em; color:var(--color-danger);">${I18n.t('game.housing.insufficientCashShort', baseCost) || '现金不足'}</div>`}
+                            </div>
                         </div>
                     </button>
                 `;
@@ -2396,10 +2469,13 @@ export const UI = {
     /**
      * 财务详情弹窗
      */
-    showFinanceDetailModal() {
+    showFinanceDetailModal(options = {}) {
         if (!this.elements.financeDetailModal) return;
 
         const state = game.getState();
+        if (!state.autoRepay || typeof state.autoRepay !== 'object') {
+            state.autoRepay = { enabled: false, keepCash: 1000, maxDaily: 0 };
+        }
 
         if (this.elements.financeDetailCash) {
             this.elements.financeDetailCash.textContent = game.formatMoney(state.money || 0);
@@ -2489,7 +2565,79 @@ export const UI = {
             this.elements.financeDetailRepayInput.max = `${Math.max(0, state.money || 0)}`;
         }
 
+        if (this.elements.autoRepayEnabled) {
+            this.elements.autoRepayEnabled.checked = !!state.autoRepay.enabled;
+        }
+        if (this.elements.autoRepayKeepCash) {
+            this.elements.autoRepayKeepCash.value = `${Math.max(0, Math.round(state.autoRepay.keepCash || 0))}`;
+        }
+        if (this.elements.autoRepayMaxDaily) {
+            this.elements.autoRepayMaxDaily.value = `${Math.max(0, Math.round(state.autoRepay.maxDaily || 0))}`;
+        }
+
+        this.updateAutoRepayIndicator(state);
+
+        this.setFinanceDetailViewMode(options);
+
         this.elements.financeDetailModal.classList.remove('hidden');
+    },
+
+    setFinanceDetailViewMode(options = {}) {
+        const onlyAutoRepay = !!options.onlyAutoRepay;
+
+        const setVisible = (el, visible) => {
+            if (!el) return;
+            el.style.display = visible ? '' : 'none';
+        };
+
+        if (onlyAutoRepay) {
+            setVisible(this.elements.financeDetailSectionCash, false);
+            setVisible(this.elements.financeDetailSectionDebt, false);
+            setVisible(this.elements.financeDetailSectionRepay, false);
+            setVisible(this.elements.financeDetailSectionAutoRepay, true);
+        } else {
+            setVisible(this.elements.financeDetailSectionCash, true);
+            setVisible(this.elements.financeDetailSectionDebt, true);
+            setVisible(this.elements.financeDetailSectionRepay, true);
+            setVisible(this.elements.financeDetailSectionAutoRepay, true);
+        }
+
+        if (onlyAutoRepay && this.elements.financeDetailSectionAutoRepay) {
+            this.elements.financeDetailSectionAutoRepay.scrollIntoView({ block: 'start' });
+        }
+    },
+
+    syncAutoRepayFromModal() {
+        const state = game.getState();
+        if (!state) return;
+        if (!state.autoRepay || typeof state.autoRepay !== 'object') {
+            state.autoRepay = { enabled: false, keepCash: 1000, maxDaily: 0 };
+        }
+
+        const keepCash = this.elements.autoRepayKeepCash
+            ? Math.max(0, Math.round(Number(this.elements.autoRepayKeepCash.value) || 0))
+            : 0;
+        const maxDaily = this.elements.autoRepayMaxDaily
+            ? Math.max(0, Math.round(Number(this.elements.autoRepayMaxDaily.value) || 0))
+            : 0;
+
+        state.autoRepay.enabled = !!(this.elements.autoRepayEnabled && this.elements.autoRepayEnabled.checked);
+        state.autoRepay.keepCash = keepCash;
+        state.autoRepay.maxDaily = maxDaily;
+
+        if (this.elements.autoRepayKeepCash) this.elements.autoRepayKeepCash.value = `${keepCash}`;
+        if (this.elements.autoRepayMaxDaily) this.elements.autoRepayMaxDaily.value = `${maxDaily}`;
+
+        this.updateAutoRepayIndicator(state);
+    },
+
+    updateAutoRepayIndicator(stateOverride = null) {
+        const state = stateOverride || game.getState();
+        if (!state || !this.elements.debtAutoRepayBtn) return;
+
+        const enabled = !!(state.autoRepay && state.autoRepay.enabled);
+        this.elements.debtAutoRepayBtn.textContent = enabled ? 'Auto' : '';
+        this.elements.debtAutoRepayBtn.classList.toggle('enabled', enabled);
     },
 
     handleDebtRepay() {
@@ -2680,6 +2828,7 @@ export const UI = {
             this.elements.debtValue.textContent = `${label}: $${debtAmount.toLocaleString()}`;
             this.elements.debtValue.style.opacity = debtAmount > 0 ? '1' : '0.6';
         }
+        this.updateAutoRepayIndicator(state);
 
         // 住所
         const pendingTag = state.pendingHousing ? ' 🚚' : '';

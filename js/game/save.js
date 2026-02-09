@@ -89,12 +89,13 @@ export const SaveMixin = {
 
         try {
             const parsed = JSON.parse(savedData);
+            const savedCurrentEvent = parsed.currentEvent || null;
 
             // 恢复状态
             this.state = parsed.state;
             this.pendingEnergyChange = parsed.pendingEnergyChange || 0;
             this.isRunning = true;
-            this.currentEvent = parsed.currentEvent || null; // V2.12: 恢复当前事件
+            this.currentEvent = null; // 先置空，等 RNG 恢复后再重建事件
 
             // V2.XX 多神器存档兼容
             if (!Array.isArray(this.state.artifacts)) {
@@ -106,55 +107,6 @@ export const SaveMixin = {
             }
             this.state.artifacts = this.state.artifacts.map(id => id === 'coffee_iv_drip' ? 'coffee_drip' : id);
 
-            // V2.13: 修复读档后 event.choices 丢失 function 的问题
-            if (this.currentEvent) {
-                if (this.currentEvent.id === 'day_work') {
-                    // 特殊处理 day_work: 它是动态生成的
-                    // 注意: generateDailyWorkEvent 返回的是 choices 数组，不是事件对象
-                    const dummyState = JSON.parse(JSON.stringify(this.state));
-                    const tempChoices = GameEvents.generateDailyWorkEvent(dummyState, { game: this, rng: this.rng });
-
-                    // 恢复 choice.effect 和 hint
-                    this.currentEvent.choices.forEach((c, i) => {
-                        if (tempChoices[i]) {
-                            c.effect = tempChoices[i].effect;
-                            c.hint = tempChoices[i].hint;
-                            c.hintType = tempChoices[i].hintType;
-                        }
-                    });
-                } else if (this.currentEvent.id === 'night_choice') {
-                    // 特殊处理 night_choice
-                    const tempEvent = GameEvents.getNightChoiceEvent(this.state);
-                    this.currentEvent.choices.forEach(c => {
-                        if (c.nightAction) {
-                            const match = tempEvent.choices.find(tc => tc.nightAction === c.nightAction);
-                            if (match) {
-                                c.effect = match.effect;
-                                c.hint = match.hint;
-                            }
-                        }
-                    });
-                } else {
-                    // 标准静态事件
-                    const baseEvent = GameEvents.events.find(e => e.id === this.currentEvent.id);
-                    if (baseEvent) {
-                        // 恢复动态描述和标题
-                        if (typeof baseEvent.description === 'function') this.currentEvent.description = baseEvent.description;
-                        if (typeof baseEvent.title === 'function') this.currentEvent.title = baseEvent.title;
-
-                        this.currentEvent.choices.forEach((c, i) => {
-                            // 尝试按索引匹配
-                            if (baseEvent.choices[i]) {
-                                c.effect = baseEvent.choices[i].effect;
-                                c.hint = baseEvent.choices[i].hint;
-                                c.hintType = baseEvent.choices[i].hintType;
-                                // 尽量也恢复 condition
-                                if (baseEvent.choices[i].condition) c.condition = baseEvent.choices[i].condition;
-                            }
-                        });
-                    }
-                }
-            }
             // V2.13: 修复读档后 dailyActions/incidents 丢失 function 的问题
             if (this.state.currentDailyActions) {
                 this.state.currentDailyActions.forEach(action => {
@@ -219,6 +171,13 @@ export const SaveMixin = {
             if (typeof this.state.debt !== 'number') this.state.debt = 0;
             if (!Array.isArray(this.state.debtItems)) this.state.debtItems = [];
             if (typeof this.state.debtInterestAccrued !== 'number') this.state.debtInterestAccrued = 0;
+            if (!this.state.autoRepay || typeof this.state.autoRepay !== 'object') {
+                this.state.autoRepay = { enabled: false, keepCash: 1000, maxDaily: 0 };
+            }
+            this.state.autoRepay.enabled = !!this.state.autoRepay.enabled;
+            this.state.autoRepay.keepCash = Math.max(0, Math.round(this.state.autoRepay.keepCash || 0));
+            this.state.autoRepay.maxDaily = Math.max(0, Math.round(this.state.autoRepay.maxDaily || 0));
+            if (typeof this.state.autoRepaySetupPrompted !== 'boolean') this.state.autoRepaySetupPrompted = false;
             if (!Array.isArray(this.state.pendingMedicalInstallments)) this.state.pendingMedicalInstallments = [];
             if (typeof this.state.unpaidRentMonths !== 'number') this.state.unpaidRentMonths = 0;
 
@@ -251,6 +210,73 @@ export const SaveMixin = {
                 // Fallback for older saves without explicit RNG state
                 this.rng = new SeededRNG(parsed.state.seed);
             }
+
+            // V2.XX 根因修复：统一重建读档事件（JSON 会丢失 function）
+            const rehydrateEvent = (savedEvent) => {
+                if (!savedEvent || !savedEvent.id) return savedEvent;
+
+                if (savedEvent.id === 'day_work') {
+                    const rebuiltChoices = GameEvents.generateDailyWorkEvent(this.state, {
+                        game: this,
+                        rng: this.rng,
+                        successRate: GameEvents.calculateSuccessRate(this.state)
+                    });
+                    return {
+                        ...savedEvent,
+                        choices: rebuiltChoices
+                    };
+                }
+
+                if (savedEvent.id === 'night_choice') {
+                    return GameEvents.getNightChoiceEvent(this.state);
+                }
+
+                if (savedEvent.id === 'evening_dashboard') {
+                    return null;
+                }
+
+                const baseEvent = GameEvents.events.find(e => e.id === savedEvent.id);
+                if (!baseEvent) return savedEvent;
+
+                const rebuilt = { ...savedEvent };
+
+                if (typeof baseEvent.title === 'function') rebuilt.title = baseEvent.title;
+                if (typeof baseEvent.description === 'function') rebuilt.description = baseEvent.description;
+                if (typeof baseEvent.condition === 'function') rebuilt.condition = baseEvent.condition;
+                if (baseEvent.type) rebuilt.type = baseEvent.type;
+                if (baseEvent.period) rebuilt.period = baseEvent.period;
+
+                if (typeof baseEvent.generateChoices === 'function') {
+                    rebuilt.generateChoices = baseEvent.generateChoices;
+                    rebuilt.choices = baseEvent.generateChoices(this.state, {
+                        game: this,
+                        rng: this.rng,
+                        successRate: GameEvents.calculateSuccessRate(this.state)
+                    }) || [];
+                    return rebuilt;
+                }
+
+                if (Array.isArray(baseEvent.choices)) {
+                    rebuilt.choices = baseEvent.choices.map((baseChoice, index) => {
+                        const savedChoice = Array.isArray(savedEvent.choices) ? savedEvent.choices[index] : null;
+                        return {
+                            ...(savedChoice || {}),
+                            ...baseChoice,
+                            text: (savedChoice && savedChoice.text) ? savedChoice.text : baseChoice.text
+                        };
+                    });
+                }
+
+                return rebuilt;
+            };
+
+            if (Array.isArray(this.state.eventQueue) && this.state.eventQueue.length > 0) {
+                this.state.eventQueue = this.state.eventQueue
+                    .map(evt => rehydrateEvent(evt))
+                    .filter(Boolean);
+            }
+
+            this.currentEvent = rehydrateEvent(savedCurrentEvent);
 
             console.log(`[Game] 已从槽位 ${slotId} 加载存档, 第 ${this.state.day} 天`);
             return true;

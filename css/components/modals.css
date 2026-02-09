@@ -82,6 +82,16 @@
     border-color: var(--color-text-secondary);
 }
 
+.plan-option-card:disabled,
+.plan-option-card[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.plan-option-card:disabled:hover {
+    border-color: var(--color-border);
+}
+
 .plan-option-card.active {
     border-color: var(--color-success);
     background: rgba(46, 213, 115, 0.1);
@@ -238,6 +248,39 @@
     outline: none;
     border-color: var(--color-info);
     box-shadow: 0 0 10px rgba(55, 66, 250, 0.3);
+}
+
+.finance-detail-tip {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin: 0 0 10px;
+}
+
+.finance-detail-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-size: 0.85rem;
+    color: var(--color-text-primary);
+    margin-bottom: 6px;
+}
+
+.finance-detail-checkbox-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.finance-detail-inline-input {
+    width: 130px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    text-align: right;
 }
 
 /* ========================================

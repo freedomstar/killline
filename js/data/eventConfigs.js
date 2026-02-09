@@ -298,8 +298,11 @@ export const eventConfigs = {
             ignore: { healthLoss: 20, mentalLoss: 20 }
         },
         rent_due: {
+            // 房租到期 / 驱逐风险：扩展“主动退出”路径
             negotiate: { successChance: 0.5, creditLoss: 20, mentalLoss: 20 },
-            moveOut: { mentalLoss: 30 }
+            moveOut: { mentalLoss: 30 },
+            carDwelling: { mentalLoss: 15, creditLoss: 0 },
+            homelessNow: { mentalLoss: 20, creditLoss: 5 }
         },
         friend_help: {
             accept: { moneyGain: 300, mentalGain: 15, mentalGainShelter: 25 },

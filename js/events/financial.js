@@ -5,6 +5,22 @@
 import { I18n } from '../i18n.js';
 import { GameData } from '../data/index.js';
 
+const getRentDueAmount = (state) => {
+    const months = Math.max(1, Math.round(state.unpaidRentMonths || 1));
+    const cost = Math.max(0, Math.round(state.housingCost || 0));
+    return months * cost;
+};
+
+const canAffordTargetRent = (state, requiredMonthlyRent) => {
+    const required = Math.max(0, Math.round(requiredMonthlyRent || 0));
+    return (state.money || 0) >= required;
+};
+
+const getCheapRoomMonthlyRent = (state) => {
+    const baseCost = GameData.housingTypes.cheapRoom?.cost || 500;
+    return Math.floor(baseCost * (state.rentIndex || 1));
+};
+
 export const financialEvents = [
     // 1. 房租危机 (Rent Due / Eviction Risk)
     {
@@ -26,10 +42,39 @@ export const financialEvents = [
         },
         choices: [
             {
+                text: I18n.t('events.rent_due.choices.pay.text'),
+                hint: (state) => {
+                    const due = getRentDueAmount(state);
+                    return I18n.t('events.rent_due.choices.pay.hint', due);
+                },
+                hintType: 'money',
+                condition: (state) => {
+                    const due = getRentDueAmount(state);
+                    return due > 0 && (state.money || 0) >= due;
+                },
+                effect: (state, context) => {
+                    const due = getRentDueAmount(state);
+                    state.rentCrisisToday = true;
+                    context.game.deductMoney(due, 'rent', { state });
+                    state.unpaidRentMonths = 0;
+                    return { message: I18n.t('events.rent_due.messages.paid', due), type: 'positive' };
+                }
+            },
+            {
                 text: I18n.t('events.rent_due.choices.negotiate.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.random_events_cleanup.rent_due.negotiate;
-                    return I18n.t('events.rent_due.choices.negotiate.hint', conf.successChance * 100, conf.creditLoss, conf.mentalLoss);
+                    const crisisConf = GameData.eventConfigs.financial_crisis.rent_due;
+                    const creditFail = conf.creditLoss * crisisConf.evictionCreditLossMultiplier;
+                    const mentalSuccess = Math.floor(conf.mentalLoss / 2);
+                    return I18n.t(
+                        'events.rent_due.choices.negotiate.hint',
+                        conf.successChance * 100,
+                        conf.creditLoss,
+                        mentalSuccess,
+                        creditFail,
+                        conf.mentalLoss
+                    );
                 },
                 hintType: 'neutral',
                 effect: (state, context) => {
@@ -47,7 +92,7 @@ export const financialEvents = [
                         state.housing = 'homeless';
                         state.housingCost = 0;
                         state.mental -= conf.mentalLoss;
-                        state.creditScore -= conf.creditLoss * crisisConf.evictionCreditLossMultiplier;
+                        state.creditScore = Math.max(300, state.creditScore - conf.creditLoss * crisisConf.evictionCreditLossMultiplier);
                         return { message: I18n.t('events.rent_due.messages.negotiateFail'), type: 'negative' };
                     }
                 }
@@ -56,32 +101,65 @@ export const financialEvents = [
                 text: I18n.t('events.rent_due.choices.moveOut.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.random_events_cleanup.rent_due.moveOut;
-                    if (state.housing === 'apartment') {
-                        // 降级为廉价房
-                        const baseCost = GameData.housingTypes.cheapRoom?.cost || 500;
-                        const newCost = Math.floor(baseCost * (state.rentIndex || 1));
-                        return I18n.t('events.rent_due.choices.moveOut.hint', newCost, conf.mentalLoss);
-                    }
-                    // 已经是廉价房，只能流浪
-                    return "无力支付，流落街头";
+                    // 降级为廉价房
+                    const baseCost = GameData.housingTypes.cheapRoom?.cost || 500;
+                    const newCost = Math.floor(baseCost * (state.rentIndex || 1));
+                    return I18n.t('events.rent_due.choices.moveOut.hint', newCost, conf.mentalLoss);
                 },
                 hintType: 'danger',
+                condition: (state) => {
+                    if (state.housing !== 'apartment') return false;
+                    const required = getCheapRoomMonthlyRent(state);
+                    return canAffordTargetRent(state, required);
+                },
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.random_events_cleanup.rent_due.moveOut;
                     state.rentCrisisToday = true;
-
-                    if (state.housing === 'apartment') {
-                        state.housing = 'cheapRoom';
-                        const baseCost = GameData.housingTypes.cheapRoom?.cost || 500;
-                        state.housingCost = Math.floor(baseCost * (state.rentIndex || 1));
-                        state.mental -= conf.mentalLoss;
-                        return { message: I18n.t('events.rent_due.messages.moveOut'), type: 'negative' };
-                    } else {
-                        state.housing = 'homeless';
-                        state.housingCost = 0;
-                        state.mental -= conf.mentalLoss;
-                        return { message: "你主动搬离了住所，现在无家可归。", type: 'negative' };
-                    }
+                    state.pendingHousing = null;
+                    state.housing = 'cheapRoom';
+                    state.housingCost = getCheapRoomMonthlyRent(state);
+                    state.unpaidRentMonths = 0;
+                    state.mental -= conf.mentalLoss;
+                    return { message: I18n.t('events.rent_due.messages.moveOut'), type: 'negative' };
+                }
+            },
+            {
+                text: I18n.t('events.rent_due.choices.carDwelling.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.rent_due.carDwelling;
+                    return I18n.t('events.rent_due.choices.carDwelling.hint', conf.mentalLoss);
+                },
+                hintType: 'neutral',
+                condition: (state) => state.hasCar === true,
+                effect: (state, context) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.rent_due.carDwelling;
+                    state.rentCrisisToday = true;
+                    state.pendingHousing = null;
+                    state.housing = 'car';
+                    state.housingCost = 0;
+                    state.unpaidRentMonths = 0;
+                    state.mental -= conf.mentalLoss;
+                    state.creditScore = Math.max(300, state.creditScore - (conf.creditLoss || 0));
+                    return { message: I18n.t('events.rent_due.messages.carDwelling'), type: 'negative' };
+                }
+            },
+            {
+                text: I18n.t('events.rent_due.choices.homelessNow.text'),
+                hint: (state) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.rent_due.homelessNow;
+                    return I18n.t('events.rent_due.choices.homelessNow.hint', conf.mentalLoss, conf.creditLoss);
+                },
+                hintType: 'danger',
+                effect: (state, context) => {
+                    const conf = GameData.eventConfigs.random_events_cleanup.rent_due.homelessNow;
+                    state.rentCrisisToday = true;
+                    state.pendingHousing = null;
+                    state.housing = 'homeless';
+                    state.housingCost = 0;
+                    state.unpaidRentMonths = 0;
+                    state.mental -= conf.mentalLoss;
+                    state.creditScore = Math.max(300, state.creditScore - (conf.creditLoss || 0));
+                    return { message: I18n.t('events.rent_due.messages.homelessNow'), type: 'negative' };
                 }
             }
         ]

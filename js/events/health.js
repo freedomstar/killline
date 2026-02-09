@@ -140,12 +140,15 @@ export const healthEvents = [
                     return I18n.t('events.worsening_symptoms.choices.er.hint', signedDelta, res.youPay, res.insurancePays, baseCost);
                 },
                 hintType: 'danger',
+                condition: (state) => state.health <= 70,
                 effect: (state, context) => {
                     const baseCost = GameData.medicalSystem.treatmentOptions.er.baseCost;
                     const conf = GameData.eventConfigs.worsening_symptoms.er;
                     const result = context.game.calculateMedicalCost(baseCost, true);
                     context.game.commitMedicalTransaction(result);
                     context.game.deductMoney(result.youPay, 'medical', { state: context.game.state, allowInstallment: true });
+
+                    state.maxHealth = Math.max(state.maxHealth || 0, 80);
                     state.health = conf.healthSetTo;
 
                     let msg = I18n.t('events.worsening_symptoms.messages.erTreated', result.youPay);

@@ -227,6 +227,10 @@ export const TimeMixin = {
     advanceDay() {
         this.state.day++;
 
+        // 财务危机事件的“当日去重”标记
+        this.state.rentCrisisToday = false;
+        this.state.creditCrisisToday = false;
+
         this.state.randomEventsToday = [];
         this.state.randomEventsTodayCount = 0;
 
@@ -673,6 +677,11 @@ export const TimeMixin = {
             this.addLog(msg, 'positive', artName);
         }
         this.state.spentMoneyToday = false;
+
+        // V2.XX 自动还款：在每日结算后执行（收入与刚性支出都已处理）
+        if (this.processAutoRepayment) {
+            this.processAutoRepayment();
+        }
 
 
         // 注释：日常消费现在完全由事件驱动（吃饭、加油等选择）

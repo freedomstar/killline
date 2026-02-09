@@ -612,7 +612,7 @@ export const I18n = {
                 debt: '债务',
                 totalDebt: '总债务',
                 pendingInstallment: '待结转分期',
-                repay: '偿还',
+                repay: '偿还(手动还款)',
                 repaySuccess: (amount) => `成功偿还 $${amount}`,
                 repayEmpty: '当前没有可偿还的债务',
                 newDebtNotice: (amount, source) => `新增债务 $${amount} (${source})`,
@@ -623,7 +623,16 @@ export const I18n = {
                 daily: '日常',
                 fine: '罚款',
                 overflow: '超支',
-                other: '其他'
+                other: '其他',
+                autoRepay: {
+                    title: '自动还款设置',
+                    enable: '启用每日自动还债',
+                    keepCash: '保留现金 (不用于还债)',
+                    maxDaily: '每日最大还款额 (0为不限)',
+                    tips: '系统将在每日结束时，利用闲置资金自动偿还债务，优先处理高息债务。你也可以随时打开主界面的存款卡片调整计划。',
+                    dailyLog: (amount, keepCash) => `🔄 自动还款 -$${amount} (保留现金 $${keepCash})`,
+                    setupPrompt: '你可以立即设置自动还款计划，后续也可在主界面存款卡片中随时调整。'
+                }
             },
 
             // ========== game.js 文本 ==========
@@ -801,7 +810,9 @@ export const I18n = {
                     pendingTo: (name) => `搬家申请中：${name}`,
                     changeCanceled: '已撤销搬家申请',
                     moveCompleted: (name) => `搬家完成！新住所：${name}`,
-                    noAlternative: '暂无可选住所'
+                    noAlternative: '暂无可选住所',
+                    insufficientCash: (required) => `现金不足：需要至少 $${required} 才能申请搬家`,
+                    insufficientCashShort: (required) => `至少需要 $${required}`
                 }
             },
 
@@ -1545,14 +1556,21 @@ export const I18n = {
                     description: (cost) => `房东发来消息：房租 $${cost} 到期了。`,
                     choices: {
                         pay: { text: '支付房租', hint: (cost) => `-$${cost}` },
-                        negotiate: { text: '协商延期', hint: (chance, credit, mental) => `${chance}% 成功延期一周（成功信用-${credit}，失败精神-${mental}）` },
-                        moveOut: { text: '搬到廉价房', hint: (cost, mental) => `月租${cost}，精神-${mental}` }
+                        negotiate: {
+                            text: '协商延期',
+                            hint: (chance, creditSuccess, mentalSuccess, creditFail, mentalFail) => `${chance}% 成功：信用-${creditSuccess}，精神-${mentalSuccess}；失败：被驱逐，信用-${creditFail}，精神-${mentalFail}`
+                        },
+                        moveOut: { text: '搬到廉价房', hint: (cost, mental) => `月租${cost}，精神-${mental}` },
+                        carDwelling: { text: '立刻搬离：住进车里', hint: (mental) => `房租归零，精神-${mental}，信用不变` },
+                        homelessNow: { text: '立刻搬离：流落街头', hint: (mental, credit) => `房租归零，精神-${mental}，信用-${credit}` }
                     },
                     messages: {
                         paid: (cost) => `房租 $${cost} 已支付`,
                         negotiateSuccess: '房东同意延期几天',
                         negotiateFail: '房东拒绝了，你被赶出了公寓',
-                        moveOut: '你搬到了一个廉价合租房'
+                        moveOut: '你搬到了一个廉价合租房',
+                        carDwelling: '你连夜收拾行李住进了车里。至少不用面对房东的冷眼。',
+                        homelessNow: '你主动退租离开，现在流落街头。'
                     }
                 },
 
@@ -2280,19 +2298,6 @@ export const I18n = {
 
         },
 
-        game: {
-            artifactDaily: {
-                ticker_news_title: '市场快讯',
-                ticker_rumor_label: '🔍 市场传闻',
-                modal_insider_title: '线人情报',
-                modal_no_insider: '今日暂无可用内幕。',
-                modal_news_title: '公开新闻',
-                modal_news_sentiment: '市场情绪影响',
-                modal_no_news: '当前没有已确认新闻。',
-                insider_phone_tip: '你收到一条匿名爆料短信，某资产可能在近日异动。',
-                insider_phone_detail: '线人电话：下一个周期该资产波动权重提高，消息准确率受伪消息干扰影响。'
-            }
-        },
     },
 
     /**

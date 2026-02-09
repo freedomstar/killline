@@ -186,6 +186,35 @@ export const DebtMixin = {
         return interest;
     },
 
+    processAutoRepayment(stateOverride = null) {
+        const state = stateOverride || this.state;
+        if (!state || !state.autoRepay || !state.autoRepay.enabled) return { success: false, paid: 0 };
+
+        const debtTotal = Math.max(0, state.debt || 0);
+        if (debtTotal <= 0) return { success: false, paid: 0 };
+
+        const keepCash = Math.max(0, Math.round(state.autoRepay.keepCash || 0));
+        const maxDaily = Math.max(0, Math.round(state.autoRepay.maxDaily || 0));
+        const available = Math.max(0, Math.floor((state.money || 0) - keepCash));
+
+        if (available <= 0) return { success: false, paid: 0 };
+
+        const target = maxDaily > 0 ? Math.min(available, maxDaily) : available;
+        if (target <= 0) return { success: false, paid: 0 };
+
+        const result = this.repayDebt(target, { state });
+        if (!result || !result.success || result.paid <= 0) return { success: false, paid: 0 };
+
+        const msg = I18n.t('finance.autoRepay.dailyLog', result.paid, keepCash);
+        if (!state.dailyFinancialReport) state.dailyFinancialReport = [];
+        state.dailyFinancialReport.push(msg || `自动还款 -$${result.paid} (保留现金 $${keepCash})`);
+        if (this.addLog) {
+            this.addLog(msg || `自动还款 -$${result.paid} (保留现金 $${keepCash})`, 'info', I18n.t('finance.autoRepay.title'));
+        }
+
+        return { success: true, paid: result.paid };
+    },
+
     repayDebt(amount, options = {}) {
         const state = options.state || this.state;
         if (!state || typeof amount !== 'number' || amount <= 0) {
