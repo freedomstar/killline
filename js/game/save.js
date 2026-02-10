@@ -406,5 +406,7 @@ export const SaveMixin = {
         const key = `killzone_save_${slotId}`;
         localStorage.removeItem(key);
         console.log(`[Game] 槽位 ${slotId} 存档已删除`);
+        // v2.xx fix: reset slot 0
+        try { const hasManual = [1,2,3].some(id => localStorage.getItem('killzone_save_'+id)); if(!hasManual) localStorage.removeItem('killzone_save_0'); } catch(e){}
     }
 };

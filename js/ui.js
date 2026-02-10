@@ -415,12 +415,20 @@ export const UI = {
             if (this.elements.closeFinanceDetail) {
                 this.elements.closeFinanceDetail.addEventListener('click', () => {
                     this.elements.financeDetailModal.classList.add('hidden');
+                    if (this.pendingTutorial) {
+                        this.pendingTutorial = false;
+                        setTimeout(() => this.showTutorialHighlights(), 500);
+                    }
                 });
             }
             if (this.elements.financeDetailModal) {
                 this.elements.financeDetailModal.addEventListener('click', (e) => {
                     if (e.target === this.elements.financeDetailModal) {
                         this.elements.financeDetailModal.classList.add('hidden');
+                        if (this.pendingTutorial) {
+                            this.pendingTutorial = false;
+                            setTimeout(() => this.showTutorialHighlights(), 500);
+                        }
                     }
                 });
             }
@@ -1692,9 +1700,22 @@ export const UI = {
             state.autoRepaySetupPrompted = true;
             this.showToast(I18n.t('finance.autoRepay.setupPrompt'), 'info');
             this.showFinanceDetailModal({ onlyAutoRepay: true });
+
+            // Mark tutorial as pending if it's a new game, to show after modal closes
+            if (!game.getSlotInfo(0)) {
+                this.pendingTutorial = true;
+            }
         }
 
         this.showToast(I18n.t('ui.toast.newGameStarted', slotId));
+
+        // V2.XX: 新手引导触发 (如果检测到是新游戏/Slot 0 空缺)
+        // 只有在没有等待 Modal 关闭的情况下才直接显示
+        if (!game.getSlotInfo(0) && !this.pendingTutorial) {
+            setTimeout(() => {
+                this.showTutorialHighlights();
+            }, 800); // 稍微延迟，等界面切换动画完成
+        }
     },
 
     /**
@@ -5143,6 +5164,58 @@ export const UI = {
         return summaryCard;
     },
 
+    /**
+     * V2.XX 新手引导：高亮关键区域
+     */
+    showTutorialHighlights() {
+        // 1. 住所卡片
+        const housingCard = document.getElementById('housing-card-container');
+        // 2. 财务卡片
+        const financeCard = document.getElementById('finance-card-container');
+        // 3. 底部 Tab (如果有)
+        const tabItems = document.querySelectorAll('.tab-item');
+
+        const targets = [];
+        if (housingCard) targets.push(housingCard);
+        if (financeCard) targets.push(financeCard);
+
+        // V2.XX: User requested Artifacts and Monthly Bill
+        const artifactCard = document.getElementById('artifact-display-container');
+        const billCard = document.getElementById('monthly-bill-container');
+        if (artifactCard) targets.push(artifactCard);
+        if (billCard) targets.push(billCard);
+
+        // User requested to remove bottom tab highlights
+        // if (tabItems.length > 0) { ... }
+
+        targets.forEach(el => {
+            el.classList.add('tutorial-highlight');
+
+            // Ensure visible on mobile
+            el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+            // 点击一次即移除高亮
+            const removeHighlight = () => {
+                el.classList.remove('tutorial-highlight');
+                el.removeEventListener('click', removeHighlight);
+            };
+            el.addEventListener('click', removeHighlight, { once: true });
+        });
+
+        // 提示 Toast
+        // 延迟一点显示，确保在其他初始化 Toast 之后
+        setTimeout(() => {
+            const key = 'ui.tutorial.welcome';
+            const msg = I18n.t(key);
+            if (msg && !msg.startsWith('Missing')) {
+                this.showToast(msg, 'help tutorial-toast');
+            } else {
+                this.showToast("欢迎来到生存游戏！点击发光区域来管理你的资产与生活。", 'help tutorial-toast');
+            }
+        }, 1000);
+    },
+
+
 };
 
 // V2.9 绑定资产交易按钮事件 (初始化时绑定)
@@ -5152,6 +5225,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Expose UI to window for access from other modules (like time.js)
 window.UI = UI;
-
-
 

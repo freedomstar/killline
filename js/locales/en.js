@@ -519,6 +519,9 @@ const enOverrides = {
             invalidQuantity: 'Enter valid amount',
             socialLow: 'Social too low!'
         },
+        tutorial: {
+            welcome: 'Welcome to the Game! Highlighted areas are clickable too!'
+        },
         artifacts: {
             title: 'Artifacts',
             emptySlot: '[Empty]',

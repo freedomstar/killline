@@ -1,0 +1,57 @@
+/* Tutorial Highlights for Mobile/Desktop */
+#game-container .tutorial-highlight {
+    position: relative;
+    z-index: 2000 !important;
+    /* Extremely high to overlay everything */
+    /* Ensure it's above other elements */
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255, 215, 0, 0.3) !important;
+    border: 2px solid var(--color-gold, #ffd700) !important;
+    animation: tutorial-pulse 2s infinite ease-in-out;
+    cursor: pointer;
+    pointer-events: auto;
+    /* Ensure clickable */
+}
+
+/* Hand Icon for Mobile */
+/* Hand Icon removed per user request */
+/* .tutorial-highlight::after { ... } */
+
+@keyframes tutorial-pulse {
+    0% {
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.4), inset 0 0 5px rgba(255, 215, 0, 0.2);
+        border-color: rgba(255, 215, 0, 0.6);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.9), inset 0 0 15px rgba(255, 215, 0, 0.5);
+        border-color: rgba(255, 215, 0, 1);
+    }
+
+    100% {
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.4), inset 0 0 5px rgba(255, 215, 0, 0.2);
+        border-color: rgba(255, 215, 0, 0.6);
+    }
+}
+
+@keyframes tutorial-bounce {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-10px);
+    }
+}
+
+/* Tutorial Toast Special Styling */
+.toast.tutorial-toast {
+    z-index: 2100 !important;
+    /* Higher than highlights */
+    border: 2px solid var(--color-gold, #ffd700) !important;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+    animation: tutorial-pulse 2s infinite ease-in-out;
+    background: rgba(0, 0, 0, 0.9) !important;
+    /* Ensure readability */
+    color: #ffd700 !important;
+    font-weight: bold;
+}

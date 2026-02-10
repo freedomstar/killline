@@ -632,6 +632,12 @@ export const zh = {
         manualRepayTip: '(你可以随时手动还款)'
     },
 
+    // V2.XX Tutorial
+    tutorial: {
+        welcome: '欢迎来到生存游戏！点击发光区域来管理你的资产与生活。',
+        click_hint: '👆 点我'
+    },
+
     // ========== game.js 文本 ==========
     game: {
         // 任务名称列表
@@ -1069,6 +1075,10 @@ export const zh = {
             gmSaved: 'GM数据已保存',
             socialLow: '⚠️ 社交值过低！如果不去社交，精神将会崩溃。',
             gameResumed: '你选择回到了残酷的世界',
+        },
+
+        tutorial: {
+            welcome: '欢迎来到生存游戏！发光区域也是可点击的哦！'
         },
 
         artifacts: {

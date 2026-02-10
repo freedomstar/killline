@@ -76,10 +76,15 @@ const GameController = {
     },
 
     startGame(seed) {
+        const isNewGame = !game.getSlotInfo(0);
         game.init(seed);
         UI.switchScreen('game');
         this.updateUI();
         this.showNextEvent();
+
+        if (isNewGame) {
+            // Logic moved to UI._finishStartNewGame to ensure it triggers correctly from UI flow
+        }
     },
 
     updateUI() {
