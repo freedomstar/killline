@@ -628,7 +628,7 @@ const DebugTools = {
             // 时间/日期条件
             { regex: /state\.day\s*%\s*GameData\.timeCycle\.weekDays\s*===?\s*GameData\.timeCycle\.restDayMod/g, text: '休息日' },
             { regex: /state\.day\s*%\s*GameData\.timeCycle\.weekDays\s*!==?\s*GameData\.timeCycle\.restDayMod/g, text: '工作日' },
-            { regex: /state\.day\s*>\s*GameData\.newbieProtectionDays/g, text: '新手保护期后' },
+            { regex: /state\.day\s*>\s*GameData\.newbieProtectionDays/g, text: '初始阶段后' },
 
             // 特殊状态
             { regex: /state\.pipActive/g, text: 'PIP中' },

@@ -126,6 +126,11 @@
     margin: 0;
 }
 
+/* Specific adjustment for savings label to move it closer to icon */
+#finance-card-container .status-label {
+    margin-left: -5px;
+}
+
 /* Unified Value Style */
 #dashboard-info .status-value,
 #dashboard-info .finance-value {
@@ -149,13 +154,14 @@
     transform: scale(0.95);
 }
 
-/* Money Display - Special Styling */
+
+
 #dashboard-info .finance-item-full {
     grid-column: 1 / -1;
     flex-direction: row !important;
     /* Keep Money bar row-based */
     justify-content: space-between;
-    padding-left: 12px;
+    padding-left: 4px;
     padding-right: 12px;
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%) !important;
     border: 1px solid rgba(255, 215, 0, 0.2) !important;
@@ -172,10 +178,8 @@
     align-items: flex-end;
     justify-content: center;
     min-width: 0;
-    margin-left: auto;
-    /* Push to right */
-    max-width: 60%;
-    /* Limit width to force shrink if needed, adjust based on icon/label space */
+    /* Push slightly to the left to reduce gap with icon */
+    max-width: 85%;
 }
 
 /* Base adjustment for money text to clear space */
@@ -184,11 +188,11 @@
     /* No wrapping */
     font-size: 0.85rem !important;
     /* Slightly decrease base size from 0.9rem */
-    transform: translateY(7px);
+    transform: translateY(4px);
 }
 
 .finance-sub-value {
-    font-size: 0.65rem;
+    font-size: 0.55rem;
     color: var(--color-text-secondary);
     font-weight: 500;
     white-space: nowrap;
@@ -210,14 +214,14 @@
     display: none;
     align-items: center;
     justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 6px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 4px;
     border: none;
     border-radius: 999px;
     background: transparent;
     color: var(--color-text-secondary);
-    font-size: inherit;
+    font-size: 0.5rem;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;

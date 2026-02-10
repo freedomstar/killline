@@ -23,18 +23,10 @@ export class Game {
      */
     init(seed, artifactId = null, housingId = null) {
         // V2.11 初始化 RNG
-        this.rng = new SeededRNG(seed);
-        console.log(`[Game] 初始化, 种子: ${this.rng.originalSeed || this.rng.initialSeed}`);
-
         this.state = JSON.parse(JSON.stringify(GameData.initialState));
-        // V2.XX: 保存原始种子字符串，确保复制后可复现
-        this.state.seed = this.rng.originalSeed || this.rng.initialSeed;
-        this.state.artifacts = Array.isArray(this.state.artifacts) ? this.state.artifacts : [];
-        this.state.pendingHousing = this.state.pendingHousing || null;
-
-        if (housingId && GameData.housingTypes[housingId]) {
-            this.state.housing = housingId;
-        }
+        if (seed) this.state.seed = seed;
+        if (housingId) this.state.housing = housingId;
+        this.rng = new SeededRNG(this.state.seed);
 
         const baseHousingCost = GameData.housingTypes[this.state.housing]?.cost || GameData.initialState.housingCost || 1000;
         this.state.housingCost = Math.floor(baseHousingCost * (this.state.rentIndex || 1));
@@ -48,7 +40,9 @@ export class Game {
         this.currentEvent = null;
         this.pendingEnergyChange = 0;
         this.pendingInvestmentEffect = null; // V2.XX 待播放的投资情绪特效
+        this.startedAt = Date.now();
         this.messageLog = []; // V2.XX 消息历史记录
+        this.state.triggeredEndings = []; // V2.XX 已触发结局记录
 
         // V2.6 初始化保险状态
         if (!this.state.insurance) {

@@ -224,7 +224,21 @@ export function processArtifactReactions(state, initialDelta, sourceId) {
     }
     if (delta.money !== undefined) {
         const newVal = (state.money || 0) + delta.money;
-        state.money = Math.round(newVal * 10) / 10;
+        const rounded = Math.round(newVal * 10) / 10;
+        if (rounded < 0) {
+            // 余额不足，差额转入债务
+            const shortfall = Math.abs(rounded);
+            state.money = 0;
+            state.debt = Math.max(0, (state.debt || 0) + Math.round(shortfall));
+            if (!Array.isArray(state.debtItems)) state.debtItems = [];
+            state.debtItems.push({
+                source: 'daily',
+                amount: Math.round(shortfall),
+                day: state.day || 0
+            });
+        } else {
+            state.money = rounded;
+        }
     }
 
     // 兼容旧接口：生成扁平的 logs 和 triggeredIds
@@ -593,7 +607,7 @@ export const artifacts = {
     stray_cat: {
         id: 'stray_cat',
         name: () => I18n.t('data.artifacts.stray_cat.name'),
-        description: () => I18n.t('data.artifacts.stray_cat.description', artifactConfig.stray_cat.dailyCost, artifactConfig.stray_cat.dailyMentalGain, artifactConfig.stray_cat.interval, artifactConfig.stray_cat.maxMentalGain),
+        description: () => I18n.t('data.artifacts.stray_cat.description', artifactConfig.stray_cat.dailyCost, artifactConfig.stray_cat.dailyMentalGain, artifactConfig.stray_cat.interval, artifactConfig.stray_cat.maxMentalGain, artifactConfig.stray_cat.maxMentalCap),
         icon: '🐱',
         rarity: 'uncommon',
         onDaily: (state) => {
@@ -603,9 +617,13 @@ export const artifacts = {
                 mental: dailyMentalGain
             };
 
-            // Periodic max mental gain
+            // Periodic max mental gain with cap
+            const maxMentalCap = artifactConfig.stray_cat.maxMentalCap;
             if (state.day > 0 && state.day % interval === 0) {
-                delta.maxMental = maxMentalGain;
+                const currentMax = state.maxMental || 100;
+                if (currentMax < maxMentalCap) {
+                    delta.maxMental = Math.min(maxMentalGain, maxMentalCap - currentMax);
+                }
             }
 
             const { logs, triggeredIds, layers } = processArtifactReactions(state, delta, 'stray_cat');

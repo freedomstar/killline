@@ -39,6 +39,18 @@ const GameController = {
             UI.switchScreen('start');
         });
 
+        if (UI.elements.continueButton) {
+            UI.elements.continueButton.addEventListener('click', () => {
+                // 继续游戏：恢复运行状态，刷新UI，显示下一个事件
+                game.isRunning = true;
+                UI.switchScreen('game');
+                this.updateUI();
+                this.showNextEvent();
+                UI.showToast(I18n.t('ui.toast.gameResumed'), 'positive');
+                game.addLog({ key: 'ui.toast.gameResumed', fallback: 'Game Resumed' }, 'positive');
+            });
+        }
+
         UI.elements.eventChoices.addEventListener('click', (e) => {
             const button = e.target.closest('.choice-button');
             if (button && !button.disabled) {
@@ -535,7 +547,9 @@ const GameController = {
             // V2.14 Fix: Check for Game Over (e.g. Bankruptcy detected during day update)
             if (game.state.pendingEnding) {
                 UI.updateStatusBar(game.getStatusDescription());
-                UI.showEnding(game.state.pendingEnding, game.getStatusDescription());
+                const endObj = game.state.pendingEnding;
+                game.state.pendingEnding = null; // 清除，防止重复触发
+                UI.showEnding(endObj, game.getStatusDescription());
                 this.clearPendingSelection();
                 return;
             }

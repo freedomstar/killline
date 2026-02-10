@@ -57,8 +57,8 @@ export const eventConfigs = {
         mentalLossFail: 45
     },
     sudden_layoff: {
-        accept: { severanceMonths: 1, mentalLoss: 50 },
-        fight: { energyCost: 50, successMod: 0.4, successSeveranceMonths: 2, failSeveranceMonths: 0, mentalLossSuccess: 40, mentalLossFail: 50 }
+        accept: { severanceMonths: 1, mentalLoss: 30 },
+        fight: { energyCost: 30, successMod: 0.4, successSeveranceMonths: 2, failSeveranceMonths: 0, mentalLossSuccess: 20, mentalLossFail: 35 }
     },
     // Work Incidents
     urgent_meeting: {
@@ -144,8 +144,8 @@ export const eventConfigs = {
 
     // 医疗事件配置
     worsening_symptoms: {
-        urgentCare: { healthGain: 25, oonMentalLoss: 20 },
-        er: { healthSetTo: 80 }
+        urgentCare: { healthGain: 20, oonMentalLoss: 20 },
+        er: { healthSetTo: 90 }
     },
     medical_emergency: {
         er: { healthGain: 40, mentalLoss: 30 },

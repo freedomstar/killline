@@ -172,6 +172,18 @@
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.finance-detail-title-tip {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: normal;
+    opacity: 0.8;
 }
 
 .finance-detail-row {
@@ -229,12 +241,26 @@
     padding: 4px 0;
 }
 
-.finance-detail-repay {
+/* V2.50 Updated Repay Layout */
+.finance-detail-repay-container {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
 }
 
-.finance-detail-repay input {
+.finance-repay-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.finance-repay-row button {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.finance-repay-row input {
     flex: 1;
     padding: 10px 12px;
     background: rgba(0, 0, 0, 0.2);
@@ -244,7 +270,7 @@
     font-family: var(--font-mono);
 }
 
-.finance-detail-repay input:focus {
+.finance-repay-row input:focus {
     outline: none;
     border-color: var(--color-info);
     box-shadow: 0 0 10px rgba(55, 66, 250, 0.3);

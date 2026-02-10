@@ -170,6 +170,11 @@ export const initialState = {
         solana: { quantity: 0, avgCost: 0 },
         meme_coin: { quantity: 0, avgCost: 0 },
     },
+
+    // V2.XX 收藏与历史记录
+    favoriteAssets: [],       // 收藏的资产 ID 列表
+    portfolioHistory: [],     // 综合收益历史 (每天记录总持仓价值)
+
     // 市场价格：每个资产 ID -> { price, change, history }
     marketPrices: {
         gold: { price: 2000, change: 0, history: [] },
@@ -307,6 +312,7 @@ export const endingRules = {
     criticalMental: 0,                 // 精神崩溃阈值
     criticalEnergy: 0,                 // 精力耗尽阈值
     noMoney: 0,                        // 没钱阈值
+    bankruptCreditScore: 400,          // 破产信用分阈值
     wealthThreshold: 10000,            // 财务自由结局存款阈值
 };
 

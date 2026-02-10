@@ -202,7 +202,7 @@ const enOverrides = {
             convenience: { name: 'Convenience Store' }
         },
         lunch: {
-            bento: { name: 'Bento', hint: (cfg) => `E+${cfg.energyEffect} H+${cfg.healthEffect} M+${cfg.mentalEffect}` },
+            bento: { name: 'Packed Lunch', hint: (cfg) => `E+${cfg.energyEffect} H+${cfg.healthEffect} M+${cfg.mentalEffect}` },
             fastfood: { name: 'Fast Food', hint: (cfg) => `H${cfg.healthEffect} M+${cfg.mentalEffect} -$${cfg.cost}` },
             skip: { name: 'Skip Lunch', hint: (cfg) => `H${cfg.healthEffect}, Save money` },
             business: { name: 'Business', hint: (cfg) => `-$${cfg.cost} M+${cfg.mentalEffect} S+${cfg.socialEffect}` },
@@ -318,7 +318,9 @@ const enOverrides = {
             tips: 'Auto repay debt daily, prioritizing high interest.',
             dailyLog: (amount, keepCash) => `Auto -$${amount} (keep $${keepCash})`,
             setupPrompt: 'Set up auto repay now or adjust later.'
-        }
+        },
+        max: 'Max',
+        manualRepayTip: '(You can repay manually at any time)'
     },
 
     game: {
@@ -414,7 +416,7 @@ const enOverrides = {
             income: 'Salary',
             task: 'Task',
             difficulty: 'Diff',
-            meal: 'Lunch',
+            meal: 'Packed Lunch',
             investment: 'Invest'
         },
         tabs: {
@@ -474,6 +476,7 @@ const enOverrides = {
             cash_label: 'Cash',
             portfolio_label: 'Portfolio',
             total_assets_label: 'Net Worth',
+            tab_watchlist: '⭐ Watchlist',
             tab_gold: 'Gold',
             tab_stock: 'Stocks',
             tab_crypto: 'Crypto'
@@ -588,7 +591,18 @@ const enOverrides = {
             value: 'Value',
             profitLoss: 'P/L',
             avgCost: 'Avg Cost',
-            trend: 'Trend'
+            trend: 'Trend',
+            favorite: 'Favorite',
+            unfavorite: 'Unfavorite',
+            todayPnl: 'Today P/L',
+            totalPnl: 'Total P/L',
+            portfolioTrend: 'Portfolio Trend',
+            purchased: 'Purchased',
+            favorited: 'Watchlist',
+            noWatchlist: 'No assets in watchlist<br>Mark assets with star to add them here',
+            noHistory: 'Insufficient Historical Data',
+            chartDaily: 'D',
+            chartWeekly: 'W'
         },
         validation: {
             selectLunch: 'Lunch',
@@ -870,9 +884,9 @@ const enMoreOverrides = {
             },
             stray_cat: {
                 name: 'Stray Cat',
-                description: 'A distant orange cat. Costs ${0}/day for food, heals {1} mental daily, and every {2} days grants +{3} max mental.',
-                log: (cost, mental) => `Cat care: -$${cost}, +${mental} mental`,
-                log_max: (max) => `Cat bond: max mental +${max}`
+                description: 'A cold ginger cat. Cost ${0} daily for food, but restores {1} Mental every morning. Every {2} days, it permanently increases Max Mental by {3} (up to {4}).',
+                log: (cost, mental) => `🐱 Feed the cat -$${cost}, Mental +${mental}.`,
+                log_max: (gain) => `🐱 The cat\'s presence warms your heart (Max Mental +${gain}).`
             },
             rent_increase_bonus: {
                 title: 'Rent Hike Compensation',
@@ -1031,6 +1045,13 @@ const enMoreOverrides = {
         event: {
             advance_btn: 'Advance Time'
         },
+        ending_screen: {
+            title: 'Game Over',
+            subtitle: 'You were terminated by the system',
+            default_message: 'In Country M, only one layoff, one major illness, or one accident stands between the middle class and homelessness.',
+            restart_btn: 'Try Again',
+            continue_btn: 'Continue Game',
+        },
         ending_stats: {
             days: 'Days Survived',
             money: 'Final Savings',
@@ -1051,7 +1072,8 @@ const enMoreOverrides = {
             nextMonthActive: 'Request submitted. Effective next month.',
             assetLoadError: 'Failed to load asset data',
             tradeInfoError: 'Trade info error',
-            gmSaved: 'GM data saved'
+            gmSaved: 'GM data saved',
+            gameResumed: 'You have chosen to return to the cruel world.',
         },
         modal: {
             buyAsset: 'Buy Asset',
@@ -2205,7 +2227,7 @@ const enFinalOverrides = {
             refuel: (cost, remaining, capacity) => `[Game] Refuel -$${cost}, fuel ${remaining}/${capacity}`,
             repairCar: (cost) => `[Game] Car repair -$${cost}, fixed but guaranteed late`,
             taskOverdue: (days, risk) => `[Game] Task overdue by ${days} day(s), PIP risk: ${risk * 100}%`,
-            bentoExpired: '[Game] Bento not consumed, expired',
+            bentoExpired: '[Game] Packed lunch not consumed, expired',
             lostEmployerInsurance: '[Game] Job lost, employer insurance terminated',
             gotEmployerInsurance: '[Game] Full-time employment gained, auto-enrolled in employer basic health plan'
         },
@@ -2321,9 +2343,6 @@ const enFinalOverrides = {
         }
     },
     ui: {
-        time: {
-            newbie_protection: 'Newbie Protection'
-        },
         dayToast: {
             energyUnchanged: '⚡ Energy unchanged',
             energyRecovered: (delta) => `⚡ Energy recovery: ${delta}`,

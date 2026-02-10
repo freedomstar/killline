@@ -49,3 +49,10 @@
     color: var(--color-success);
     text-shadow: 0 0 40px var(--color-success-glow);
 }
+
+#ending-screen .primary-button {
+    width: 100%;
+    max-width: 280px;
+    margin: var(--spacing-sm) auto;
+    display: block;
+}

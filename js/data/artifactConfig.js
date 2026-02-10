@@ -134,6 +134,7 @@ export const artifactConfig = {
         dailyCost: 5,
         dailyMentalGain: 1,
         interval: 3,
-        maxMentalGain: 2
+        maxMentalGain: 2,
+        maxMentalCap: 110  // 精神上限成长的最大值
     }
 };

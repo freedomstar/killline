@@ -37,30 +37,33 @@ export const EndingMixin = {
      * 检查结局 (Modified to call triggerEnding which returns object)
      */
     checkEnding() {
+        // V2.XX: Ensure triggeredEndings is initialized (compatibility for old saves)
+        if (!this.state.triggeredEndings) {
+            this.state.triggeredEndings = [];
+        }
+
         // V2.XX 优先检查强制结束标志 (如医疗紧急情况点“放弃”)
         if (this.state.forcedGameOver) {
             console.log('[Game] 触发强制结局 (玩家选择放弃或致死判定)');
+            this.state.forcedGameOver = false; // 重置，防止循环触发
             this.isRunning = false;
             return this.triggerEnding('healthCollapse');
         }
 
-        // 1. 深度破产 (连锁斩杀结局)
-        if ((this.state.debt || 0) >= GameData.endingRules.debtSpiralThreshold) {
+        // 1. 破产 (Debt > Threshold)
+        if (this.state.debt > GameData.endingRules.debtSpiralThreshold) {
             console.log('[Game] 触发结局: 深度破产 (债务螺旋)');
             this.isRunning = false;
             return this.triggerEnding('debtSpiral');
         }
 
-        // 胜利：存活一年
-        if (this.state.day >= GameData.endingRules.survivalDays) {
-            this.isRunning = false;
-            return this.triggerEnding('survived');
-        }
-
         // 5. 财务自由
         if (this.state.money >= GameData.endingRules.wealthThreshold) {
-            this.isRunning = false;
-            return this.triggerEnding('financialFreedom');
+            if (!this.state.triggeredEndings.includes('financialFreedom')) {
+                this.state.triggeredEndings.push('financialFreedom');
+                this.isRunning = false;
+                return this.triggerEnding('financialFreedom');
+            }
         }
 
 
@@ -80,9 +83,10 @@ export const EndingMixin = {
 
 
         // 破产 + 无收入
+        const bankruptCredit = GameData.endingRules.bankruptCreditScore || 400;
         if (this.state.money <= GameData.endingRules.noMoney &&
             (this.state.job === 'unemployed' || this.state.job === 'fired') &&
-            this.state.creditScore < GameData.endingRules.bankruptCreditScore) {
+            this.state.creditScore < bankruptCredit) {
             this.isRunning = false;
             return this.triggerEnding('bankrupt');
         }
@@ -91,6 +95,15 @@ export const EndingMixin = {
         if (this.state.housing === 'homeless' && this.state.unemployedDays > GameData.endingRules.homelessUnemployedDays) {
             this.isRunning = false;
             return this.triggerEnding('homeless');
+        }
+
+        // 胜利：存活一年 (放在最后检查，防止与其他结局冲突)
+        if (this.state.day >= GameData.endingRules.survivalDays) {
+            if (!this.state.triggeredEndings.includes('survived')) {
+                this.state.triggeredEndings.push('survived');
+                this.isRunning = false;
+                return this.triggerEnding('survived');
+            }
         }
 
         return null;

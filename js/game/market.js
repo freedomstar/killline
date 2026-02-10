@@ -303,6 +303,26 @@ export const MarketMixin = {
             }
         }
 
+        // V2.XX 记录综合持仓历史 (用于自选页面的走势图)
+        let totalPortfolioValue = 0;
+        let totalPortfolioCost = 0;
+        if (this.state.holdings) {
+            for (const id in this.state.holdings) {
+                const h = this.state.holdings[id];
+                const p = this.state.marketPrices[id];
+                if (h && p) {
+                    totalPortfolioValue += h.quantity * p.price;
+                    totalPortfolioCost += h.quantity * h.avgCost;
+                }
+            }
+        }
+        if (!this.state.portfolioHistory) this.state.portfolioHistory = [];
+        this.state.portfolioHistory.push({
+            value: totalPortfolioValue,
+            cost: totalPortfolioCost,
+            day: this.state.day
+        });
+
         // 4. 情绪衰减 (逐渐回归中性)
         this.state.marketSentiment = Math.round(this.state.marketSentiment * 0.8);
 

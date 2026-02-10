@@ -53,6 +53,7 @@ export const UI = {
 
         // 按钮
         this.elements.restartButton = document.getElementById('restart-button');
+        this.elements.continueButton = document.getElementById('continue-button');
 
         // 状态栏
         this.elements.moneyValue = document.getElementById('money-value');
@@ -140,6 +141,7 @@ export const UI = {
         this.elements.financeDetailDebtTotal = document.getElementById('finance-detail-debt-total');
         this.elements.financeDetailDebtList = document.getElementById('finance-detail-debt-list');
         this.elements.financeDetailRepayInput = document.getElementById('finance-detail-repay-input');
+        this.elements.financeDetailMaxBtn = document.getElementById('finance-detail-max-btn');
         this.elements.financeDetailRepayBtn = document.getElementById('finance-detail-repay-btn');
         this.elements.autoRepayEnabled = document.getElementById('auto-repay-enabled');
         this.elements.autoRepayKeepCash = document.getElementById('auto-repay-keep-cash');
@@ -158,6 +160,12 @@ export const UI = {
         // V2.1 储备信息
         this.elements.ingredientsCount = document.getElementById('ingredients-count');
         this.elements.mealStatus = document.getElementById('meal-status');
+        if (this.elements.mealStatus && this.elements.mealStatus.parentElement) {
+            this.elements.mealStatus.parentElement.style.maxWidth = '100%';
+            this.elements.mealStatus.parentElement.style.width = '100%';
+            // Also for job and housing just to be safe, though they might be direct children.
+            // But let's stick to mealStatus as confirmed issue.
+        }
 
         // V2.7 任务进度
         // V2.7 任务进度
@@ -418,6 +426,9 @@ export const UI = {
             }
             if (this.elements.financeDetailRepayBtn) {
                 this.elements.financeDetailRepayBtn.addEventListener('click', () => this.handleDebtRepay());
+            }
+            if (this.elements.financeDetailMaxBtn) {
+                this.elements.financeDetailMaxBtn.addEventListener('click', () => this.handleFillMaxRepay());
             }
             if (this.elements.autoRepayEnabled) {
                 this.elements.autoRepayEnabled.addEventListener('change', () => this.syncAutoRepayFromModal());
@@ -1002,7 +1013,7 @@ export const UI = {
     renderAssetsScreen() {
         const state = game.getState();
         // Fix category if missing
-        if (!this.currentAssetCategory) this.currentAssetCategory = 'commodity';
+        if (!this.currentAssetCategory) this.currentAssetCategory = 'watchlist';
         this.setupAssetTabs();
 
         // Update Summary
@@ -1525,21 +1536,27 @@ export const UI = {
             this.updateTimeDisplay(status);
             this.updateBackground(state.period);
 
-            // V2.XX 修复：读档后若恢复事件不可渲染（无可选项），回退到重新取事件
+            // V2.XX 修复：读档后若恢复事件不可渲染，循环推进时段直到拿到可交互事件
             let event = game.currentEvent;
             if (!hasRenderableChoices(event, state)) {
                 game.currentEvent = null;
                 event = game.getNextEvent();
             }
 
-            // 深夜可能没有事件，推进到下一时段后再尝试一次
-            if (!hasRenderableChoices(event, state) && state.period === 'deep_night') {
+            let retryCount = 0;
+            const maxRetry = 5;
+            while (!hasRenderableChoices(event, state) && retryCount < maxRetry) {
+                retryCount += 1;
+                console.warn(`[UI] No valid choices at period: ${state.period}, advancing... (${retryCount}/${maxRetry})`);
+
                 game.advancePeriod();
                 state = game.getState();
                 status = game.getStatusDescription();
                 this.updateStatusBar(status);
                 this.updateTimeDisplay(status);
                 this.updateBackground(state.period);
+
+                game.currentEvent = null;
                 event = game.getNextEvent();
             }
 
@@ -2799,6 +2816,13 @@ export const UI = {
         this.elements.debtAutoRepayBtn.classList.toggle('enabled', enabled);
     },
 
+    handleFillMaxRepay() {
+        if (!this.elements.financeDetailRepayInput) return;
+        const state = game.getState();
+        const maxRepay = Math.min(state.money || 0, state.debt || 0);
+        this.elements.financeDetailRepayInput.value = Math.max(0, maxRepay);
+    },
+
     handleDebtRepay() {
         if (!this.elements.financeDetailRepayInput) return;
         const raw = parseFloat(this.elements.financeDetailRepayInput.value);
@@ -2899,6 +2923,29 @@ export const UI = {
     },
 
     /**
+     * V2.XX Dynamic font scaling for status elements
+     */
+    adjustFontSize(element, minSize = 9) {
+        if (!element) return;
+
+        // Reset to default
+        element.style.fontSize = '';
+        element.style.whiteSpace = 'nowrap';
+        element.style.display = 'inline-block';
+        element.style.maxWidth = '100%';
+        element.style.overflow = 'hidden'; // Ensure it clips to clientWidth logic
+
+        let fs = parseFloat(window.getComputedStyle(element).fontSize);
+        // Safety check
+        if (isNaN(fs)) fs = 14;
+
+        while (element.scrollWidth > element.clientWidth && fs > minSize) {
+            fs -= 1;
+            element.style.fontSize = `${fs}px`;
+        }
+    },
+
+    /**
      * 更新状态栏
      */
     updateStatusBar(status, stateOverride = null) {
@@ -2975,9 +3022,9 @@ export const UI = {
 
             // 如果只有 0 资产，显示淡色
             if (portfolioValue === 0) {
-                this.elements.investmentValue.innerHTML = `${label}: <span style="color: ${neutralColor}">${valueStr}</span>`;
+                this.elements.investmentValue.innerHTML = `${label}:<span style="color: ${neutralColor}">${valueStr}</span>`;
             } else {
-                this.elements.investmentValue.innerHTML = `${label}: ${valueStr} <span style="color: ${color}; font-size: 0.9em; margin-left: 4px;">${rateStr}</span>`;
+                this.elements.investmentValue.innerHTML = `${label}:${valueStr}<span style="color: ${color}; font-size: 0.9em;">${rateStr}</span>`;
             }
         }
 
@@ -2992,9 +3039,11 @@ export const UI = {
         // 住所
         const pendingTag = state.pendingHousing ? ' 🚚' : '';
         this.elements.housingValue.textContent = `${status.housing}${pendingTag}`;
+        this.adjustFontSize(this.elements.housingValue);
 
         // 工作
         this.elements.jobValue.textContent = status.job;
+        this.adjustFontSize(this.elements.jobValue);
 
         // 精力条
         const effectiveEnergy = Math.max(0, Math.min(state.maxEnergy || 100, state.energy + offset('energy')));
@@ -3169,6 +3218,7 @@ export const UI = {
                 ? I18n.t('ui_static.finance.prepared')
                 : I18n.t('ui_static.finance.not_prepared');
             this.elements.mealStatus.className = 'status-value' + (status.hasPreparedMeal ? ' positive' : ' warning');
+            this.adjustFontSize(this.elements.mealStatus);
         }
 
         // Render Artifacts (Slots)
@@ -3429,9 +3479,6 @@ export const UI = {
     updateTimeDisplay(status) {
         // 天数
         let dayText = I18n.t('ui_static.game_header.day', status.day);
-        if (status.day <= GameData.newbieProtectionDays) {
-            dayText += ` (${I18n.t('ui.time.newbie_protection')})`;
-        }
         this.elements.dayCount.textContent = dayText;
 
         // 时段图标和名称
@@ -3985,10 +4032,16 @@ export const UI = {
      * 显示结局
      */
     showEnding(ending, finalStats) {
+        if (!ending) {
+            console.error('[UI] showEnding called with null ending');
+            return;
+        }
         if (ending.isVictory) {
             this.elements.endingContent.classList.add('victory');
+            if (this.elements.continueButton) this.elements.continueButton.classList.remove('hidden');
         } else {
             this.elements.endingContent.classList.remove('victory');
+            if (this.elements.continueButton) this.elements.continueButton.classList.add('hidden');
         }
 
         this.elements.endingTitle.textContent = ending.title;
@@ -4029,7 +4082,7 @@ export const UI = {
         if (!state.marketPrices || !state.holdings) return;
 
         // 当前选中的分类
-        this.currentAssetCategory = this.currentAssetCategory || 'commodity';
+        this.currentAssetCategory = this.currentAssetCategory || 'watchlist';
 
         // 1. 渲染新闻横幅
         this.renderNewsBanner(state);
@@ -4161,7 +4214,46 @@ export const UI = {
         const assetTypes = GameData.assetTypes;
         const category = this.currentAssetCategory;
 
-        // 筛选当前分类的资产
+        // 自选页面逻辑
+        if (category === 'watchlist') {
+            // 1. 渲染综合收益走势图
+            const summaryCard = this.renderWatchlistSummary(state);
+            if (summaryCard) container.appendChild(summaryCard);
+
+            // 2. 筛选已购买或已收藏的资产
+            const watchlist = state.favoriteAssets || [];
+            const sortedAssets = Object.keys(assetTypes).filter(id => {
+                const holding = state.holdings[id];
+                const isOwned = holding && holding.quantity > 0;
+                const isFavorite = watchlist.includes(id);
+                return isOwned || isFavorite;
+            }).sort((a, b) => {
+                // 排序：自选页面，已持有的排前面，然后按收藏顺序
+                const holdingA = state.holdings[a]?.quantity > 0;
+                const holdingB = state.holdings[b]?.quantity > 0;
+                if (holdingA && !holdingB) return -1;
+                if (!holdingA && holdingB) return 1;
+                return 0; // 保持原有顺序或其他排序
+            });
+
+            if (sortedAssets.length === 0) {
+                container.innerHTML += `<div class="empty-state" style="padding: 2rem; text-align: center; color: #95a5a6;">${I18n.t('ui.assets.noWatchlist') || '暂无自选资产<br>请在其他分类中点击星号收藏'}</div>`;
+                return;
+            }
+
+            for (const assetId of sortedAssets) {
+                const config = assetTypes[assetId];
+                const holding = state.holdings[assetId];
+                const marketData = state.marketPrices[assetId];
+                if (holding && marketData) {
+                    const card = this.createAssetCard(assetId, config, holding, marketData);
+                    container.appendChild(card);
+                }
+            }
+            return;
+        }
+
+        // 普通分类逻辑
         for (const assetId in assetTypes) {
             const config = assetTypes[assetId];
             if (config.category !== category) continue;
@@ -4201,11 +4293,18 @@ export const UI = {
             priceText = '$' + marketData.price.toFixed(4);
         }
 
+        const isFavorite = (game.state.favoriteAssets || []).includes(assetId);
+
         card.innerHTML = `
             <div class="asset-header">
-                <span class="asset-icon">${config.icon}</span>
-                <span class="asset-name">${this.resolveText(config.name)}</span>
-                <span class="asset-risk ${config.riskLevel}">${this.getRiskLabel(config.riskLevel)}</span>
+                <div style="display:flex; align-items:center;">
+                    <span class="asset-icon">${config.icon}</span>
+                    <span class="asset-name">${this.resolveText(config.name)}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap: 8px;">
+                     <span class="asset-risk ${config.riskLevel}">${this.getRiskLabel(config.riskLevel)}</span>
+                     <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-asset="${assetId}">★</button>
+                </div>
             </div>
             <div class="asset-price">
                 <span class="price-value">${priceText}</span>
@@ -4227,6 +4326,22 @@ export const UI = {
                 <button class="asset-btn sell" data-action="sell" data-type="${assetId}">${I18n.t('ui.assets.sell')}</button>
             </div>
         `;
+
+        card.querySelector('.favorite-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止触发其他点击
+            this.toggleFavorite(assetId);
+            // 仅切换样式，如果是在自选页且未持有，可能需要移除卡片，但为了体验，暂不立即移除，或者重新渲染
+            const btn = e.currentTarget;
+            btn.classList.toggle('active');
+
+            // 如果在自选页，取消收藏且未持仓，立即刷新 list
+            if (this.currentAssetCategory === 'watchlist') {
+                const isOwned = holding.quantity > 0;
+                if (!btn.classList.contains('active') && !isOwned) {
+                    this.renderAssetsScreen();
+                }
+            }
+        });
 
         // 绑定按钮事件
         card.querySelectorAll('.asset-btn').forEach(btn => {
@@ -4750,6 +4865,261 @@ export const UI = {
             body.innerHTML = html;
             this.elements.newsDetailModal.classList.remove('hidden');
         } catch (e) { console.error("Modal error", e); }
+    },
+
+    /**
+     * V2.XX 切换收藏状态
+     */
+    toggleFavorite(assetId) {
+        if (!game.state.favoriteAssets) game.state.favoriteAssets = [];
+        const index = game.state.favoriteAssets.indexOf(assetId);
+        if (index >= 0) {
+            game.state.favoriteAssets.splice(index, 1);
+            this.showToast(I18n.t('ui.assets.unfavorite') + ' ' + I18n.t('data.assetNames.' + assetId));
+        } else {
+            game.state.favoriteAssets.push(assetId);
+            this.showToast(I18n.t('ui.assets.favorite') + ' ' + I18n.t('data.assetNames.' + assetId));
+        }
+    },
+
+    /**
+     * V2.XX 渲染自选页面的综合收益卡片
+     */
+    renderWatchlistSummary(state) {
+        const history = state.portfolioHistory || [];
+
+        // 图表视图模式：daily(最近7天) / weekly(按周采样)
+        if (!this.chartViewMode) this.chartViewMode = 'daily';
+
+        // 根据模式筛选显示数据
+        let displayHistory;
+        if (this.chartViewMode === 'weekly') {
+            // 周视图：每7天取一个采样点
+            if (history.length <= 4) {
+                displayHistory = [...history];
+            } else {
+                displayHistory = [];
+                // 游戏内4天为一周，每4天取一个采样点
+                for (let i = 0; i < history.length; i += 4) {
+                    displayHistory.push(history[i]);
+                }
+                // 确保最后一天始终显示
+                const lastEntry = history[history.length - 1];
+                if (displayHistory[displayHistory.length - 1] !== lastEntry) {
+                    displayHistory.push(lastEntry);
+                }
+            }
+        } else {
+            // 日视图：显示最近5天
+            displayHistory = history.length > 5 ? history.slice(-5) : [...history];
+        }
+
+        let totalValue = 0;
+        let totalCost = 0;
+        if (state.holdings) {
+            for (const id in state.holdings) {
+                const h = state.holdings[id];
+                const p = state.marketPrices[id];
+                if (h && p) {
+                    totalValue += h.quantity * p.price;
+                    totalCost += h.quantity * h.avgCost;
+                }
+            }
+        }
+
+        // 如果历史还是空的(第一天)，或者最新一天的还没有被 market.js 写入
+        // market.js 是在 updateMarket 写入的。如果是当天，可能还没有 updateMarket?
+        // 不，updateMarket 每天都会运行。
+        // 但如果是初始化刚进入游戏，history是空的。
+        // 如果 history 为空，或者 history 最后一个元素的 day 小于当前 day，说明今天的还没有入库（或者今天还没过完）
+        // 实际上 market.js 是在“进入下一天”时调用的 updateMarket。
+        // 所以当玩家在操作界面时，看到的是 updateMarket 之后的状态。
+        // 也就是说 history 应该包含了“今天”（也就是刚刚结算完的那一天，或者说当前状态对应的那一天）。
+        // 稍等，updateMarket 是在 nextDay 逻辑里调用的。
+        // 所以 history 最后一个元素就是当前最新的。
+
+        // 计算盈亏
+        const totalPnl = totalValue - totalCost;
+        const totalPnlPercent = totalCost > 0 ? (totalPnl / totalCost * 100).toFixed(2) : 0;
+
+        // 今日盈亏：当前值 - 昨天值
+        // history 最后一个如果是今天，那么倒数第二个就是昨天。
+        // 如果 history 包含今天（即 history[last].day === state.day），那么
+        // 今日盈亏 = history[last].value - history[last-1].value
+        // 可是 ui 是实时显示的，marketPrices 是当前的。
+        // 如果 market.js 在 updateMarket 之后立即 push 了 history，那么 history[last] 的 value 应该等于 totalValue (大致)
+
+        let todayPnl = 0;
+        let todayPnlPercent = 0;
+
+        if (displayHistory.length >= 2) {
+            const last = displayHistory[displayHistory.length - 1];
+            const prev = displayHistory[displayHistory.length - 2];
+            todayPnl = last.value - prev.value;
+            todayPnlPercent = prev.value > 0 ? (todayPnl / prev.value * 100).toFixed(2) : 0;
+        } else if (displayHistory.length === 1) {
+            // 只有一天数据，今日盈亏 = 总盈亏 (假设初始为0)
+            todayPnl = totalPnl;
+            todayPnlPercent = totalPnlPercent;
+        }
+
+        const summaryCard = document.createElement('div');
+        summaryCard.className = 'watchlist-summary-card';
+
+        // 构建 SVG 趋势图
+        let svgContent = '';
+        if (displayHistory.length > 1) {
+            const containerWidth = 600;
+            const containerHeight = 200;
+            // 留出空间给坐标轴标签：左侧Y轴标签、底部X轴标签
+            const paddingLeft = 65;
+            const paddingRight = 20;
+            const paddingTop = 25;
+            const paddingBottom = 30;
+            const chartWidth = containerWidth - paddingLeft - paddingRight;
+            const chartHeight = containerHeight - paddingTop - paddingBottom;
+
+            const values = displayHistory.map(h => h.value);
+            const days = displayHistory.map(h => h.day);
+
+            // 正确处理负值：不乘以系数，直接取 min/max 再加边距
+            const rawMin = Math.min(...values);
+            const rawMax = Math.max(...values);
+            const valueRange = rawMax - rawMin;
+            const margin = valueRange > 0 ? valueRange * 0.1 : Math.max(Math.abs(rawMax) * 0.1, 10);
+            const minVal = rawMin - margin;
+            const maxVal = rawMax + margin;
+            const range = maxVal - minVal || 1;
+
+            // 坐标映射函数
+            const getX = (idx) => paddingLeft + (idx / (values.length - 1)) * chartWidth;
+            const getY = (val) => paddingTop + chartHeight - ((val - minVal) / range) * chartHeight;
+
+            // 生成折线
+            const points = values.map((val, idx) => `${getX(idx).toFixed(1)},${getY(val).toFixed(1)}`).join(' ');
+
+            // 判断涨跌颜色
+            const isUp = values[values.length - 1] >= values[0];
+            const strokeColor = isUp ? 'var(--color-success)' : 'var(--color-danger)';
+
+            // Y轴：生成3-4个刻度线
+            const yTickCount = 4;
+            let yAxisSvg = '';
+            for (let i = 0; i <= yTickCount; i++) {
+                const tickVal = minVal + (range / yTickCount) * i;
+                const tickY = getY(tickVal).toFixed(1);
+                const label = tickVal >= 1000 ? `$${Math.round(tickVal).toLocaleString()}`
+                    : tickVal >= 1 ? `$${tickVal.toFixed(0)}`
+                        : `$${tickVal.toFixed(2)}`;
+                // 网格线
+                yAxisSvg += `<line x1="${paddingLeft}" y1="${tickY}" x2="${containerWidth - paddingRight}" y2="${tickY}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="4,3" />`;
+                // 刻度标签
+                yAxisSvg += `<text x="${paddingLeft - 5}" y="${tickY}" fill="var(--color-text-muted)" font-size="10" text-anchor="end" dominant-baseline="middle">${label}</text>`;
+            }
+
+            // X轴：根据视图模式显示天数或周数标签
+            let xAxisSvg = '';
+            values.forEach((val, idx) => {
+                const x = getX(idx).toFixed(1);
+                const xLabel = this.chartViewMode === 'weekly' ? `W${idx + 1}` : `D${days[idx]}`;
+                xAxisSvg += `<text x="${x}" y="${containerHeight - 5}" fill="var(--color-text-muted)" font-size="10" text-anchor="middle">${xLabel}</text>`;
+            });
+
+            // 数据点 + 价格标注
+            const dotsSvg = values.map((val, idx) => {
+                const x = getX(idx);
+                const y = getY(val);
+                const priceLabel = val >= 1000 ? `$${Math.round(val).toLocaleString()}`
+                    : val >= 1 ? `$${val.toFixed(1)}`
+                        : `$${val.toFixed(2)}`;
+                // 标注位置：如果在上半部分则标在下方，否则标在上方
+                const labelY = y < (paddingTop + chartHeight / 2) ? y + 14 : y - 8;
+                return `
+                    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="var(--color-surface-elevated)" stroke="${strokeColor}" stroke-width="2" />
+                    <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" fill="var(--color-text-secondary)" font-size="9" text-anchor="middle" font-weight="600">${priceLabel}</text>
+                `;
+            }).join('');
+
+            // 趋势填充区（半透明渐变区域）
+            const firstX = getX(0).toFixed(1);
+            const lastX = getX(values.length - 1).toFixed(1);
+            const baselineY = getY(minVal).toFixed(1);
+            const fillPoints = `${firstX},${baselineY} ${points} ${lastX},${baselineY}`;
+            const fillId = `chartGrad_${Date.now()}`;
+
+            svgContent = `
+                <svg viewBox="0 0 ${containerWidth} ${containerHeight}" class="chart-svg" style="width:100%; height:100%;" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="${isUp ? 'var(--color-success)' : 'var(--color-danger)'}" stop-opacity="0.25" />
+                            <stop offset="100%" stop-color="${isUp ? 'var(--color-success)' : 'var(--color-danger)'}" stop-opacity="0.02" />
+                        </linearGradient>
+                    </defs>
+                    <!-- 网格和Y轴标签 -->
+                    ${yAxisSvg}
+                    <!-- X轴标签 -->
+                    ${xAxisSvg}
+                    <!-- 趋势填充 -->
+                    <polygon fill="url(#${fillId})" points="${fillPoints}" />
+                    <!-- 趋势线 -->
+                    <polyline fill="none" stroke="${strokeColor}" stroke-width="2.5" points="${points}" stroke-linecap="round" stroke-linejoin="round" />
+                    <!-- 数据点和价格标注 -->
+                    ${dotsSvg}
+                </svg>
+            `;
+        } else {
+            svgContent = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:var(--color-text-secondary);">${I18n.t('ui.assets.noHistory')}</div>`;
+        }
+
+        summaryCard.innerHTML = `
+            <div class="watchlist-header">
+                <div class="watchlist-title">
+                     📊 ${I18n.t('ui.assets.portfolioTrend')}
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="chart-view-toggle">
+                        <button class="chart-toggle-btn ${this.chartViewMode === 'daily' ? 'active' : ''}" data-mode="daily">${I18n.t('ui.assets.chartDaily')}</button>
+                        <button class="chart-toggle-btn ${this.chartViewMode === 'weekly' ? 'active' : ''}" data-mode="weekly">${I18n.t('ui.assets.chartWeekly')}</button>
+                    </div>
+                    <div class="watchlist-total">
+                        <span style="font-size:0.9em; color:var(--color-text-secondary);">${I18n.t('ui_static.assets_page.total_assets_label')}:</span>
+                        <span style="font-size:1.2em; font-weight:bold; color:var(--color-text-primary);">$${Math.round(totalValue).toLocaleString()}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="watchlist-chart-container">
+                ${svgContent}
+            </div>
+            
+            <div class="watchlist-pnl">
+                <div class="pnl-item">
+                    <span class="pnl-label">${I18n.t('ui.assets.todayPnl')}</span>
+                    <span class="pnl-value ${todayPnl >= 0 ? 'profit' : 'loss'}">
+                        ${todayPnl >= 0 ? '+' : ''}$${todayPnl.toFixed(2)} 
+                        <span style="font-size:0.8em">(${todayPnl >= 0 ? '+' : ''}${todayPnlPercent}%)</span>
+                    </span>
+                </div>
+                <div class="pnl-separator"></div>
+                <div class="pnl-item">
+                    <span class="pnl-label">${I18n.t('ui.assets.totalPnl')}</span>
+                    <span class="pnl-value ${totalPnl >= 0 ? 'profit' : 'loss'}">
+                         ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)}
+                         <span style="font-size:0.8em">(${totalPnl >= 0 ? '+' : ''}${totalPnlPercent}%)</span>
+                    </span>
+                </div>
+            </div>
+        `;
+
+        // 绑定日/周切换按钮事件
+        summaryCard.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.chartViewMode = btn.dataset.mode;
+                this.renderAssetsScreen();
+            });
+        });
+
+        return summaryCard;
     },
 
 };

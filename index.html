@@ -400,13 +400,15 @@
                 <h2 class="modal-title" data-i18n="ui_static.finance_detail.title">💼 财务详情</h2>
                 <div class="modal-body finance-detail-body">
                     <div class="finance-detail-section" id="finance-detail-section-cash">
-                        <div class="finance-detail-section-title" data-i18n="ui_static.finance_detail.cash_title">现金资产</div>
+                        <div class="finance-detail-section-title" data-i18n="ui_static.finance_detail.cash_title">现金资产
+                        </div>
                         <div class="finance-detail-row">
                             <span class="finance-detail-label" data-i18n="ui_static.assets_page.cash_label">现金</span>
                             <span id="finance-detail-cash" class="finance-detail-value positive">...</span>
                         </div>
                         <div class="finance-detail-row">
-                            <span class="finance-detail-label" data-i18n="ui_static.assets_page.portfolio_label">投资总值</span>
+                            <span class="finance-detail-label"
+                                data-i18n="ui_static.assets_page.portfolio_label">投资总值</span>
                             <span id="finance-detail-investments" class="finance-detail-value">...</span>
                         </div>
                         <div class="finance-detail-list" id="finance-detail-investment-list"></div>
@@ -419,11 +421,19 @@
                     </div>
 
                     <div class="finance-detail-section" id="finance-detail-section-repay">
-                        <div class="finance-detail-section-title" data-i18n="finance.repay">偿还</div>
-                        <div class="finance-detail-repay">
-                            <input type="number" id="finance-detail-repay-input" min="0" step="1"
-                                data-i18n="ui_static.finance_detail.repay_placeholder" placeholder="输入偿还金额">
-                            <button id="finance-detail-repay-btn" class="primary-button" data-i18n="finance.repay">偿还</button>
+                        <div class="finance-detail-section-title">
+                            <span data-i18n="finance.repay">偿还</span>
+                            <span class="finance-detail-title-tip" data-i18n="finance.manualRepayTip">(你可以随时手动还款)</span>
+                        </div>
+                        <div class="finance-detail-repay-container">
+                            <div class="finance-repay-row">
+                                <input type="number" id="finance-detail-repay-input" min="0" step="1"
+                                    data-i18n="ui_static.finance_detail.repay_placeholder" placeholder="输入偿还金额">
+                                <button id="finance-detail-max-btn" class="action-btn outline" style="width: auto;"
+                                    data-i18n="finance.max">Max</button>
+                            </div>
+                            <button id="finance-detail-repay-btn" class="primary-button"
+                                style="width: 100%; margin-top: 8px;" data-i18n="finance.repay">偿还</button>
                         </div>
                     </div>
 
@@ -437,12 +447,16 @@
                             <span data-i18n="finance.autoRepay.enable">启用每日自动还债</span>
                         </label>
                         <div class="finance-detail-row">
-                            <span class="finance-detail-label" data-i18n="finance.autoRepay.keepCash">保留现金 (不用于还债)</span>
-                            <input type="number" id="auto-repay-keep-cash" min="0" step="100" class="finance-detail-inline-input">
+                            <span class="finance-detail-label" data-i18n="finance.autoRepay.keepCash">保留现金
+                                (不用于还债)</span>
+                            <input type="number" id="auto-repay-keep-cash" min="0" step="100"
+                                class="finance-detail-inline-input">
                         </div>
                         <div class="finance-detail-row">
-                            <span class="finance-detail-label" data-i18n="finance.autoRepay.maxDaily">每日最大还款额 (0为不限)</span>
-                            <input type="number" id="auto-repay-max-daily" min="0" step="100" class="finance-detail-inline-input">
+                            <span class="finance-detail-label" data-i18n="finance.autoRepay.maxDaily">每日最大还款额
+                                (0为不限)</span>
+                            <input type="number" id="auto-repay-max-daily" min="0" step="100"
+                                class="finance-detail-inline-input">
                         </div>
                     </div>
                 </div>
@@ -738,7 +752,8 @@
                                 <span class="status-value money" id="money-value">$15,000</span>
                                 <span id="investment-value" class="finance-sub-value">...</span>
                                 <span class="finance-sub-value debt debt-auto-row">
-                                    <button id="debt-auto-repay-btn" class="debt-auto-btn" type="button" aria-label="自动还款设置">⚙️</button>
+                                    <button id="debt-auto-repay-btn" class="debt-auto-btn" type="button"
+                                        aria-label="自动还款设置">⚙️</button>
                                     <span id="debt-value">...</span>
                                 </span>
                             </div>
@@ -780,17 +795,20 @@
 
                         <!-- Selectors -->
                         <div id="commute-selector" class="lunch-selector hidden">
-                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_commute">🚗 选择通勤方式：</div>
+                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_commute">🚗 选择通勤方式：
+                            </div>
                             <div id="commute-options" class="lunch-options"></div>
                         </div>
 
                         <div id="lunch-selector" class="lunch-selector hidden">
-                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_lunch">🍱 选择今日午餐策略：</div>
+                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_lunch">🍱 选择今日午餐策略：
+                            </div>
                             <div id="lunch-options" class="lunch-options"></div>
                         </div>
 
                         <div id="daily-action-selector" class="lunch-selector hidden">
-                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_daily_action">✨ 顺带做点别的：</div>
+                            <div class="lunch-selector-label" data-i18n="ui_static.event.select_daily_action">✨ 顺带做点别的：
+                            </div>
                             <div id="daily-action-options" class="lunch-options"></div>
                         </div>
 
@@ -938,7 +956,10 @@
                 </div>
 
                 <div class="asset-tabs">
-                    <div class="asset-tab active" data-category="commodity" data-i18n="ui_static.assets_page.tab_gold">
+                    <div class="asset-tab active" data-category="watchlist"
+                        data-i18n="ui_static.assets_page.tab_watchlist">⭐
+                        自选</div>
+                    <div class="asset-tab" data-category="commodity" data-i18n="ui_static.assets_page.tab_gold">
                         🥇 黄金</div>
                     <div class="asset-tab" data-category="stock" data-i18n="ui_static.assets_page.tab_stock">📈
                         股票
@@ -1164,6 +1185,8 @@
                 </p>
                 <button id="restart-button" class="primary-button"
                     data-i18n="ui_static.ending_screen.restart_btn">再次挑战</button>
+                <button id="continue-button" class="primary-button hidden"
+                    data-i18n="ui_static.ending_screen.continue_btn">继续游戏</button>
             </div>
         </div>
 

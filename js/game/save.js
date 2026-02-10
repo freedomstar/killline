@@ -56,13 +56,36 @@ export const SaveMixin = {
         }
 
         const key = `killzone_save_${slotId}`;
+        const snapshotEventForSave = (event) => {
+            if (!event || typeof event !== 'object') return null;
+
+            return {
+                id: event.id,
+                type: event.type,
+                period: event.period,
+                title: event.title,
+                description: event.description,
+                isRandom: !!event.isRandom,
+                isRandomEncounter: !!event.isRandomEncounter,
+                choices: Array.isArray(event.choices)
+                    ? event.choices.map(choice => ({
+                        id: choice && choice.id,
+                        text: choice && choice.text,
+                        hint: choice && choice.hint,
+                        hintType: choice && choice.hintType,
+                        energyCost: choice && choice.energyCost
+                    }))
+                    : []
+            };
+        };
+
         const saveData = {
             state: JSON.parse(JSON.stringify(this.state)),
             rngSeed: this.rng.seed, // 当前 RNG 内部种子
             rngInitialSeed: this.rng.initialSeed,
             rngOriginalSeed: this.rng.originalSeed, // V2.XX 保存原始种子字符串
             pendingEnergyChange: this.pendingEnergyChange,
-            currentEvent: this.currentEvent, // V2.12: 保存当前事件以保证读档后选项一致
+            currentEvent: snapshotEventForSave(this.currentEvent), // V2.12: 保存当前事件以保证读档后选项一致
             savedAt: new Date().toISOString()
         };
 
@@ -213,6 +236,37 @@ export const SaveMixin = {
             }
 
             // V2.XX 根因修复：统一重建读档事件（JSON 会丢失 function）
+            const buildEveningDashboardEvent = (savedEvent) => {
+                if (!Array.isArray(this.state.eventQueue) || this.state.eventQueue.length === 0) {
+                    return null;
+                }
+
+                const title = (savedEvent && savedEvent.title) || '待处理事项';
+                const description = (savedEvent && savedEvent.description) || '今晚有几件事需要你处理...';
+
+                return {
+                    id: 'evening_dashboard',
+                    title,
+                    description,
+                    period: 'night',
+                    choices: this.state.eventQueue.map((evt) => ({
+                        text: `处理: ${evt && evt.title ? evt.title : '未知事件'}`,
+                        effect: (state) => {
+                            const qIdx = Array.isArray(state.eventQueue)
+                                ? state.eventQueue.findIndex(e => e && evt && e.id === evt.id)
+                                : -1;
+                            if (qIdx >= 0) {
+                                state.eventQueue.splice(qIdx, 1);
+                            }
+                            return {
+                                triggerEvent: evt && evt.id ? evt.id : null,
+                                message: `正在处理: ${evt && evt.title ? evt.title : '未知事件'}`
+                            };
+                        }
+                    }))
+                };
+            };
+
             const rehydrateEvent = (savedEvent) => {
                 if (!savedEvent || !savedEvent.id) return savedEvent;
 
@@ -233,11 +287,11 @@ export const SaveMixin = {
                 }
 
                 if (savedEvent.id === 'evening_dashboard') {
-                    return null;
+                    return buildEveningDashboardEvent(savedEvent);
                 }
 
                 const baseEvent = GameEvents.events.find(e => e.id === savedEvent.id);
-                if (!baseEvent) return savedEvent;
+                if (!baseEvent) return null;
 
                 const rebuilt = { ...savedEvent };
 

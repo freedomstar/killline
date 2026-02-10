@@ -134,3 +134,145 @@
         opacity: 0;
     }
 }
+
+/* Watchlist Tab */
+.asset-tab[data-category="watchlist"].active {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+    color: #fff;
+    border-color: #f39c12;
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+}
+
+/* Favorite Button in Asset Card */
+.asset-header {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.favorite-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #bdc3c7;
+    /* Gray */
+    transition: all 0.2s ease;
+    padding: 0 0 0 10px;
+    line-height: 1;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.1);
+}
+
+.favorite-btn.active {
+    color: #f1c40f;
+    /* Gold */
+    text-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
+}
+
+/* Watchlist Summary Card */
+.watchlist-summary-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 20px;
+    border: 1px solid var(--color-border);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: var(--color-text-primary);
+}
+
+.watchlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.watchlist-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.watchlist-chart-container {
+    height: 220px;
+    width: 100%;
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.watchlist-pnl {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+.pnl-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pnl-label {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+.pnl-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+.pnl-value.profit {
+    color: var(--color-success);
+}
+
+.pnl-value.loss {
+    color: var(--color-danger);
+}
+
+.pnl-separator {
+    width: 1px;
+    background: var(--color-border);
+}
+
+/* 日/周 切换按钮 */
+.chart-view-toggle {
+    display: flex;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+}
+
+.chart-toggle-btn {
+    padding: 3px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.chart-toggle-btn.active {
+    background: var(--color-info);
+    color: #fff;
+}
+
+.chart-toggle-btn:hover:not(.active) {
+    background: var(--color-surface-elevated);
+}
