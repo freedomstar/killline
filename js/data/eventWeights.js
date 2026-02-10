@@ -20,6 +20,7 @@ export const eventWeights = {
     burglary: 10,
     apartment_fire: 5,
     feeling_under_weather: 20,
+    worsening_symptoms: 25,
     medical_emergency: 100,
     rent_due: 100,
     phone_bill_due: 50,

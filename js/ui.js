@@ -4987,7 +4987,9 @@ export const UI = {
         let svgContent = '';
         if (displayHistory.length > 1) {
             const containerWidth = 600;
-            const containerHeight = 200;
+            // 使用比例高度以适应不同屏幕：移动端 240px，桌面端 220px
+            const isMobile = window.innerWidth <= 600;
+            const containerHeight = isMobile ? 370 : 220;
             // 留出空间给坐标轴标签：左侧Y轴标签、底部X轴标签
             const paddingLeft = 65;
             const paddingRight = 20;
@@ -5021,17 +5023,17 @@ export const UI = {
 
             // Y轴：生成3-4个刻度线
             const yTickCount = 4;
+            const axisFontSize = isMobile ? 20 : 15;
+            const priceLabelFontSize = isMobile ? 19 : 15;
             let yAxisSvg = '';
             for (let i = 0; i <= yTickCount; i++) {
                 const tickVal = minVal + (range / yTickCount) * i;
                 const tickY = getY(tickVal).toFixed(1);
-                const label = tickVal >= 1000 ? `$${Math.round(tickVal).toLocaleString()}`
-                    : tickVal >= 1 ? `$${tickVal.toFixed(0)}`
-                        : `$${tickVal.toFixed(2)}`;
+                const label = `$${Math.round(tickVal)}`;
                 // 网格线
                 yAxisSvg += `<line x1="${paddingLeft}" y1="${tickY}" x2="${containerWidth - paddingRight}" y2="${tickY}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="4,3" />`;
                 // 刻度标签
-                yAxisSvg += `<text x="${paddingLeft - 5}" y="${tickY}" fill="var(--color-text-muted)" font-size="10" text-anchor="end" dominant-baseline="middle">${label}</text>`;
+                yAxisSvg += `<text x="${paddingLeft - 8}" y="${tickY}" fill="var(--color-text-muted)" font-size="${axisFontSize}" text-anchor="end" dominant-baseline="middle">${label}</text>`;
             }
 
             // X轴：根据视图模式显示天数或周数标签
@@ -5039,21 +5041,20 @@ export const UI = {
             values.forEach((val, idx) => {
                 const x = getX(idx).toFixed(1);
                 const xLabel = this.chartViewMode === 'weekly' ? `W${idx + 1}` : `D${days[idx]}`;
-                xAxisSvg += `<text x="${x}" y="${containerHeight - 5}" fill="var(--color-text-muted)" font-size="10" text-anchor="middle">${xLabel}</text>`;
+                xAxisSvg += `<text x="${x}" y="${containerHeight - 6}" fill="var(--color-text-muted)" font-size="${axisFontSize}" text-anchor="middle">${xLabel}</text>`;
             });
 
             // 数据点 + 价格标注
             const dotsSvg = values.map((val, idx) => {
                 const x = getX(idx);
                 const y = getY(val);
-                const priceLabel = val >= 1000 ? `$${Math.round(val).toLocaleString()}`
-                    : val >= 1 ? `$${val.toFixed(1)}`
-                        : `$${val.toFixed(2)}`;
+                const priceLabel = `$${val.toFixed(1)}`;
                 // 标注位置：如果在上半部分则标在下方，否则标在上方
-                const labelY = y < (paddingTop + chartHeight / 2) ? y + 14 : y - 8;
+                const labelOffset = isMobile ? 16 : 14;
+                const labelY = y < (paddingTop + chartHeight / 2) ? y + labelOffset : y - 10;
                 return `
-                    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="var(--color-surface-elevated)" stroke="${strokeColor}" stroke-width="2" />
-                    <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" fill="var(--color-text-secondary)" font-size="9" text-anchor="middle" font-weight="600">${priceLabel}</text>
+                    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isMobile ? 5 : 4}" fill="var(--color-surface-elevated)" stroke="${strokeColor}" stroke-width="2" />
+                    <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" fill="var(--color-text-secondary)" font-size="${priceLabelFontSize}" text-anchor="middle" font-weight="600">${priceLabel}</text>
                 `;
             }).join('');
 

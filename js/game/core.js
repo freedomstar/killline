@@ -181,6 +181,7 @@ export class Game {
             housingCost: state.housingCost,
             job: jobInfo ? (typeof jobInfo.name === 'function' ? jobInfo.name() : jobInfo.name) : '未知',
             jobId: state.job, // 用于 UI 查找收入
+            monthlyIncome: state.monthlyIncome,
             energy: state.energy,
             mental: state.mental,
             health: state.health,

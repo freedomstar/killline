@@ -84,6 +84,7 @@ export const healthEvents = [
         period: 'any',
         condition: (state) => state.healthStatus === 'sick' || state.healthStatus === 'cold',
         weight: GameData.eventWeights.worsening_symptoms,
+        isRandom: true,
         choices: [
             {
                 text: I18n.t('events.worsening_symptoms.choices.urgentCare.text'),

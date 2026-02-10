@@ -186,6 +186,12 @@
     color: var(--color-text-primary);
 }
 
+@media (max-width: 600px) {
+    .watchlist-summary-card {
+        padding: 15px;
+    }
+}
+
 .watchlist-header {
     display: flex;
     justify-content: space-between;
@@ -207,6 +213,12 @@
     width: 100%;
     position: relative;
     margin-bottom: 1rem;
+}
+
+@media (max-width: 600px) {
+    .watchlist-chart-container {
+        height: 260px;
+    }
 }
 
 .watchlist-pnl {

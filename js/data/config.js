@@ -249,8 +249,8 @@ export const workTaskConfig = {
 
 export const financialIncreaseConfig = {
     interval: 10,                        // 触发周期 (天)
-    minWorkEfficiencyForRaise: 100,      // 加薪所需的最低工作能力
-    salaryRaiseRange: { min: 0.1, max: 0.3 }, // 加薪幅度 10%-30%
+    minWorkEfficiencyForRaise: 80,      // 加薪所需的最低工作能力
+    salaryRaiseRange: { min: 0.1, max: 0.4 }, // 加薪幅度 10%-30%
     rentRaiseRange: { min: 0.2, max: 0.5 }    // 房租涨幅 20%-50%
 };
 

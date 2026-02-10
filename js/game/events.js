@@ -287,44 +287,50 @@ export const EventsMixin = {
 
         // V2.35 检查事件队列 (傍晚事件) - 优先于所有夜间/日常事件
         if (this.state.eventQueue && this.state.eventQueue.length > 0) {
+            // 夜晚只消费 period=night 的队列事件，避免 any 事件顶替 night_choice。
+            const queuedEvents = period === 'night'
+                ? this.state.eventQueue.filter(evt => evt && evt.period === 'night')
+                : this.state.eventQueue;
 
-            // 如果只有一个事件，直接触发
-            if (this.state.eventQueue.length === 1) {
-                const evt = this.state.eventQueue[0];
-                // 从队列移除
-                this.state.eventQueue.shift();
-                this.currentEvent = this._applyDynamicChoices(evt, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
-                this.recordRandomEvent(evt);
-                return this.currentEvent;
-            }
+            if (queuedEvents.length > 0) {
+                // 如果只有一个事件，直接触发
+                if (queuedEvents.length === 1) {
+                    const evt = queuedEvents[0];
+                    const idx = this.state.eventQueue.findIndex(e => e.id === evt.id);
+                    if (idx >= 0) this.state.eventQueue.splice(idx, 1);
+                    this.currentEvent = this._applyDynamicChoices(evt, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
+                    this.recordRandomEvent(evt);
+                    return this.currentEvent;
+                }
 
-            // 如果有多个事件，生成 Dashboard
-            console.log('[Game] Multiple events pending, showing dashboard.');
-            const dashboardEvent = {
-                id: 'evening_dashboard',
-                title: '待处理事项',
-                description: '今晚有几件事需要你处理...',
-                period: 'night',
-                choices: this.state.eventQueue.map((evt, index) => {
-                    return {
-                        text: `处理: ${evt.title}`,
-                        effect: (state) => {
-                            // 从队列中找到并移除该事件
-                            const qIdx = state.eventQueue.findIndex(e => e.id === evt.id);
-                            if (qIdx >= 0) {
-                                state.eventQueue.splice(qIdx, 1);
+                // 如果有多个事件，生成 Dashboard
+                console.log('[Game] Multiple events pending, showing dashboard.');
+                const dashboardEvent = {
+                    id: 'evening_dashboard',
+                    title: '待处理事项',
+                    description: '今晚有几件事需要你处理...',
+                    period: 'night',
+                    choices: queuedEvents.map((evt, index) => {
+                        return {
+                            text: `处理: ${evt.title}`,
+                            effect: (state) => {
+                                // 从队列中找到并移除该事件
+                                const qIdx = state.eventQueue.findIndex(e => e.id === evt.id);
+                                if (qIdx >= 0) {
+                                    state.eventQueue.splice(qIdx, 1);
+                                }
+                                // 触发该事件
+                                return {
+                                    triggerEvent: evt.id,
+                                    message: `正在处理: ${evt.title}`
+                                };
                             }
-                            // 触发该事件
-                            return {
-                                triggerEvent: evt.id,
-                                message: `正在处理: ${evt.title}`
-                            };
-                        }
-                    };
-                })
-            };
-            this.currentEvent = dashboardEvent;
-            return dashboardEvent;
+                        };
+                    })
+                };
+                this.currentEvent = dashboardEvent;
+                return dashboardEvent;
+            }
         }
 
         // 夜间特殊处理：先处理强制夜宿，其次进入“夜间选择”(深夜随机事件放到 deep_night)
@@ -883,7 +889,11 @@ export const EventsMixin = {
         }
 
         // V2.35 队列接续处理
-        if (this.state.eventQueue && this.state.eventQueue.length > 0 && !result.triggerEvent) {
+        // 夜晚只在存在 night 队列事件时接续，避免重复触发 night_choice。
+        const hasFollowupQueue = Array.isArray(this.state.eventQueue) && this.state.eventQueue.length > 0 && (
+            this.state.period !== 'night' || this.state.eventQueue.some(evt => evt && evt.period === 'night')
+        );
+        if (hasFollowupQueue && !result.triggerEvent) {
             console.log('[Game] Event finished, continuing queue...');
             result.triggerEvent = 'FORCE_NEXT';
         }

@@ -476,7 +476,7 @@ const enOverrides = {
             cash_label: 'Cash',
             portfolio_label: 'Portfolio',
             total_assets_label: 'Net Worth',
-            tab_watchlist: '⭐ Watchlist',
+            tab_watchlist: 'Watchlist',
             tab_gold: 'Gold',
             tab_stock: 'Stocks',
             tab_crypto: 'Crypto'
