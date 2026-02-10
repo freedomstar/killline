@@ -602,7 +602,11 @@ const enOverrides = {
             noWatchlist: 'No assets in watchlist<br>Mark assets with star to add them here',
             noHistory: 'Insufficient Historical Data',
             chartDaily: 'D',
-            chartWeekly: 'W'
+            chartWeekly: 'W',
+            todayPnl: 'Today P/L',
+            weeklyPnl: 'Weekly P/L',
+            totalPnl: 'Total P/L',
+            needMoreData: 'Need more data'
         },
         validation: {
             selectLunch: 'Lunch',

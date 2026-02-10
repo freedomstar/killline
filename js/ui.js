@@ -4891,6 +4891,12 @@ export const UI = {
         // 图表视图模式：daily(最近7天) / weekly(按周采样)
         if (!this.chartViewMode) this.chartViewMode = 'daily';
 
+        // 检查是否有足够的周数据（至少需要第5天的数据才能显示第1周的变化趋势）
+        const canSwitchToWeekly = history.length > 4;
+        if (!canSwitchToWeekly && this.chartViewMode === 'weekly') {
+            this.chartViewMode = 'daily';
+        }
+
         // 根据模式筛选显示数据
         let displayHistory;
         if (this.chartViewMode === 'weekly') {
@@ -4942,25 +4948,36 @@ export const UI = {
         const totalPnl = totalValue - totalCost;
         const totalPnlPercent = totalCost > 0 ? (totalPnl / totalCost * 100).toFixed(2) : 0;
 
-        // 今日盈亏：当前值 - 昨天值
-        // history 最后一个如果是今天，那么倒数第二个就是昨天。
-        // 如果 history 包含今天（即 history[last].day === state.day），那么
-        // 今日盈亏 = history[last].value - history[last-1].value
-        // 可是 ui 是实时显示的，marketPrices 是当前的。
-        // 如果 market.js 在 updateMarket 之后立即 push 了 history，那么 history[last] 的 value 应该等于 totalValue (大致)
+        const pnlLabel = this.chartViewMode === 'weekly' ? I18n.t('ui.assets.weeklyPnl') : I18n.t('ui.assets.todayPnl');
 
         let todayPnl = 0;
         let todayPnlPercent = 0;
-
-        if (displayHistory.length >= 2) {
-            const last = displayHistory[displayHistory.length - 1];
-            const prev = displayHistory[displayHistory.length - 2];
-            todayPnl = last.value - prev.value;
-            todayPnlPercent = prev.value > 0 ? (todayPnl / prev.value * 100).toFixed(2) : 0;
-        } else if (displayHistory.length === 1) {
-            // 只有一天数据，今日盈亏 = 总盈亏 (假设初始为0)
-            todayPnl = totalPnl;
-            todayPnlPercent = totalPnlPercent;
+        // 动态盈亏计算逻辑
+        if (this.chartViewMode === 'weekly') {
+            // 周视图：显示本周（或当前采样周期）的变化
+            // displayHistory 是已经按周（4天）采样过的数据
+            if (displayHistory.length >= 2) {
+                const last = displayHistory[displayHistory.length - 1];
+                const prev = displayHistory[displayHistory.length - 2];
+                todayPnl = last.value - prev.value;
+                todayPnlPercent = prev.value > 0 ? (todayPnl / prev.value * 100).toFixed(2) : 0;
+            } else {
+                // 数据不足一周，回退到总盈亏或0
+                todayPnl = totalPnl;
+                todayPnlPercent = totalPnlPercent;
+            }
+        } else {
+            // 日视图：显示今日变化 (始终取最后两天，忽略 displayHistory 的裁剪，因为它可能只取了最后5天)
+            // 使用完整 history 计算今日变化，以确保准确性
+            if (history.length >= 2) {
+                const last = history[history.length - 1];
+                const prev = history[history.length - 2];
+                todayPnl = last.value - prev.value;
+                todayPnlPercent = prev.value > 0 ? (todayPnl / prev.value * 100).toFixed(2) : 0;
+            } else {
+                todayPnl = totalPnl;
+                todayPnlPercent = totalPnlPercent;
+            }
         }
 
         const summaryCard = document.createElement('div');
@@ -5079,7 +5096,10 @@ export const UI = {
                 <div style="display:flex; align-items:center; gap:8px;">
                     <div class="chart-view-toggle">
                         <button class="chart-toggle-btn ${this.chartViewMode === 'daily' ? 'active' : ''}" data-mode="daily">${I18n.t('ui.assets.chartDaily')}</button>
-                        <button class="chart-toggle-btn ${this.chartViewMode === 'weekly' ? 'active' : ''}" data-mode="weekly">${I18n.t('ui.assets.chartWeekly')}</button>
+                        <button class="chart-toggle-btn ${this.chartViewMode === 'weekly' ? 'active' : ''}" data-mode="weekly" 
+                                ${!canSwitchToWeekly ? 'disabled style="opacity:0.5;cursor:not-allowed;" title="' + (I18n.t('ui.assets.needMoreData') || '需积累更多数据') + '"' : ''}>
+                                ${I18n.t('ui.assets.chartWeekly')}
+                        </button>
                     </div>
                     <div class="watchlist-total">
                         <span style="font-size:0.9em; color:var(--color-text-secondary);">${I18n.t('ui_static.assets_page.total_assets_label')}:</span>
@@ -5094,7 +5114,7 @@ export const UI = {
             
             <div class="watchlist-pnl">
                 <div class="pnl-item">
-                    <span class="pnl-label">${I18n.t('ui.assets.todayPnl')}</span>
+                    <span class="pnl-label">${pnlLabel}</span>
                     <span class="pnl-value ${todayPnl >= 0 ? 'profit' : 'loss'}">
                         ${todayPnl >= 0 ? '+' : ''}$${todayPnl.toFixed(2)} 
                         <span style="font-size:0.8em">(${todayPnl >= 0 ? '+' : ''}${todayPnlPercent}%)</span>

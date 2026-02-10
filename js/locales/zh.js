@@ -1202,7 +1202,11 @@ export const zh = {
             noWatchlist: '暂无自选资产<br>请在其他分类中点击星号收藏',
             noHistory: '暂无足够历史数据',
             chartDaily: '日',
-            chartWeekly: '周'
+            chartWeekly: '周',
+            todayPnl: '今日盈亏',
+            weeklyPnl: '本周盈亏',
+            totalPnl: '累计盈亏',
+            needMoreData: '需积累更多数据',
         },
 
 
