@@ -76,7 +76,7 @@ export const initialState = {
     sleptWell: true,        // 昨晚是否睡好
 
     // V2.1 新增属性
-    socialValue: 50,        // 社交值 0-100
+    socialValue: 80,        // 社交值 0-100
     maxSocialValue: 100,    // 社交值上限
     healthStatus: 'normal', // 健康状态: normal/cold/sick/critical
     consecutiveFastFood: 0, // 连续吃快餐天数
