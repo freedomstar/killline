@@ -1063,7 +1063,8 @@ const enMoreOverrides = {
             money: 'Final Savings',
             housing: 'Final Housing',
             job: 'Job Status',
-            energy: 'Final Energy'
+            energy: 'Final Energy',
+            debt: 'Final Debt',
         }
     },
 

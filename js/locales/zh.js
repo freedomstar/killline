@@ -1020,6 +1020,7 @@ export const zh = {
             housing: '最终住所',
             job: '工作状态',
             energy: '最终精力',
+            debt: '最终负债',
         },
     },
 

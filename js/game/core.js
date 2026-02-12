@@ -203,7 +203,8 @@ export class Game {
             isLowEnergy: state.energy < GameData.energyConfig.lowEnergyThreshold,
             dailyFinancialReport: state.dailyFinancialReport || [], // 暴露给 UI (V2.4)
             workTask: state.workTask, // V2.7 工作任务
-            daysUntilInsurance: state.daysUntilInsurance // 保险账单倒计时
+            daysUntilInsurance: state.daysUntilInsurance, // 保险账单倒计时
+            debt: this.formatMoney(state.debt || 0) // V2.XX 负债
         };
     }
 

@@ -4207,11 +4207,15 @@ export const UI = {
                 <span class="stat-value">${finalStats.day} ${I18n.t('ui_static.finance.wait')}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">${I18n.t('ui_static.ending_stats.money')}</span>
-                <span class="stat-value">${finalStats.money}</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">${I18n.t('ui_static.ending_stats.housing')}</span>
+            <span class="stat-label">${I18n.t('ui_static.ending_stats.money')}</span>
+            <span class="stat-value">${finalStats.money}</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">${I18n.t('ui_static.ending_stats.debt')}</span>
+            <span class="stat-value" style="color: var(--color-danger, #ff4d4f);">${finalStats.debt}</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">${I18n.t('ui_static.ending_stats.housing')}</span>
                 <span class="stat-value">${finalStats.housing}</span>
             </div>
             <div class="stat-row">
