@@ -30,7 +30,7 @@ export const artifactConfig = {
     // 卖血流 (Risk/Reward)
     gopro_camera: {
         healthLossReward: 50,
-        medicalCostMultiplier: 1.2 // +50%
+        medicalCostMultiplier: 2.0,
     },
 
     // 欧皇流 (Luck)

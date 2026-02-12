@@ -498,7 +498,7 @@ export const zh = {
             },
             gopro_camera: {
                 name: '运动相机',
-                description: '记录你的每一次受伤。每次损失健康时获得 ${0}。医疗费用 x{1}倍。',
+                description: '记录你的每一次受伤。每次损失健康时获得 ${0}。',
             },
             lucky_ring: {
                 name: '幸运戒指',
@@ -671,7 +671,6 @@ export const zh = {
 
             gig_cap: (bonus) => `🧢 奋斗者之帽：+$${bonus}`,
             gopro_camera: (reward) => `📹 运动相机：受伤赚钱 +$${reward}`,
-            gopro_camera_medical: '📹 运动相机：医疗费用增加',
             bull_plushie: (percent) => `🐂 牛市公仔：收益 +${percent}%`,
             blood_contract: '📝 卖血契约：收益翻倍',
             grinder_tie: (mental) => `👔 奋斗逼领带：精神 +${mental}`,

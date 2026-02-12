@@ -3,6 +3,7 @@
  */
 import { GameData } from '../data/index.js';
 import { I18n } from '../i18n.js';
+import { processArtifactReactions } from '../data/artifacts.js';
 
 /**
  * 日常效果相关方法的 Mixin
@@ -140,32 +141,70 @@ export const EffectsMixin = {
 
         if (social <= config.criticalThreshold) {
             // Social Death Phase: Critical Chain Reaction
-            // 1. Health Collapse (Ignoring self)
             const healthPen = config.criticalHealthPen;
-            this.state.health = Math.max(0, this.state.health - healthPen);
-
-            // 2. Mental Collapse (Total isolation)
             const mentalPen = config.criticalMentalPen;
-            this.state.mental = Math.max(0, this.state.mental - mentalPen);
+            const workPen = config.criticalWorkPen;
+
+            // V2.XX: 使用 processArtifactReactions 处理健康和精神损失
+            const res = processArtifactReactions(this.state, {
+                health: -healthPen,
+                mental: -mentalPen
+            }, 'social_death');
+
+            const actualHealthLoss = Math.abs(res.totalDelta.health || -healthPen);
+            const actualMentalLoss = Math.abs(res.totalDelta.mental || -mentalPen);
 
             // 3. Career Suicide (Social Anxiety leading to poor performance)
-            const workPen = config.criticalWorkPen;
             if (!this.state.workEfficiency) this.state.workEfficiency = 100;
             this.state.workEfficiency = Math.max(0, this.state.workEfficiency - workPen);
 
             // Log events
-            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.socialDeath', args: [healthPen, mentalPen], fallback: I18n.t('game.finance.socialDeath', healthPen, mentalPen) });
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.socialDeath', args: [actualHealthLoss, actualMentalLoss], fallback: I18n.t('game.finance.socialDeath', actualHealthLoss, actualMentalLoss) });
             this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.socialJobImpact', args: [workPen], fallback: I18n.t('game.finance.socialJobImpact', workPen) });
 
+            // 记录神器的联动消息
+            if (res.logs) {
+                res.logs.forEach(log => {
+                    this.pushDailyReport && this.pushDailyReport({ text: log });
+                });
+            }
+
             console.log(`[Social] CRITICAL: Social value ${social}. Triggering chain reaction.`);
+
+            // UI 反馈
+            if (res.layers && res.layers.length > 0 && window.UI && window.UI.showChainedArtifactEffects) {
+                window.UI.showChainedArtifactEffects(res.layers, 500);
+            }
+            if (res.totalDelta && window.UI && window.UI.triggerAttributeShake) {
+                window.UI.triggerAttributeShake(res.totalDelta);
+            }
 
         } else if (social < config.warningThreshold) {
             // Isolation Phase: Warning
             const mentalPen = social < 10 ? config.warningSevereMentalPen : config.warningMentalPen;
-            this.state.mental = Math.max(0, this.state.mental - mentalPen);
 
-            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.socialIsolation', args: [mentalPen], fallback: I18n.t('game.finance.socialIsolation', mentalPen) });
+            // V2.XX: 使用 processArtifactReactions 处理精神损失
+            const res = processArtifactReactions(this.state, { mental: -mentalPen }, 'social_isolation');
+            const actualMentalLoss = Math.abs(res.totalDelta.mental || -mentalPen);
+
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.socialIsolation', args: [actualMentalLoss], fallback: I18n.t('game.finance.socialIsolation', actualMentalLoss) });
+
+            // 记录神器的联动消息
+            if (res.logs) {
+                res.logs.forEach(log => {
+                    this.pushDailyReport && this.pushDailyReport({ text: log });
+                });
+            }
+
             console.log(`[Social] Warning: Social value ${social}. Isolation penalty applied.`);
+
+            // UI 反馈
+            if (res.layers && res.layers.length > 0 && window.UI && window.UI.showChainedArtifactEffects) {
+                window.UI.showChainedArtifactEffects(res.layers, 500);
+            }
+            if (res.totalDelta && window.UI && window.UI.triggerAttributeShake) {
+                window.UI.triggerAttributeShake(res.totalDelta);
+            }
         }
     }
 };

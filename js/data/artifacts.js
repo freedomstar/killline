@@ -299,7 +299,7 @@ export const artifacts = {
     gopro_camera: {
         id: 'gopro_camera',
         name: () => I18n.t('data.artifacts.gopro_camera.name'),
-        description: () => I18n.t('data.artifacts.gopro_camera.description', artifactConfig.gopro_camera.healthLossReward, artifactConfig.gopro_camera.medicalCostMultiplier),
+        description: () => I18n.t('data.artifacts.gopro_camera.description', artifactConfig.gopro_camera.healthLossReward),
         icon: '📹',
         rarity: 'uncommon',
         // gopro_camera fix
@@ -307,19 +307,8 @@ export const artifacts = {
             if (!delta.health || delta.health >= 0) return null;
             const reward = Math.abs(delta.health) * artifactConfig.gopro_camera.healthLossReward;
             if (reward <= 0) return null;
-            delta.money += reward;
+            delta.money = (delta.money || 0) + reward;
             return { message: I18n.t('game.artifactTriggers.gopro_camera', Math.round(reward * 10) / 10) };
-        },
-        onModifyMult: (state, actionInfo, delta) => {
-            if (!delta.money || delta.money >= 0) return null;
-            const isMedical = actionInfo.type === 'health' || actionInfo.type === 'hospital'
-                || (actionInfo.id && (actionInfo.id.includes('medical') || actionInfo.id.includes('hospital')));
-            if (!isMedical) return null;
-            return {
-                multiplier: artifactConfig.gopro_camera.medicalCostMultiplier,
-                appliesTo: 'negative',
-                message: I18n.t('game.artifactTriggers.gopro_camera_medical')
-            };
         }
     },
 
@@ -354,7 +343,7 @@ export const artifacts = {
         rarity: 'uncommon',
         onModifyBase: (delta) => {
             if (!delta.energy || delta.energy >= 0) return null;
-            delta.money += artifactConfig.gig_cap.moneyBonus;
+            delta.money = (delta.money || 0) + artifactConfig.gig_cap.moneyBonus;
             return { message: I18n.t('game.artifactTriggers.gig_cap', artifactConfig.gig_cap.moneyBonus) };
         }
     },
@@ -432,7 +421,7 @@ export const artifacts = {
             if (state.lastWorkChoiceId !== actionInfo.choiceId) return null;
             const extra = state.lastWorkProgressGain || 0;
             if (extra <= 0) return null;
-            delta.workProgress += extra;
+            delta.workProgress = (delta.workProgress || 0) + extra;
             return { message: I18n.t('game.artifactTriggers.jammed_copier', Math.round(extra * 10) / 10) };
         }
     },
@@ -497,7 +486,7 @@ export const artifacts = {
             const isWork = actionInfo.type === 'work' || actionInfo.id === 'day_work';
             if (isWork && delta.workProgress > 0) {
                 const bonus = artifactConfig.neural_chip.workProgressBonus;
-                delta.workProgress += bonus;
+                delta.workProgress = (delta.workProgress || 0) + bonus;
                 return { message: I18n.t('game.artifactTriggers.neural_chip', bonus) };
             }
             return null;

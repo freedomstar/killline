@@ -4,7 +4,7 @@
 import { GameData } from '../data/index.js';
 import { EventManager as GameEvents, rentIncreaseBonusEvent } from '../events/index.js';
 import { I18n } from '../i18n.js';
-import { getArtifact } from '../data/artifacts.js';
+import { getArtifact, processArtifactReactions } from '../data/artifacts.js';
 
 /**
  * 时间相关方法的 Mixin
@@ -711,18 +711,36 @@ export const TimeMixin = {
 
         if (this.state.energy < lowEnergyThreshold) {
             let healthPenalty = 2; // 轻微过度劳累
-            let penaltyMsg = I18n.t('game.finance.chronicFatigue', healthPenalty);
             let penaltyKey = 'game.finance.chronicFatigue';
 
             if (this.state.energy < 10) {
                 healthPenalty += 3; // 严重过度劳累 (total 5)
-                penaltyMsg = I18n.t('game.finance.severeOverwork', healthPenalty);
                 penaltyKey = 'game.finance.severeOverwork';
             }
 
-            this.state.health = Math.max(0, this.state.health - healthPenalty);
-            this.pushDailyReport && this.pushDailyReport({ key: penaltyKey, args: [healthPenalty], fallback: penaltyMsg });
+            // V2.XX: 使用 processArtifactReactions 以便触发 GoPro 等神器的响应
+            const res = processArtifactReactions(this.state, { health: -healthPenalty }, 'chronic_fatigue');
+            const actualHealthLoss = Math.abs(res.totalDelta.health || -healthPenalty);
+            const penaltyMsg = I18n.t(penaltyKey, actualHealthLoss);
+
+            this.pushDailyReport && this.pushDailyReport({ key: penaltyKey, args: [actualHealthLoss], fallback: penaltyMsg });
+
+            // 记录神器的联动消息
+            if (res.logs) {
+                res.logs.forEach(log => {
+                    this.pushDailyReport && this.pushDailyReport({ text: log });
+                });
+            }
+
             console.log(`[Game] ${penaltyMsg}`);
+
+            // 触发 UI 反馈 (神器连锁与属性抖动)
+            if (res.layers && res.layers.length > 0 && window.UI && window.UI.showChainedArtifactEffects) {
+                window.UI.showChainedArtifactEffects(res.layers, 500);
+            }
+            if (res.totalDelta && window.UI && window.UI.triggerAttributeShake) {
+                window.UI.triggerAttributeShake(res.totalDelta);
+            }
         }
 
         // 应用待处理的精力变化（熬夜等）
@@ -756,8 +774,26 @@ export const TimeMixin = {
                 GameData.sicknessConfig.waitingDeteriorationMin,
                 GameData.sicknessConfig.waitingDeteriorationMax
             );
-            this.state.health -= deterioration;
-            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.waitingForDoctor', args: [deterioration], fallback: `⏳ 等待医生中: 健康 -${deterioration}` });
+
+            // V2.XX: 使用 processArtifactReactions
+            const res = processArtifactReactions(this.state, { health: -deterioration }, 'waiting_doctor');
+            const actualLoss = Math.abs(res.totalDelta.health || -deterioration);
+
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.waitingForDoctor', args: [actualLoss], fallback: `⏳ 等待医生中: 健康 -${actualLoss}` });
+
+            // 记录神器的联动消息
+            if (res.logs) {
+                res.logs.forEach(log => {
+                    this.pushDailyReport && this.pushDailyReport({ text: log });
+                });
+            }
+
+            if (res.layers && res.layers.length > 0 && window.UI && window.UI.showChainedArtifactEffects) {
+                window.UI.showChainedArtifactEffects(res.layers, 500);
+            }
+            if (res.totalDelta && window.UI && window.UI.triggerAttributeShake) {
+                window.UI.triggerAttributeShake(res.totalDelta);
+            }
 
             if (this.state.insurance.waitingForDoctor <= 0) {
                 this.state.pendingDoctorVisit = true; // 标记次日可看医生
@@ -767,8 +803,26 @@ export const TimeMixin = {
         if (this.state.surgeryApprovalDaysLeft > 0) {
             const conf = GameData.eventConfigs.surgery_required.wait;
             this.state.surgeryApprovalDaysLeft--;
-            this.state.health = Math.max(0, this.state.health - conf.dailyHealthLoss);
-            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.waitingSurgeryApproval', args: [conf.dailyHealthLoss], fallback: `⏳ 等待手术审批: 健康 -${conf.dailyHealthLoss}` });
+
+            // V2.XX: 使用 processArtifactReactions
+            const res = processArtifactReactions(this.state, { health: -conf.dailyHealthLoss }, 'waiting_surgery');
+            const actualLoss = Math.abs(res.totalDelta.health || -conf.dailyHealthLoss);
+
+            this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.waitingSurgeryApproval', args: [actualLoss], fallback: `⏳ 等待手术审批: 健康 -${actualLoss}` });
+
+            // 记录神器的联动消息
+            if (res.logs) {
+                res.logs.forEach(log => {
+                    this.pushDailyReport && this.pushDailyReport({ text: log });
+                });
+            }
+
+            if (res.layers && res.layers.length > 0 && window.UI && window.UI.showChainedArtifactEffects) {
+                window.UI.showChainedArtifactEffects(res.layers, 500);
+            }
+            if (res.totalDelta && window.UI && window.UI.triggerAttributeShake) {
+                window.UI.triggerAttributeShake(res.totalDelta);
+            }
 
             if (this.state.surgeryApprovalDaysLeft <= 0) {
                 this.state.surgeryApprovalPending = true;

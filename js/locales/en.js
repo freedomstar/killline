@@ -828,7 +828,7 @@ const enMoreOverrides = {
             },
             gopro_camera: {
                 name: 'Action Camera',
-                description: 'Monetize every injury. Gain ${0} when losing health. Medical costs x{1}.'
+                description: 'Monetize every injury. Gain ${0} when losing health.'
             },
             gig_cap: {
                 name: 'Hustler Cap',
@@ -2245,7 +2245,7 @@ const enFinalOverrides = {
             quantum_meditation_mat: (amount) => `🧘 Quantum Mat: H +${amount}`,
             streamer_mic: (amount) => `🎤 Streamer Mic: +$${amount}`,
             super_vitamin: (amount) => `💊 Super Vitamin: M +${amount}`,
-            gopro_camera_medical: '[Action Camera] Medical cost increased',
+
             blood_contract: '[Blood Contract] Gains doubled'
         },
         artifactDaily: {

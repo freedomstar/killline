@@ -209,7 +209,7 @@ export const initialState = {
 export const artifactMaxSlots = 3;
 
 export const energyConfig = {
-    lowEnergyThreshold: 30,     // 低精力阈值
+    lowEnergyThreshold: 20,     // 低精力阈值
     lowEnergyPenalty: 0.2,      // 低精力时成功率惩罚 (20%)
     coffeeBoost: 20,            // 咖啡提升精力
     coffeeMentalCost: 5,        // 咖啡降低精神（长期）
