@@ -43,9 +43,7 @@ export const artifactConfig = {
         minEnergy: 1
     },
 
-    side_job_bot: {
-        moneyBonus: 5
-    },
+
 
     gig_cap: {
         moneyBonus: 30

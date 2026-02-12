@@ -363,7 +363,7 @@ const enOverrides = {
             insurancePaid: (amount) => `[Insurance] -$${amount}`
         },
         artifactTriggers: {
-            side_job_bot: (bonus) => `Bot: +$${bonus}`,
+
             piggy_bank: (bonus) => `Piggy: +$${bonus}`,
             golden_parachute: (name, price, proceeds) => `${name} stop-loss @$${price}, recovered $${proceeds}`
         },
@@ -829,10 +829,6 @@ const enMoreOverrides = {
             gopro_camera: {
                 name: 'Action Camera',
                 description: 'Monetize every injury. Gain ${0} when losing health. Medical costs x{1}.'
-            },
-            side_job_bot: {
-                name: 'Side Job Bot',
-                description: 'Whenever you gain money, gain extra +$${0}.'
             },
             gig_cap: {
                 name: 'Hustler Cap',
@@ -2412,6 +2408,7 @@ const enFinalOverrides = {
                 id: 'intro',
                 title: '1. What Are You Playing',
                 content: [
+                    'Goal: Survive for more than 60 days or earn $10,000.',
                     'You play as an ordinary person struggling in a high-cost city: simultaneously battling **bill countdowns**, **health/mental/energy**, **work task pressure**, and **debt interest**. The core of the game is not to "win once", but to avoid being dragged into the "kill chain" by chain reactions.',
                     'If you collapse on any line (money/health/mental/credit/employment), subsequent costs will increase exponentially.'
                 ]

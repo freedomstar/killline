@@ -508,10 +508,7 @@ export const zh = {
                 name: '咖啡点滴',
                 description: '精力锁定 ≥ {0}，永远不会归零透支。',
             },
-            side_job_bot: {
-                name: '副业机器人',
-                description: '每次获得金钱时额外 +$${0}。',
-            },
+
             gig_cap: {
                 name: '奋斗者之帽',
                 description: '所有消耗精力的行动，基础收益 +${0}。',
@@ -671,7 +668,7 @@ export const zh = {
         },
 
         artifactTriggers: {
-            side_job_bot: (bonus) => `🤖 副业机器人：+$${bonus}`,
+
             gig_cap: (bonus) => `🧢 奋斗者之帽：+$${bonus}`,
             gopro_camera: (reward) => `📹 运动相机：受伤赚钱 +$${reward}`,
             gopro_camera_medical: '📹 运动相机：医疗费用增加',
@@ -2385,6 +2382,7 @@ export const zh = {
                 id: 'intro',
                 title: '1. 你在玩什么',
                 content: [
+                    '目的:存活超过60天或者赚够$10000',
                     '你扮演一个在高成本城市里挣扎的普通人：要同时对抗 **账单倒计时**、**健康/精神/精力**、**工作任务压力** 与 **债务利息**。游戏的核心不是"赢一次"，而是避免被连锁反应拖入"斩杀链"。',
                     '如果你在某条线（钱/健康/精神/信用/就业）上崩掉，后续成本会指数级放大。'
                 ]

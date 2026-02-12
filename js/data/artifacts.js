@@ -344,18 +344,7 @@ export const artifacts = {
         rarity: 'common'
     },
 
-    side_job_bot: {
-        id: 'side_job_bot',
-        name: () => I18n.t('data.artifacts.side_job_bot.name'),
-        description: () => I18n.t('data.artifacts.side_job_bot.description', artifactConfig.side_job_bot.moneyBonus),
-        icon: '🤖',
-        rarity: 'common',
-        onModifyBase: (delta) => {
-            if (!delta.money || delta.money <= 0) return null;
-            delta.money += artifactConfig.side_job_bot.moneyBonus;
-            return { message: I18n.t('game.artifactTriggers.side_job_bot', artifactConfig.side_job_bot.moneyBonus) };
-        }
-    },
+
 
     gig_cap: {
         id: 'gig_cap',
