@@ -62,6 +62,11 @@ export class Game {
 
         // V2.7 初始化工作任务
         this.assignNewTask();
+
+        // V2.XX 初始化第一天市场新闻 (确保第一天必有新闻)
+        if (typeof this.triggerMarketNews === 'function') {
+            this.triggerMarketNews();
+        }
     }
 
     /**

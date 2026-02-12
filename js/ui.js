@@ -610,6 +610,138 @@ export const UI = {
         });
     },
 
+    /**
+     * 渲染游戏说明
+     */
+    renderManual() {
+        const container = document.getElementById('manual-content');
+        if (!container) return;
+
+        const manual = I18n.t('manual');
+        if (!manual || typeof manual === 'string') {
+            console.warn('[UI] Manual data not found');
+            return;
+        }
+
+        let html = '';
+
+        // 标题
+        html += `<h1>${manual.title}</h1>`;
+        html += `<p>${manual.subtitle}</p>`;
+
+        // 提示信息
+        if (manual.tips) {
+            html += '<blockquote>';
+            if (manual.tips.rng) {
+                html += `<p>💡 ${manual.tips.rng}</p>`;
+            }
+            if (manual.tips.disclaimer) {
+                html += `<p>⚠️ <strong>${manual.tips.disclaimer}</strong></p>`;
+            }
+            html += '</blockquote>';
+        }
+
+        // 章节
+        if (manual.sections && Array.isArray(manual.sections)) {
+            for (const section of manual.sections) {
+                html += this.renderManualSection(section);
+            }
+        }
+
+        container.innerHTML = html;
+    },
+
+    /**
+     * 渲染单个章节
+     */
+    renderManualSection(section) {
+        let html = `<h2>${section.title}</h2>`;
+
+        // 内容（支持数组或字符串）
+        if (section.content) {
+            if (Array.isArray(section.content)) {
+                for (const p of section.content) {
+                    html += `<p>${this.formatManualText(p)}</p>`;
+                }
+            } else {
+                html += `<p>${this.formatManualText(section.content)}</p>`;
+            }
+        }
+
+        // 列表
+        if (section.list && Array.isArray(section.list)) {
+            html += '<ul>';
+            for (const item of section.list) {
+                html += `<li>${this.formatManualText(item)}</li>`;
+            }
+            html += '</ul>';
+        }
+
+        // 图片
+        if (section.image) {
+            html += `<img src="${section.image.src}" alt="${section.image.alt || ''}" width="${section.image.width || 400}">`;
+        }
+
+        // 多张图片
+        if (section.images && Array.isArray(section.images)) {
+            for (const img of section.images) {
+                html += `<img src="${img.src}" alt="${img.alt || ''}" width="${img.width || 150}">`;
+            }
+        }
+
+        // 第二张图片
+        if (section.image2) {
+            html += `<img src="${section.image2.src}" alt="${section.image2.alt || ''}" width="${section.image2.width || 400}">`;
+        }
+
+        // 子章节
+        if (section.subsections && Array.isArray(section.subsections)) {
+            for (const sub of section.subsections) {
+                html += `<h3>${sub.title}</h3>`;
+                if (sub.content) {
+                    html += `<p>${this.formatManualText(sub.content)}</p>`;
+                }
+                if (sub.list && Array.isArray(sub.list)) {
+                    html += '<ul>';
+                    for (const item of sub.list) {
+                        html += `<li>${this.formatManualText(item)}</li>`;
+                    }
+                    html += '</ul>';
+                }
+                if (sub.image) {
+                    html += `<img src="${sub.image.src}" alt="${sub.image.alt || ''}" width="${sub.image.width || 400}">`;
+                }
+                if (sub.image2) {
+                    html += `<img src="${sub.image2.src}" alt="${sub.image2.alt || ''}" width="${sub.image2.width || 400}">`;
+                }
+                if (sub.note) {
+                    html += `<p class="manual-note"><strong>关键点：</strong>${this.formatManualText(sub.note)}</p>`;
+                }
+            }
+        }
+
+        // 注意事项
+        if (section.note) {
+            html += `<p class="manual-note"><strong>关键点：</strong>${this.formatManualText(section.note)}</p>`;
+        }
+
+        return html;
+    },
+
+    /**
+     * 格式化文本（处理加粗、斜体、代码等）
+     */
+    formatManualText(text) {
+        if (!text) return '';
+        // 处理 **加粗**
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // 处理 *斜体*
+        text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        // 处理 `代码`
+        text = text.replace(/`(.+?)`/g, '<code>$1</code>');
+        return text;
+    },
+
     updateLanguageSwitchLabel() {
         if (!this.elements.languageSwitch) return;
 
@@ -683,6 +815,7 @@ export const UI = {
                 break;
             case 'manual':
                 target = this.elements.manualScreen;
+                this.renderManual(); // 动态渲染游戏说明
                 break;
         }
 
@@ -5184,6 +5317,10 @@ export const UI = {
         const billCard = document.getElementById('monthly-bill-container');
         if (artifactCard) targets.push(artifactCard);
         if (billCard) targets.push(billCard);
+
+        // 顶上跑马灯 (V2.9+)
+        const tickerCard = document.getElementById('news-ticker-container');
+        if (tickerCard) targets.push(tickerCard);
 
         // User requested to remove bottom tab highlights
         // if (tabItems.length > 0) { ... }

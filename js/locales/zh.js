@@ -200,37 +200,35 @@ export const zh = {
 
         // 市场新闻
         marketNews: {
+            ai_breakthrough: { title: '🤖 AI技术重大突破', description: '新一代AI模型性能飙升' },
+            bank_crisis: { title: '🏦 银行业危机蔓延', description: '多家银行面临流动性问题' },
+            crypto_ban: { title: '🚫 某大国宣布禁止加密货币', description: '全球币圈恐慌性抛售' },
+            crypto_etf_approved: { title: '🚀 比特币ETF获批', description: '机构资金涌入加密市场' },
+            defi_hack: { title: '💻 DeFi协议遭黑客攻击', description: '数亿美元资产被盗，币圈震惊' },
+            drug_trial_fail: { title: '🧪 临床试验失败', description: '某明星药企股价腰斩，带崩板块' },
+            election_year: { title: '🗳️ 大选年政策红利', description: '候选人承诺刺激经济，能源与国防受益' },
+            eth_upgrade: { title: '⚡ 以太坊完成重大升级', description: 'Gas费大幅降低' },
+            exchange_hack: { title: '🔓 大型交易所遭黑客攻击', description: '用户资产安全受威胁' },
+            fed_rate_cut: { title: '🏦 美联储宣布降息', description: '货币政策转向宽松' },
+            fed_rate_hike: { title: '🏦 美联储宣布加息', description: '利率上调25个基点' },
+            fda_approval: { title: '💊 新药获FDA批准', description: '生物科技板块迎来重大利好' },
+            geopolitical_tension: { title: '🌍 地缘政治紧张加剧', description: '避险情绪升温' },
+            green_energy: { title: '🌱 新能源法案通过', description: '传统能源股承压' },
+            housing_bubble_burst: { title: '🏠 房地产泡沫破裂', description: '房价暴跌，房贷违约率上升' },
+            inflation_spike: { title: '📊 通胀数据创新高', description: 'CPI同比上涨超预期' },
+            interest_rate_hike: { title: '📈 央行大幅加息', description: '为了抗通胀，借钱变得更贵了' },
+            job_report_strong: { title: '💼 非农就业数据强劲', description: '就业市场持续火热' },
+            market_rally: { title: '🎉 市场情绪乐观', description: '投资者信心高涨，股市全面上涨' },
+            meme_frenzy: { title: '🐕 马X克发X暗示迷因币', description: '迷因币价格暴涨' },
+            oil_discovery: { title: '🛢️ 发现大型油田', description: '能源股集体上涨' },
+            oil_surge: { title: '⛽ OPEC宣布减产', description: '国际油价应声上涨' },
+            pandemic_scare: { title: '🦠 新型病毒预警', description: '全球卫生组织发布警告，生物医药受关注' },
+            peace_agreement: { title: '🕊️ 重大和平协议达成', description: '全球市场欢欣鼓舞' },
+            recession_fear: { title: '📉 经济衰退担忧加剧', description: '多项经济指标走弱' },
+            solana_network_outage: { title: '🔌 Solana网络宕机', description: '工程师正在紧急抢修，交易暂停' },
             tech_earnings_beat: { title: '📈 科技巨头财报超预期', description: '梨子、巨硬季度营收创新高' },
             tech_layoffs: { title: '📉 硅谷爆发大规模裁员潮', description: '多家科技公司宣布裁员万人' },
-            ai_breakthrough: { title: '🤖 AI技术重大突破', description: '新一代AI模型性能飙升' },
-            oil_surge: { title: '⛽ OPEC宣布减产', description: '国际油价应声上涨' },
-            green_energy: { title: '🌱 新能源法案通过', description: '传统能源股承压' },
-            oil_discovery: { title: '🛢️ 发现大型油田', description: '能源股集体上涨' },
-            crypto_etf_approved: { title: '🚀 比特币ETF获批', description: '机构资金涌入加密市场' },
-            crypto_ban: { title: '🚫 某大国宣布禁止加密货币', description: '全球币圈恐慌性抛售' },
-            meme_frenzy: { title: '🐕 马X克发X暗示迷因币', description: '迷因币价格暴涨' },
-            exchange_hack: { title: '🔓 大型交易所遭黑客攻击', description: '用户资产安全受威胁' },
-            eth_upgrade: { title: '⚡ 以太坊完成重大升级', description: 'Gas费大幅降低' },
-            fed_rate_hike: { title: '🏦 美联储宣布加息', description: '利率上调25个基点' },
-            fed_rate_cut: { title: '🏦 美联储宣布降息', description: '货币政策转向宽松' },
-            inflation_spike: { title: '📊 通胀数据创新高', description: 'CPI同比上涨超预期' },
-            geopolitical_tension: { title: '🌍 地缘政治紧张加剧', description: '避险情绪升温' },
-            peace_agreement: { title: '🕊️ 重大和平协议达成', description: '全球市场欢欣鼓舞' },
-            market_rally: { title: '🎉 市场情绪乐观', description: '投资者信心高涨，股市全面上涨' },
-            recession_fear: { title: '📉 经济衰退担忧加剧', description: '多项经济指标走弱' },
-            job_report_strong: { title: '💼 非农就业数据强劲', description: '就业市场持续火热' },
-            bank_crisis: { title: '🏦 银行业危机蔓延', description: '多家银行面临流动性问题' },
-
-            // 新增
-            fda_approval: { title: '💊 新药获FDA批准', description: '生物科技板块迎来重大利好' },
-            drug_trial_fail: { title: '🧪 临床试验失败', description: '某明星药企股价腰斩，带崩板块' },
-            housing_bubble_burst: { title: '🏠 房地产泡沫破裂', description: '房价暴跌，房贷违约率上升' },
-            interest_rate_hike: { title: '📈 央行大幅加息', description: '为了抗通胀，借钱变得更贵了' },
-            solana_network_outage: { title: '🔌 Solana网络宕机', description: '工程师正在紧急抢修，交易暂停' },
-            defi_hack: { title: '💻 DeFi协议遭黑客攻击', description: '数亿美元资产被盗，币圈震惊' },
-            pandemic_scare: { title: '🦠 新型病毒预警', description: '全球卫生组织发布警告，生物医药受关注' },
-            trade_war: { title: '🚢 贸易战升级', description: '关税壁垒提高，全球供应链受阻' },
-            election_year: { title: '🗳️ 大选年政策红利', description: '候选人承诺刺激经济，能源与国防受益' },
+            trade_war: { title: '🚢 贸易战升级', description: '关税壁垒提高，全球供应链受阻' }
         },
 
 
@@ -2369,6 +2367,390 @@ export const zh = {
                 continue: '深夜过去了。',
             },
         },
+    },
+
+    // ========== 游戏说明 ==========
+    manual: {
+        title: 'Killzone Survivor 游戏说明',
+        subtitle: '本说明面向第一次上手的玩家，按"看懂界面 → 完成一天 → 管住债务与状态 → 活下去/翻盘"的顺序讲解。',
+
+        tips: {
+            rng: '本作使用"种子 RNG"驱动随机事件与市场波动；同一种子下的关键随机序列可复现。',
+            disclaimer: '免责声明：本游戏为虚构作品，人物、组织、城市与事件均为虚构；如有雷同，纯属巧合，请勿代入现实。'
+        },
+
+        sections: [
+            {
+                id: 'intro',
+                title: '1. 你在玩什么',
+                content: [
+                    '你扮演一个在高成本城市里挣扎的普通人：要同时对抗 **账单倒计时**、**健康/精神/精力**、**工作任务压力** 与 **债务利息**。游戏的核心不是"赢一次"，而是避免被连锁反应拖入"斩杀链"。',
+                    '如果你在某条线（钱/健康/精神/信用/就业）上崩掉，后续成本会指数级放大。'
+                ]
+            },
+            {
+                id: 'daily_cycle',
+                title: '2. 一天怎么推进（核心循环）',
+                content: '游戏按天推进，但每一天分为多个时段：',
+                list: [
+                    '`白天`：处理工作相关事件，并完成当日的"通勤/午餐/额外行动/突发"选择。',
+                    '`夜晚`：更偏生活与风险（也会出现"预兆/传闻"）。',
+                    '`深夜`：当天收尾，随后进入下一天。'
+                ],
+                note: '事件卡片通常会给出多个选择；你先点选一个选项，界面会更新"预览状态"。部分选择含随机性时，预览会隐藏随机结果（避免剧透）；需要你确认后才真正结算。'
+            },
+            {
+                id: 'time_cycle',
+                title: '2.1 时间与周期（必读）',
+                content: '为了让"账单压力"更强，本作把时间压缩成更短的周期（界面也会用倒计时提醒，你不需要死记硬背）：',
+                list: [
+                    '`4天 = 1周`：用于判定"休息日"等周节律事件（例如 `day % 4 === 0` 的日子通常会被视作休息日）。',
+                    '`10天 = 1个月`：用于房租/保险/水电/发薪等"月度节律"的结算与倒计时。'
+                ],
+                note: '理解方式：你要在很短的 10 天周期里把下一个周期的刚性支出准备好；一旦断档，信用/债务/健康会把你拖进斩杀链。'
+            },
+            {
+                id: 'startup_flow',
+                title: '2.2 开局流程（从标题画面到第1天）',
+                content: '开局流程是一套固定的"跑团初始化"，建议一次性做完：',
+                list: [
+                    '选择存档槽（新开一局/继续游戏）。',
+                    '输入或生成 `种子`（Seed）。不填也行：系统会自动生成并填入，保证后续"开局神器抽取"与本局随机序列一致。',
+                    '选择开局住所（影响月租与每日恢复/加成）。',
+                    '抽取并选择开局神器：从 3 个随机神器里选 1 个作为本局起手。',
+                    '进入游戏后，通常会弹出一次"自动还款设置"引导（建议先设一个较高的保留现金）。'
+                ]
+            },
+            {
+                id: 'main_interface',
+                title: '3. 主界面怎么读',
+                content: '主界面由两部分组成：上方 **仪表盘**（你的当前生存状态），下方 **事件卡片**（你今天要做的事）。',
+                image: {
+                    src: 'assets/images/Explanation/zh/ui_dashboard_light.jpg',
+                    alt: '主界面（白天：通勤+午餐+事件）',
+                    width: 400
+                }
+            },
+            {
+                id: 'core_status',
+                title: '3.1 左侧五条核心状态',
+                list: [
+                    '`精力`：决定你能不能扛住工作与连续事件。',
+                    '`精神`：长期压力累积；归零会直接触发崩溃结局。',
+                    '`健康`：决定你会不会进入"就医/住院/医疗债务"链。',
+                    '`社交`：低社交会持续扣精神，极低时会触发更严重的连锁惩罚。',
+                    '`工作能力`：影响工作收益与风险（如任务推进、绩效压力）。'
+                ]
+            },
+            {
+                id: 'info_cards',
+                title: '3.2 右侧信息卡（住所/工作/神器/便当/账单/月薪）',
+                content: '这些卡片是你"每一天的底座"。尤其建议你常点开：住所、账单、财务详情。',
+                images: [
+                    { src: 'assets/images/Explanation/zh/icon_small_1.jpg', alt: '住所卡片（示例：公寓）', width: 150 },
+                    { src: 'assets/images/Explanation/zh/icon_small_2.jpg', alt: '神器卡片入口（示意）', width: 150 },
+                    { src: 'assets/images/Explanation/zh/ui_mini_status.jpg', alt: '月度账单小卡（倒计时提示）', width: 150 }
+                ]
+            },
+            {
+                id: 'deposit_card',
+                title: '3.3 存款卡（现金/投资/债务一眼看清）',
+                content: '存款卡是你最常用的"决策面板"：现金够不够撑到下个结算点？投资浮盈亏能不能救命？债务是否在滚雪球？',
+                image: {
+                    src: 'assets/images/Explanation/zh/icon_wide_element.jpg',
+                    alt: '存款卡（现金+投资+债务）',
+                    width: 300
+                }
+            },
+            {
+                id: 'housing',
+                title: '4. 住所：睡眠恢复与长期加成',
+                content: '住所卡片入口(示例：公寓)',
+                image: {
+                    src: 'assets/images/Explanation/zh/icon_small_1.jpg',
+                    alt: '住所卡片入口（示例：公寓）',
+                    width: 150
+                },
+                note: '住所会影响：每日精力恢复（睡眠质量）、每日精神/健康加成（长期环境）、房租（固定周期结算）。点击住所卡片可查看详情与更换。',
+                image2: {
+                    src: 'assets/images/Explanation/zh/scene_event_card.jpg',
+                    alt: '住所详情（公寓示例）',
+                    width: 400
+                },
+                subsections: [
+                    {
+                        title: '常见住所（示意，具体以游戏内为准）',
+                        list: [
+                            '`公寓`：较高房租；精力恢复更高，精神加成更好。',
+                            '`廉价房`：成本低，但对精神/健康有长期负面。',
+                            '`车内/流浪`：几乎不花房租，但恢复与加成非常差，容易走向崩盘链。'
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'billing',
+                title: '5. 账单与财务：你最常点开的两个面板',
+                subsections: [
+                    {
+                        title: '5.1 账单详情：未来刚性支出倒计时',
+                        content: '月度账单入口（倒计时提示）',
+                        image: {
+                            src: 'assets/images/Explanation/zh/ui_mini_status.jpg',
+                            alt: '月度账单入口（倒计时提示）',
+                            width: 150
+                        },
+                        note: '账单会按周期结算（房租、保险、水电等）。当你离结算日越来越近时，这里是最直观的风险提示。',
+                        image2: {
+                            src: 'assets/images/Explanation/zh/ui_investment_screen.jpg',
+                            alt: '账单详情（房租/保险/水电与倒计时）',
+                            width: 400
+                        }
+                    },
+                    {
+                        title: '5.2 财务详情：现金/持仓/债务/还款与自动还款',
+                        content: '点击主界面的存款卡片，可进入"财务详情"。这里能：',
+                        list: [
+                            '看清 `可用资金` 与 `持仓市值`',
+                            '查看 `总债务`',
+                            '手动输入金额还款（支持"最大"）'
+                        ],
+                        image: {
+                            src: 'assets/images/Explanation/zh/scene_main_interface.jpg',
+                            alt: '财务详情（现金+持仓+债务+还款）',
+                            width: 400
+                        }
+                    },
+                    {
+                        title: '5.3 自动还款：减少日常操作，但要留安全垫',
+                        content: '自动还款会在每日结束时用"闲置资金"偿还债务；你可以设置：',
+                        list: [
+                            '是否启用',
+                            '`保留现金`：不参与还款的安全垫',
+                            '`每日最大还款额`：控制现金流出速度'
+                        ],
+                        image: {
+                            src: 'assets/images/Explanation/zh/scene_square_icon.jpg',
+                            alt: '自动还款设置（开关/保留现金/每日上限）',
+                            width: 400
+                        },
+                        note: '建议：在不熟悉版本节奏前，先把保留现金设高一点，避免被自动还款抽干现金导致第二天无法吃饭/通勤。'
+                    }
+                ]
+            },
+            {
+                id: 'investment',
+                title: '6. 投资理财：用波动换机会',
+                content: '投资页面提供多资产分类与"自选"汇总；你会看到：',
+                list: [
+                    '市场情绪条（恐慌 → 贪婪）',
+                    '可用资金 / 持仓市值 / 总资产',
+                    '分类标签：`自选`、`黄金/大宗`、`股票/ETF`、`加密货币`',
+                    '综合收益走势图、今日/累计盈亏'
+                ],
+                image: {
+                    src: 'assets/images/Explanation/zh/scene_main_interface.jpg',
+                    alt: '投资页面（基础视图：自选/分类/盈亏）',
+                    width: 400
+                },
+                note: '市场新闻与传闻会影响走势（有时会先出现"传闻"，后续才可能"实锤/辟谣"）。',
+                image2: {
+                    src: 'assets/images/Explanation/zh/ui_dashboard_dark.jpg',
+                    alt: '投资页面（含传闻与走势图示例）',
+                    width: 400
+                }
+            },
+            {
+                id: 'news_system',
+                title: '6.1 新闻系统详解',
+                image: {
+                    src: 'assets/images/Explanation/zh/news.png',
+                    alt: '新闻滚动条示例',
+                    width: 400
+                },
+                content: '点击上方新闻滚动条即可进入市场情报界面。',
+                image2: {
+                    src: 'assets/images/Explanation/zh/news_view.jpg',
+                    alt: '市场情报界面',
+                    width: 400
+                },
+                subsections: [
+                    {
+                        title: '新闻三阶段',
+                        list: [
+                            '**传闻阶段（Rumor）**：夜晚有一定概率生成市场传闻，新闻标题旁会标注【传闻】，传闻阶段只影响市场情绪，不直接影响价格。',
+                            '**实锤阶段（Confirmed）**：传闻生成后 T+2 天自动实锤，实锤后新闻效果会实际作用于资产价格（效果放大 1.4 倍）。',
+                            '**辟谣阶段（Denied）**：非内幕传闻有 50% 概率被辟谣，辟谣后该新闻不产生任何市场影响。内幕消息必定实锤，不会被辟谣。'
+                        ]
+                    },
+                    {
+                        title: '市场反常机制（20% 概率）',
+                        content: '即使新闻实锤，市场也有 **20% 概率走相反方向**。这意味着不要 All in 押注单一新闻方向，保持风险控制。'
+                    },
+                    {
+                        title: '新闻对不同资产的影响',
+                        list: [
+                            '**科技新闻**：影响科技股（Tech Giant）和大盘指数（S&P 500）',
+                            '**能源新闻**：影响能源板块，可能连带影响水电费账单',
+                            '**加密新闻**：影响 BTC、ETH、山寨币等加密货币',
+                            '**宏观新闻**：影响黄金（避险资产）和整体市场情绪',
+                            '**生物医药新闻**：影响生物科技股（Biotech）',
+                            '**房地产新闻**：影响 REITs 等地产投资'
+                        ]
+                    },
+                    {
+                        title: '市场情绪联动',
+                        list: [
+                            '恐慌新闻（负面）→ 风险资产下跌，黄金上涨',
+                            '贪婪新闻（正面）→ 风险资产上涨',
+                            '情绪条显示当前市场整体情绪（-100 恐慌 ~ +100 贪婪）'
+                        ]
+                    },
+                    {
+                        title: '实用策略',
+                        list: [
+                            '**传闻期布局，实锤期收割**：在传闻阶段低价买入，实锤后价格上涨时卖出',
+                            '**分散押注**：不要单一资产满仓，防止辟谣或市场反常',
+                            '**关注黄金**：恐慌情绪高涨时，黄金作为避险资产往往逆势上涨',
+                            '**内幕优先**：获得内幕消息时，可以大胆押注（不会辟谣）',
+                            '**留有余地**：即使是实锤新闻，也要防范 20% 的市场反常概率'
+                        ]
+                    }
+                ],
+                note: '策略提示：投资收益是"波动型救命钱"，别用明天要交房租的钱去赌。市场情绪偏恐慌时，风险资产更容易剧烈下跌；偏贪婪时，回撤也更疼。'
+            },
+            {
+                id: 'insurance',
+                title: '7. 保险：把天价风险变成可控账单',
+                content: '保险页通常包含：',
+                list: [
+                    '`健康保险`：月保费、免赔额进度（Deductible）等',
+                    '`汽车保险`：半险/全险等方案',
+                    '`租客保险`：按月购买/取消'
+                ],
+                image: {
+                    src: 'assets/images/Explanation/zh/scene_purple_theme.jpg',
+                    alt: '保险管理中心（健康/汽车/租客保险）',
+                    width: 400
+                },
+                note: '提示：部分计划变更会"下周期/下月生效"，不要等到出事当日才想起换计划。'
+            },
+            {
+                id: 'artifacts',
+                title: '8. 神器：小特权，但会改变你的决策',
+                content: '神器卡片入口',
+                image: {
+                    src: 'assets/images/Explanation/zh/icon_small_2.jpg',
+                    alt: '神器卡片入口（示意）',
+                    width: 150
+                },
+                note: '神器是对生存节奏的"偏置器"。它们会把你的日常决策从"随便点"变成"有条件地最优"。',
+                subsections: [
+                    {
+                        title: '8.1 槽位与获取方式',
+                        list: [
+                            '槽位上限：`3`（界面里会显示 `当前数量/上限`）。',
+                            '开局：会抽取 3 个随机神器，你选择其中 1 个作为起手。',
+                            '局内：部分事件会奖励神器；如果槽位已满，通常会让你"替换掉一个已有神器"或选择跳过。'
+                        ]
+                    },
+                    {
+                        title: '8.2 神器会在什么时候触发',
+                        content: '不同神器的触发时机不同，但常见包括：',
+                        list: [
+                            '`onInit`：开局装备时触发（决定这局的底层节奏）。',
+                            '`onDaily`：每天早晨触发（更像"日常被动"）。',
+                            '`onStatsChange`：当你的属性发生变化时触发（例如金钱/健康/精神/精力的增减），可能产生连锁反应。'
+                        ],
+                        note: '当发生连锁触发时，你会看到提示逐条弹出，同时主界面的神器槽位可能会发光提示"是谁在起作用"。',
+                        image: {
+                            src: 'assets/images/Explanation/zh/scene_horizontal_view.jpg',
+                            alt: '我的神器（详情弹窗示例）',
+                            width: 400
+                        }
+                    },
+                    {
+                        title: '8.3 槽位满了怎么办（替换策略）',
+                        content: '当槽位已满但又遇到"送你一个新神器"的机会时，常见思路是：',
+                        list: [
+                            '先看新神器的"触发时机"与"约束条件"（例如要求当天不花钱、要求某个属性处于阈值区间）。',
+                            '再看你当前的斩杀风险来自哪条链（健康/债务/工作/社交）。',
+                            '用能直接打断斩杀链的神器，替换掉已经不再提供收益的神器。'
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'endings',
+                title: '9. 常见结局与翻盘目标（避免踩雷）',
+                content: '不同版本的阈值会调整，但大方向一致：',
+                list: [
+                    '`债务螺旋`：债务过高会被利息与刚性支出持续碾压。',
+                    '`健康崩溃`：健康归零，医疗链会把钱与信用撕碎。',
+                    '`精神崩溃`：精神归零直接结束。',
+                    '`破产/流浪`：没钱 + 失业/信用差等组合会触发。',
+                    '`财务自由/存活胜利`：满足存款或存活天数目标。'
+                ],
+                note: '上手阶段优先目标：先把"刚性支出倒计时"记牢（发薪/房租/保险/水电）。现金永远留一段安全垫。不要在精力见底时硬扛连续风险；那是最容易触发连锁的时刻。'
+            },
+            {
+                id: 'log_report',
+                title: '10. 消息日志与日报：追踪你的每一步',
+                content: '游戏会自动记录重要的游戏事件和财务变动，帮助你追踪"发生了什么"。',
+                image: {
+                    src: 'assets/images/Explanation/log.png',
+                    alt: '消息日志按钮',
+                    width: 80
+                },
+                subsections: [
+                    {
+                        title: '10.1 消息日志（历史消息）',
+                        content: '点击界面上的 📜 **历史消息** 按钮（通常位于屏幕右下角或侧边），可以打开消息日志模态框：',
+                        list: [
+                            '**记录内容**：重要事件、神器触发、状态变化、系统提示等',
+                            '**按天分组**：日志按游戏天数分组显示，方便回顾',
+                            '**时段标记**：每条日志会标注发生的时段（白天/夜晚/深夜）',
+                            '**类型标识**：不同类型的消息会有不同的样式（普通/警告/积极等）',
+                            '**内存优化**：只保留最近 2 天的日志，避免信息过载'
+                        ],
+                        note: '使用建议：当你不确定"为什么我的钱变少了"或"这个效果是从哪来的"时，查看日志。神器连锁触发时，日志会逐条显示触发顺序。每日结算后，先扫一眼日志确认没有意外损失。'
+                    },
+                    {
+                        title: '10.2 财务日报（Daily Financial Report）',
+                        content: '每天结算时，系统会生成一份财务日报，汇总当天的收支：',
+                        list: [
+                            '**收入来源**：工资、投资收益、神器奖励等',
+                            '**支出项目**：房租、保险、水电、医疗、通勤、餐饮等',
+                            '**债务变动**：新增债务、自动还款、利息累积等',
+                            '**异常情况**：拒赔、罚款、意外支出等'
+                        ]
+                    },
+                    {
+                        title: '10.3 为什么日志很重要',
+                        content: '在高压力生存游戏中，信息就是生命：',
+                        list: [
+                            '**防止莫名其妙崩盘**：很多时候损失是累积的，日志帮你发现隐藏的成本',
+                            '**验证神器效果**：确认神器是否正确触发，伤害/收益是否符合预期',
+                            '**学习游戏机制**：通过观察日志，理解不同选择的连锁后果',
+                            '**排查问题**：遇到意外结局时，回顾日志找出关键转折点'
+                        ],
+                        note: '记忆技巧：养成习惯——每天推进到夜晚后，先点开 📜 扫一眼今天的日志，确认没有遗漏重要信息再存档。'
+                    }
+                ]
+            },
+            {
+                id: 'quick_start',
+                title: '11. 快速上手（推荐）',
+                list: [
+                    '白天先选通勤：没把握时选更稳的方案。',
+                    '再选午餐策略：能吃便当就别硬吃快餐；健康链很难修。',
+                    '再处理事件选择：先保命（健康/精神/精力）再谈收益。',
+                    '每隔几天点开一次：`账单详情` + `财务详情`，提前安排现金与还款。',
+                    '每天结束时点开 📜 **历史消息**，确认今天的收支和事件没有异常。',
+                    '资金宽裕后再考虑：投资与保险升级。'
+                ]
+            }
+        ]
     },
 
 };

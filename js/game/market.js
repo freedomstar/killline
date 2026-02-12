@@ -174,7 +174,9 @@ export const MarketMixin = {
             shouldClearInsiderFlag = true;
         } else {
             // 2. 60% 几率触发新闻 (使用 RNG)
-            if (!this.state.marketRumorId && this.rng.random() < 0.60) {
+            // V2.XX: 第一天必然有一条新闻
+            const newsChance = this.state.day === 1 ? 1.0 : 0.60;
+            if (!this.state.marketRumorId && this.rng.random() < newsChance) {
                 this.triggerMarketNews();
             }
 

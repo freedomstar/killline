@@ -217,16 +217,35 @@ const enOverrides = {
             critical: { name: 'Critical' }
         },
         marketNews: {
+            ai_breakthrough: { title: 'AI Breakthrough', description: 'Next-gen model capability surges' },
+            bank_crisis: { title: 'Banking Crisis', description: 'Banks face liquidity issues' },
+            crypto_ban: { title: 'Major Country Bans Crypto', description: 'Global panic sell-off in crypto' },
+            crypto_etf_approved: { title: 'Bitcoin ETF Approved', description: 'Institutional funds flood in' },
+            defi_hack: { title: 'DeFi Protocol Hacked', description: 'Large-scale theft shocks crypto market' },
+            drug_trial_fail: { title: 'Clinical Trial Failure', description: 'Flagship biotech stock crashes' },
+            election_year: { title: 'Election-Year Policy Boost', description: 'Stimulus promises lift energy and defense sectors' },
+            eth_upgrade: { title: 'Ethereum Major Upgrade', description: 'Gas fees drop significantly' },
+            exchange_hack: { title: 'Major Exchange Hacked', description: 'User asset security concerns rise' },
+            fed_rate_cut: { title: 'Fed Cuts Rates', description: 'Monetary policy turns looser' },
+            fed_rate_hike: { title: 'Fed Hikes Rates', description: 'Up 25 basis points' },
+            fda_approval: { title: 'FDA Approves Drug', description: 'Biotech sector rallies' },
+            geopolitical_tension: { title: 'Geopolitical Tension Rises', description: 'Risk-off sentiment strengthens' },
+            green_energy: { title: 'Green Energy Bill Passed', description: 'Traditional energy stocks pressured' },
+            housing_bubble_burst: { title: 'Housing Bubble Bursts', description: 'Prices plummet' },
+            inflation_spike: { title: 'Inflation High', description: 'CPI exceeds expectations' },
+            interest_rate_hike: { title: 'Aggressive Rate Hike', description: 'Borrowing gets much more expensive' },
+            job_report_strong: { title: 'Strong Jobs Report', description: 'Labor market remains hot' },
+            market_rally: { title: 'Broad Market Rally', description: 'Investor confidence pushes markets up' },
+            meme_frenzy: { title: 'Meme Coin Frenzy', description: 'Meme token prices spike hard' },
+            oil_discovery: { title: 'Major Oil Field Discovered', description: 'Energy sector rallies' },
+            oil_surge: { title: 'OPEC Cuts', description: 'Oil prices rise' },
+            pandemic_scare: { title: 'Pandemic Alert', description: 'Global health warning boosts biotech attention' },
+            peace_agreement: { title: 'Major Peace Deal', description: 'Global markets cheer' },
+            recession_fear: { title: 'Recession Fears', description: 'Economic indicators weaken' },
+            solana_network_outage: { title: 'Solana Network Outage', description: 'Trading paused during emergency fix' },
             tech_earnings_beat: { title: 'Tech Giants Beat', description: 'Quarterly revenue hits new highs' },
             tech_layoffs: { title: 'Mass Layoffs', description: '10,000+ job cuts announced' },
-            oil_surge: { title: 'OPEC Cuts', description: 'Oil prices rise' },
-            crypto_etf_approved: { title: 'Bitcoin ETF Approved', description: 'Institutional funds flood in' },
-            fed_rate_hike: { title: 'Fed Hikes Rates', description: 'Up 25 basis points' },
-            inflation_spike: { title: 'Inflation High', description: 'CPI exceeds expectations' },
-            recession_fear: { title: 'Recession Fears', description: 'Economic indicators weaken' },
-            bank_crisis: { title: 'Banking Crisis', description: 'Banks face liquidity issues' },
-            fda_approval: { title: 'FDA Approves Drug', description: 'Biotech sector rallies' },
-            housing_bubble_burst: { title: 'Housing Bubble Bursts', description: 'Prices plummet' }
+            trade_war: { title: 'Trade War Escalation', description: 'Tariff barriers disrupt supply chains' }
         },
         commuteOptions: {
             car: { name: 'Drive', hint: (opt) => `Fuel ${opt.fuel || '?'}/${opt.capacity || '?'}` },
@@ -738,27 +757,7 @@ const enMoreOverrides = {
             night: { name: 'Night', description: '18:00 - 08:00' },
             deep_night: { name: 'Late Night', description: '00:00 - 08:00' }
         },
-        marketNews: {
-            ai_breakthrough: { title: 'AI Breakthrough', description: 'Next-gen model capability surges' },
-            green_energy: { title: 'Green Energy Bill Passed', description: 'Traditional energy stocks pressured' },
-            oil_discovery: { title: 'Major Oil Field Discovered', description: 'Energy sector rallies' },
-            crypto_ban: { title: 'Major Country Bans Crypto', description: 'Global panic sell-off in crypto' },
-            meme_frenzy: { title: 'Meme Coin Frenzy', description: 'Meme token prices spike hard' },
-            exchange_hack: { title: 'Major Exchange Hacked', description: 'User asset security concerns rise' },
-            eth_upgrade: { title: 'Ethereum Major Upgrade', description: 'Gas fees drop significantly' },
-            fed_rate_cut: { title: 'Fed Cuts Rates', description: 'Monetary policy turns looser' },
-            geopolitical_tension: { title: 'Geopolitical Tension Rises', description: 'Risk-off sentiment strengthens' },
-            peace_agreement: { title: 'Major Peace Deal', description: 'Global markets cheer' },
-            market_rally: { title: 'Broad Market Rally', description: 'Investor confidence pushes markets up' },
-            job_report_strong: { title: 'Strong Jobs Report', description: 'Labor market remains hot' },
-            drug_trial_fail: { title: 'Clinical Trial Failure', description: 'Flagship biotech stock crashes' },
-            interest_rate_hike: { title: 'Aggressive Rate Hike', description: 'Borrowing gets much more expensive' },
-            solana_network_outage: { title: 'Solana Network Outage', description: 'Trading paused during emergency fix' },
-            defi_hack: { title: 'DeFi Protocol Hacked', description: 'Large-scale theft shocks crypto market' },
-            pandemic_scare: { title: 'Pandemic Alert', description: 'Global health warning boosts biotech attention' },
-            trade_war: { title: 'Trade War Escalation', description: 'Tariff barriers disrupt supply chains' },
-            election_year: { title: 'Election-Year Policy Boost', description: 'Stimulus promises lift energy and defense sectors' }
-        },
+
         lunch_hints: {
             not_prepared: 'No lunch prepared',
             sold_out: 'Sold out today',
@@ -2396,6 +2395,389 @@ const enFinalOverrides = {
         traffic_accident: {
             message: 'Traffic accident! Vehicle damaged and needs repair. Repair -$${0}, Health -{1}, Mental -{2}.'
         }
+    },
+    // ========== Game Manual (English placeholder - TODO: translate) ==========
+    manual: {
+        title: 'Killzone Survivor Game Guide',
+        subtitle: 'This guide is designed for first-time players, following the sequence: "Understand the Interface → Complete a Day → Manage Debt & Status → Survive/Turn Around".',
+
+        tips: {
+            rng: 'This game uses "Seeded RNG" to drive random events and market fluctuations; key random sequences can be reproduced with the same seed.',
+            disclaimer: 'Disclaimer: This game is a work of fiction. All characters, organizations, cities, and events are fictional. Any resemblance is purely coincidental. Please do not interpret it as reality.'
+        },
+
+        sections: [
+            {
+                id: 'intro',
+                title: '1. What Are You Playing',
+                content: [
+                    'You play as an ordinary person struggling in a high-cost city: simultaneously battling **bill countdowns**, **health/mental/energy**, **work task pressure**, and **debt interest**. The core of the game is not to "win once", but to avoid being dragged into the "kill chain" by chain reactions.',
+                    'If you collapse on any line (money/health/mental/credit/employment), subsequent costs will increase exponentially.'
+                ]
+            },
+            {
+                id: 'daily_cycle',
+                title: '2. How a Day Progresses (Core Loop)',
+                content: 'The game progresses by days, but each day is divided into multiple periods:',
+                list: [
+                    '`Daytime`: Handle work-related events and complete daily "commute/lunch/extra action/sudden" choices.',
+                    '`Night`: More focused on life and risk (may also see "omens/rumors").',
+                    '`Late Night`: End of the day, then enter the next day.'
+                ],
+                note: 'Key point: Event cards usually offer multiple choices; you first select an option, and the interface updates with a "preview state". For choices with randomness, the preview hides random results (to avoid spoilers); you need to confirm before actual settlement.'
+            },
+            {
+                id: 'time_cycle',
+                title: '2.1 Time and Cycles (Must Read)',
+                content: 'To make "bill pressure" stronger, this game compresses time into shorter cycles (the interface also uses countdowns to remind you, you don\'t need to memorize):',
+                list: [
+                    '`4 days = 1 week`: Used to determine "rest day" and other weekly rhythm events (e.g., days where `day % 4 === 0` are usually considered rest days).',
+                    '`10 days = 1 month`: Used for rent/insurance/utilities/payday and other "monthly rhythm" settlements and countdowns.'
+                ],
+                note: 'Understanding: You need to prepare for the next cycle\'s fixed expenses within a very short 10-day cycle; once there\'s a gap, credit/debt/health will drag you into the kill chain.'
+            },
+            {
+                id: 'startup_flow',
+                title: '2.2 Startup Flow (From Title Screen to Day 1)',
+                content: 'The startup flow is a fixed "initialization", recommended to complete in one go:',
+                list: [
+                    'Select save slot (new game/continue).',
+                    'Enter or generate `Seed`. Leaving it blank works too: the system will auto-generate and fill it, ensuring subsequent "starting artifact draw" and this game\'s random sequence are consistent.',
+                    'Select starting housing (affects monthly rent and daily recovery/bonuses).',
+                    'Draw and select starting artifact: Choose 1 from 3 random artifacts as your starting hand.',
+                    'After entering the game, an "auto-payment setup" guide usually pops up (recommend setting a higher retained cash first).'
+                ]
+            },
+            {
+                id: 'main_interface',
+                title: '3. How to Read the Main Interface',
+                content: 'The main interface consists of two parts: the **Dashboard** above (your current survival status), and the **Event Cards** below (what you need to do today).',
+                image: {
+                    src: 'assets/images/Explanation/en/ui_dashboard_light.jpg',
+                    alt: 'Main Interface (Daytime: Commute+Lunch+Events)',
+                    width: 400
+                }
+            },
+            {
+                id: 'core_status',
+                title: '3.1 Left Side Five Core Status Bars',
+                list: [
+                    '`Energy`: Determines if you can handle work and consecutive events.',
+                    '`Mental`: Long-term pressure accumulation; reaching zero triggers a breakdown ending.',
+                    '`Health`: Determines if you enter the "medical/hospital/medical debt" chain.',
+                    '`Social`: Low social continuously drains mental; extremely low triggers more severe chain penalties.',
+                    '`Work Ability`: Affects work income and risk (e.g., task progress, performance pressure).'
+                ]
+            },
+            {
+                id: 'info_cards',
+                title: '3.2 Right Side Info Cards (Housing/Job/Artifact/Bento/Bills/Salary)',
+                content: 'These cards are "the foundation of each day". Especially recommend frequently checking: housing, bills, financial details.',
+                images: [
+                    { src: 'assets/images/Explanation/en/icon_small_1.jpg', alt: 'Housing Card (Example: Apartment)', width: 150 },
+                    { src: 'assets/images/Explanation/en/icon_small_2.jpg', alt: 'Artifact Card Entry (Illustration)', width: 150 },
+                    { src: 'assets/images/Explanation/en/ui_mini_status.jpg', alt: 'Monthly Bill Card (Countdown Reminder)', width: 150 }
+                ]
+            },
+            {
+                id: 'deposit_card',
+                title: '3.3 Deposit Card (Cash/Investment/Debt at a Glance)',
+                content: 'The deposit card is your most commonly used "decision panel": Is there enough cash to last until the next settlement? Can investment gains/losses save you? Is debt snowballing?',
+                image: {
+                    src: 'assets/images/Explanation/en/icon_wide_element.jpg',
+                    alt: 'Deposit Card (Cash+Investment+Debt)',
+                    width: 300
+                }
+            },
+            {
+                id: 'housing',
+                title: '4. Housing: Sleep Recovery and Long-term Bonuses',
+                content: 'Housing card entry (example: apartment)',
+                image: {
+                    src: 'assets/images/Explanation/en/icon_small_1.jpg',
+                    alt: 'Housing Card Entry (Example: Apartment)',
+                    width: 150
+                },
+                note: 'Housing affects: daily energy recovery (sleep quality), daily mental/health bonuses (long-term environment), rent (fixed cycle settlement). Click the housing card to view details and change.',
+                image2: {
+                    src: 'assets/images/Explanation/en/scene_event_card.jpg',
+                    alt: 'Housing Details (Apartment Example)',
+                    width: 400
+                },
+                subsections: [
+                    {
+                        title: 'Common Housing (Illustrative, specific values in-game)',
+                        list: [
+                            '`Apartment`: Higher rent; better energy recovery, better mental bonuses.',
+                            '`Cheap Room`: Low cost, but long-term negative effects on mental/health.',
+                            '`Car/Homeless`: Almost no rent, but recovery and bonuses are very poor, easy to slide into the collapse chain.'
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'billing',
+                title: '5. Bills and Finance: Two Panels You\'ll Open Most Often',
+                subsections: [
+                    {
+                        title: '5.1 Bill Details: Future Fixed Expense Countdown',
+                        content: 'Monthly bill entry (countdown reminder)',
+                        image: {
+                            src: 'assets/images/Explanation/en/ui_mini_status.jpg',
+                            alt: 'Monthly Bill Entry (Countdown Reminder)',
+                            width: 150
+                        },
+                        note: 'Bills are settled by cycle (rent, insurance, utilities, etc.). As you get closer to settlement day, this is the most intuitive risk indicator.',
+                        image2: {
+                            src: 'assets/images/Explanation/en/ui_investment_screen.jpg',
+                            alt: 'Bill Details (Rent/Insurance/Utilities and Countdown)',
+                            width: 400
+                        }
+                    },
+                    {
+                        title: '5.2 Financial Details: Cash/Holdings/Debt/Repayment and Auto-payment',
+                        content: 'Click the deposit card on the main interface to enter "Financial Details". Here you can:',
+                        list: [
+                            'See `Available Funds` and `Holdings Value`',
+                            'View `Total Debt`',
+                            'Manually enter amount to repay (supports "Max")'
+                        ],
+                        image: {
+                            src: 'assets/images/Explanation/en/scene_main_interface.jpg',
+                            alt: 'Financial Details (Cash+Holdings+Debt+Repayment)',
+                            width: 400
+                        }
+                    },
+                    {
+                        title: '5.3 Auto-payment: Reduce Daily Operations, But Keep a Safety Cushion',
+                        content: 'Auto-payment uses "idle funds" to repay debt at the end of each day; you can set:',
+                        list: [
+                            'Whether to enable',
+                            '`Retained Cash`: Safety cushion not participating in repayment',
+                            '`Daily Maximum Repayment`: Control cash outflow speed'
+                        ],
+                        image: {
+                            src: 'assets/images/Explanation/en/scene_square_icon.jpg',
+                            alt: 'Auto-payment Settings (On/Off/Retained Cash/Daily Limit)',
+                            width: 400
+                        },
+                        note: 'Suggestion: Before familiarizing with version rhythm, set retained cash higher first to avoid being drained by auto-payment and unable to eat/commute the next day.'
+                    }
+                ]
+            },
+            {
+                id: 'investment',
+                title: '6. Investment and Finance: Exchange Volatility for Opportunity',
+                content: 'The investment page provides multi-asset categories and "watchlist" summary; you will see:',
+                list: [
+                    'Market sentiment bar (Panic → Greed)',
+                    'Available funds / Holdings value / Total assets',
+                    'Category tabs: `Watchlist`, `Gold/Commodities`, `Stocks/ETFs`, `Crypto`',
+                    'Comprehensive return chart, today\'s/cumulative gains/losses'
+                ],
+                image: {
+                    src: 'assets/images/Explanation/en/scene_main_interface.jpg',
+                    alt: 'Investment Page (Basic View: Watchlist/Categories/Gains)',
+                    width: 400
+                },
+                note: 'Market news and rumors affect trends (sometimes "rumors" appear first, then may be "confirmed/debunked" later).',
+                image2: {
+                    src: 'assets/images/Explanation/en/ui_dashboard_dark.jpg',
+                    alt: 'Investment Page (With Rumors and Chart Example)',
+                    width: 400
+                }
+            },
+            {
+                id: 'news_system',
+                title: '6.1 News System Explained',
+                image: {
+                    src: 'assets/images/Explanation/en/news.png',
+                    alt: 'News Ticker Example',
+                    width: 400
+                },
+                content: 'Click the news ticker above to enter the market intel interface.',
+                image2: {
+                    src: 'assets/images/Explanation/en/news_view.jpg',
+                    alt: 'Market Intel Interface',
+                    width: 400
+                },
+                subsections: [
+                    {
+                        title: 'News Three Phases',
+                        list: [
+                            '**Rumor Phase**: Market rumors have a chance to generate at night, news title marked with [Rumor], rumor phase only affects market sentiment, not directly affecting prices.',
+                            '**Confirmed Phase**: Rumors auto-confirm T+2 days after generation, confirmed news effects actually apply to asset prices (effect amplified 1.4x).',
+                            '**Debunked Phase**: Non-insider rumors have 50% chance to be debunked, debunked news produces no market effect. Insider tips always confirm, never debunk.'
+                        ]
+                    },
+                    {
+                        title: 'Market Defiance Mechanism (20% Chance)',
+                        content: 'Even when news is confirmed, market has **20% chance to move in opposite direction**. This means don\'t All-in on single news direction, maintain risk control.'
+                    },
+                    {
+                        title: 'News Impact on Different Assets',
+                        list: [
+                            '**Tech News**: Affects tech stocks (Tech Giant) and broad index (S&P 500)',
+                            '**Energy News**: Affects energy sector, may also affect utility bills',
+                            '**Crypto News**: Affects BTC, ETH, altcoins and other cryptocurrencies',
+                            '**Macro News**: Affects gold (safe haven) and overall market sentiment',
+                            '**Biotech News**: Affects biotech stocks (Biotech)',
+                            '**Real Estate News**: Affects REITs and other real estate investments'
+                        ]
+                    },
+                    {
+                        title: 'Market Sentiment Correlation',
+                        list: [
+                            'Panic news (negative) → Risk assets fall, gold rises',
+                            'Greed news (positive) → Risk assets rise',
+                            'Sentiment bar shows current overall market sentiment (-100 Panic ~ +100 Greed)'
+                        ]
+                    },
+                    {
+                        title: 'Practical Strategies',
+                        list: [
+                            '**Position during rumor, harvest at confirmation**: Buy low during rumor phase, sell when price rises after confirmation',
+                            '**Diversify bets**: Don\'t go all-in on single asset, prevent debunking or market defiance',
+                            '**Watch gold**: When panic sentiment is high, gold as safe haven often rises against the trend',
+                            '**Prioritize insider**: When getting insider tips, can bet boldly (won\'t be debunked)',
+                            '**Leave room**: Even with confirmed news, guard against 20% market defiance chance'
+                        ]
+                    }
+                ],
+                note: 'Strategy tip: Investment returns are "volatile emergency money", don\'t gamble with tomorrow\'s rent money. When market sentiment leans panic, risk assets are more prone to sharp drops; when leaning greedy, pullbacks hurt more.'
+            },
+            {
+                id: 'insurance',
+                title: '7. Insurance: Turn Sky-high Risks into Manageable Bills',
+                content: 'The insurance page usually includes:',
+                list: [
+                    '`Health Insurance`: Monthly premium, deductible progress, etc.',
+                    '`Car Insurance`: Liability/Full coverage options',
+                    '`Renters Insurance`: Purchase/cancel monthly'
+                ],
+                image: {
+                    src: 'assets/images/Explanation/en/scene_purple_theme.jpg',
+                    alt: 'Insurance Center (Health/Car/Renters Insurance)',
+                    width: 400
+                },
+                note: 'Tip: Some plan changes take effect "next cycle/next month", don\'t wait until the day of incident to remember changing plans.'
+            },
+            {
+                id: 'artifacts',
+                title: '8. Artifacts: Small Privileges, But They Change Your Decisions',
+                content: 'Artifact card entry',
+                image: {
+                    src: 'assets/images/Explanation/en/icon_small_2.jpg',
+                    alt: 'Artifact Card Entry (Illustration)',
+                    width: 150
+                },
+                note: 'Artifacts are "biasers" for survival rhythm. They will shift your daily decisions from "random clicks" to "conditionally optimal".',
+                subsections: [
+                    {
+                        title: '8.1 Slots and Acquisition',
+                        list: [
+                            'Slot limit: `3` (interface shows `current/limit`).',
+                            'Starting: Draw 3 random artifacts, choose 1 as your starting hand.',
+                            'In-game: Some events reward artifacts; if slots are full, usually let you "replace an existing artifact" or skip.'
+                        ]
+                    },
+                    {
+                        title: '8.2 When Do Artifacts Trigger',
+                        content: 'Different artifacts trigger at different times, but common ones include:',
+                        list: [
+                            '`onInit`: Triggers when equipped at start (determines this run\'s underlying rhythm).',
+                            '`onDaily`: Triggers every morning (more like "daily passive").',
+                            '`onStatsChange`: Triggers when your attributes change (e.g., money/health/mental/energy gains/losses), may produce chain reactions.'
+                        ],
+                        note: 'When chain triggers occur, you\'ll see prompts pop up one by one, and the artifact slot on the main interface may glow to indicate "who is acting".',
+                        image: {
+                            src: 'assets/images/Explanation/en/scene_horizontal_view.jpg',
+                            alt: 'My Artifacts (Detail Popup Example)',
+                            width: 400
+                        }
+                    },
+                    {
+                        title: '8.3 What to Do When Slots Are Full (Replacement Strategy)',
+                        content: 'When slots are full but you encounter an opportunity to "get a new artifact", common thinking is:',
+                        list: [
+                            'First look at the new artifact\'s "trigger timing" and "constraints" (e.g., requires no spending that day, requires certain attribute in threshold range).',
+                            'Then look at where your current kill risk comes from (health/debt/work/social).',
+                            'Replace an artifact that no longer provides benefit with one that can directly break the kill chain.'
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'endings',
+                title: '9. Common Endings and Turnaround Goals (Avoid Pitfalls)',
+                content: 'Different versions may adjust thresholds, but the general direction is the same:',
+                list: [
+                    '`Debt Spiral`: High debt gets continuously crushed by interest and fixed expenses.',
+                    '`Health Collapse`: Health reaches zero, medical chain tears apart money and credit.',
+                    '`Mental Breakdown`: Mental reaches zero, game ends directly.',
+                    '`Bankruptcy/Homeless`: No money + unemployed/bad credit combination triggers.',
+                    '`Financial Freedom/Survival Victory`: Meet savings or survival days goal.'
+                ],
+                note: 'Beginner priority goals: First memorize "fixed expense countdowns" (payday/rent/insurance/utilities). Always keep a cash safety cushion. Don\'t tough out consecutive risks when energy is bottomed out; that\'s when chain reactions are most easily triggered.'
+            },
+            {
+                id: 'log_report',
+                title: '10. Message Log and Daily Report: Track Your Every Step',
+                content: 'The game automatically records important game events and financial changes, helping you track "what happened".',
+                image: {
+                    src: 'assets/images/Explanation/log.png',
+                    alt: 'Message Log Button',
+                    width: 80
+                },
+                subsections: [
+                    {
+                        title: '10.1 Message Log (History)',
+                        content: 'Click the 📜 **History** button on the interface (usually at bottom right or side) to open the message log modal:',
+                        list: [
+                            '**Record Content**: Important events, artifact triggers, status changes, system prompts, etc.',
+                            '**Grouped by Day**: Log displays grouped by game day for easy review',
+                            '**Period Markers**: Each log entry notes the period (day/night/late night)',
+                            '**Type Indicators**: Different message types have different styles (normal/warning/positive, etc.)',
+                            '**Memory Optimization**: Only keeps last 2 days of logs to avoid information overload'
+                        ],
+                        note: 'Usage tip: When unsure "why my money decreased" or "where did this effect come from", check the log. When artifact chain triggers, log shows trigger sequence. After daily settlement, scan the log to confirm no unexpected losses.'
+                    },
+                    {
+                        title: '10.2 Daily Financial Report',
+                        content: 'At each day\'s settlement, the system generates a financial report summarizing the day\'s income and expenses:',
+                        list: [
+                            '**Income Sources**: Salary, investment gains, artifact rewards, etc.',
+                            '**Expense Items**: Rent, insurance, utilities, medical, commute, meals, etc.',
+                            '**Debt Changes**: New debt, auto-payment, interest accumulation, etc.',
+                            '**Exceptions**: Claim denials, fines, unexpected expenses, etc.'
+                        ]
+                    },
+                    {
+                        title: '10.3 Why Logs Are Important',
+                        content: 'In high-pressure survival games, information is life:',
+                        list: [
+                            '**Prevent mysterious collapse**: Often losses are cumulative, logs help discover hidden costs',
+                            '**Verify artifact effects**: Confirm artifacts trigger correctly, damage/gains match expectations',
+                            '**Learn game mechanics**: Observe logs to understand chain consequences of different choices',
+                            '**Troubleshoot issues**: When encountering unexpected endings, review logs to find key turning points'
+                        ],
+                        note: 'Memory trick: Make it a habit - after progressing to night each day, first click 📜 to scan today\'s log, confirm no missed important info before saving.'
+                    }
+                ]
+            },
+            {
+                id: 'quick_start',
+                title: '11. Quick Start (Recommended)',
+                list: [
+                    'Daytime first choose commute: When unsure, choose the safer option.',
+                    'Then choose lunch strategy: Eat bento if possible, don\'t force fast food; health chain is hard to repair.',
+                    'Then handle event choices: First survive (health/mental/energy) then talk about gains.',
+                    'Every few days open: `Bill Details` + `Financial Details`, arrange cash and repayment in advance.',
+                    'At end of each day click 📜 **History**, confirm today\'s income/expenses and events have no anomalies.',
+                    'After funds are comfortable, then consider: investment and insurance upgrades.'
+                ]
+            }
+        ]
     }
 };
 
