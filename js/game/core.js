@@ -142,7 +142,6 @@ export class Game {
             this.state.money = 0;
         }
         this.state.money = Math.max(0, this.state.money);
-        this.state.creditScore = Math.max(300, Math.min(850, this.state.creditScore));
     }
 
     /**

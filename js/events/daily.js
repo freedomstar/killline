@@ -405,15 +405,8 @@ export const dailyEvents = [
                 hint: (state) => {
                     const conf = GameData.eventConfigs.afternoon_interview.tryHard;
 
-                    if (state.housing === 'homeless') {
-                        return I18n.t('events.afternoon_interview.choices.tryHard.hint_homeless', conf.energyCost);
-                    }
-
                     const energyConf = GameData.energyConfig;
                     let energyRate = 1.0;
-                    // if (state.energy < energyConf.lowEnergyThreshold) {
-                    //     energyRate -= energyConf.lowEnergyPenalty;
-                    // }
                     energyRate = Math.max(0.1, energyRate);
 
                     const efficiency = state.workEfficiency || 100;
@@ -422,6 +415,7 @@ export const dailyEvents = [
 
                     let effectiveRate = baseRate * energyRate;
                     if (state.housing === 'car') effectiveRate *= 0.5;
+                    if (state.housing === 'homeless') effectiveRate *= conf.homelessRateMultiplier;
 
                     const social = state.socialValue || 50;
                     let socialBonus = 0;
@@ -429,7 +423,13 @@ export const dailyEvents = [
                     else if (social >= 50) socialBonus = conf.socialBonusMid;
                     else if (social < 30) socialBonus = conf.socialBonusLow;
 
-                    const finalRate = Math.min(conf.maxSuccessRate, Math.max(conf.minSuccessRate, effectiveRate + socialBonus));
+                    // 保底值也受社交值影响（高社交保底更高，低社交保底更低）
+                    const adjustedMinRate = Math.max(0.05, Math.min(conf.maxSuccessRate, conf.minSuccessRate + socialBonus));
+                    const finalRate = Math.min(conf.maxSuccessRate, Math.max(adjustedMinRate, effectiveRate + socialBonus));
+
+                    if (state.housing === 'homeless') {
+                        return I18n.t('events.afternoon_interview.choices.tryHard.hint_homeless', conf.energyCost, Math.round(finalRate * 100));
+                    }
 
                     return I18n.t(
                         'events.afternoon_interview.choices.tryHard.hint',
@@ -445,16 +445,13 @@ export const dailyEvents = [
                     const conf = GameData.eventConfigs.afternoon_interview.tryHard;
                     state.energy = Math.max(0, state.energy - conf.energyCost);
 
-                    if (state.housing === 'homeless') {
-                        return { message: I18n.t('events.afternoon_interview.messages.homelessReject'), type: 'negative' };
-                    }
-
                     const successRate = context.successRate || 0.5;
                     const efficiency = state.workEfficiency || 100;
                     const efficiencyBonus = (efficiency - 100) * conf.efficiencyBonusPerPoint;
                     const baseRate = Math.min(conf.maxSuccessRate, Math.max(conf.minSuccessRate, conf.baseSuccessRate + efficiencyBonus));
                     let effectiveRate = baseRate * successRate;
                     if (state.housing === 'car') effectiveRate *= 0.5;
+                    if (state.housing === 'homeless') effectiveRate *= conf.homelessRateMultiplier;
 
                     const social = state.socialValue || 50;
                     let socialBonus = 0;
@@ -462,16 +459,28 @@ export const dailyEvents = [
                     else if (social >= 50) socialBonus = conf.socialBonusMid;
                     else if (social < 30) socialBonus = conf.socialBonusLow;
 
-                    const finalRate = Math.min(conf.maxSuccessRate, Math.max(conf.minSuccessRate, effectiveRate + socialBonus));
+                    // 保底值也受社交值影响（高社交保底更高，低社交保底更低）
+                    const adjustedMinRate = Math.max(0.05, Math.min(conf.maxSuccessRate, conf.minSuccessRate + socialBonus));
+                    const finalRate = Math.min(conf.maxSuccessRate, Math.max(adjustedMinRate, effectiveRate + socialBonus));
                     if (context.rng.random() < finalRate) {
                         state.job = 'fulltime';
                         state.jobTenure = 0;
-                        state.monthlyIncome = GameData.jobTypes.fulltime.income;
+                        const baseIncome = (state.lastMonthlyIncome > 0) ? state.lastMonthlyIncome : GameData.jobTypes.fulltime.income;
+                        const minMult = conf.incomeFluctuation ? conf.incomeFluctuation.min : 0.9;
+                        const maxMult = conf.incomeFluctuation ? conf.incomeFluctuation.max : 1.2;
+                        const mult = minMult + context.rng.random() * (maxMult - minMult);
+                        state.monthlyIncome = Math.round(baseIncome * mult);
                         state.sickLeaveDays = conf.initialSickLeaveDays;
                         state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGainSuccess);
+                        if (state.housing === 'homeless') {
+                            return { message: I18n.t('events.afternoon_interview.messages.homelessSuccess'), type: 'positive' };
+                        }
                         return { message: I18n.t('events.afternoon_interview.messages.success'), type: 'positive' };
                     } else {
                         state.mental -= conf.mentalLossFail;
+                        if (state.housing === 'homeless') {
+                            return { message: I18n.t('events.afternoon_interview.messages.homelessFail'), type: 'negative' };
+                        }
                         return { message: I18n.t('events.afternoon_interview.messages.fail'), type: 'negative' };
                     }
                 }
@@ -512,7 +521,11 @@ export const dailyEvents = [
                     if (context.rng.random() < finalRate) {
                         state.job = 'fulltime';
                         state.jobTenure = 0;
-                        state.monthlyIncome = GameData.jobTypes.fulltime.income;
+                        const baseIncome = (state.lastMonthlyIncome > 0) ? state.lastMonthlyIncome : GameData.jobTypes.fulltime.income;
+                        const minMult = conf.incomeFluctuation ? conf.incomeFluctuation.min : 0.8;
+                        const maxMult = conf.incomeFluctuation ? conf.incomeFluctuation.max : 1.1;
+                        const mult = minMult + context.rng.random() * (maxMult - minMult);
+                        state.monthlyIncome = Math.round(baseIncome * mult);
                         state.sickLeaveDays = tryHardConf.initialSickLeaveDays;
                         state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGainSuccess);
                         return { message: I18n.t('events.afternoon_interview.messages.casualSuccess'), type: 'positive' };

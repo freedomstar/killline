@@ -10,6 +10,7 @@ export const timeCycle = {
 };
 
 export const newbieProtectionDays = 2;
+export const incidentUnlockDay = 3;
 
 export const randomEventLimits = {
     dailyMax: 3,
@@ -25,6 +26,7 @@ export const debtConfig = {
 export const initialState = {
     money: 200,            // 初始存款 (10天/月节奏)
     monthlyIncome: 1500,    // 月薪 (10天周期)
+    lastMonthlyIncome: 0,   // 上一份工作的月薪 (用于重新找工作时按比例浮动)
     housing: 'apartment',   // 住所类型
     housingCost: 1000,       // 月租 (10天周期)
     pendingHousing: null,    // 待生效住所（下个房租周期）
@@ -70,7 +72,6 @@ export const initialState = {
     carBroken: false,       // 汽车是否故障 (需修理才能开)
 
     // 其他属性
-    creditScore: 750,       // 信用分数
     unemployedDays: 0,      // 失业天数
     coffeeToday: false,     // 今天是否喝了咖啡
     sleptWell: true,        // 昨晚是否睡好
@@ -97,7 +98,6 @@ export const initialState = {
     // V2.19 新增状态
     receivingUnemployment: false, // 是否正在领取失业救济
     unemploymentWeeksLeft: 0,     // 剩余救济金领取周数
-    creditCollapsedTriggered: false, // 信用崩塌事件是否已触发
     medicalDebtInstallment: false,   // 是否在分期还医疗债务
 
     // V2.28 住院与病假系统
@@ -115,7 +115,7 @@ export const initialState = {
     lunchType: null,        // V2.4 选定的午餐策略: bento, fastfood, skip (null=必须选)
     selectedDailyAction: null, // V2.10 选定的日常额外行动 (null=不选)
     selectedIncident: null,    // V2.10 选定的突发事件处理方案 (null=不选)
-    selectedCommute: null,     // V2.21 选定的通勤方式: car, bus, walk (null=必须选)
+
     sideActionsLocked: false,   // V2.55 侧边行动锁定 (防止同一时段内重复显示)
     spentMoneyToday: false,     // 当天是否发生花钱行为
     lastWorkChoiceId: null,     // 上次工作选择
@@ -218,7 +218,7 @@ export const energyConfig = {
 };
 
 export const sleepConfig = {
-    poorSleepRecoveryMod: 0.5,  // 熬夜/没睡好时的恢复效率乘数
+    poorSleepRecoveryMod: 0.6,  // 熬夜/没睡好时的恢复效率乘数
 };
 
 export const medicalRiskConfig = {
@@ -227,9 +227,9 @@ export const medicalRiskConfig = {
     denialCostThreshold: 2000,  // 触发拒赔判定的金额阈值
 };
 
-export const exhaustionConfig = {
+export const faintingConfig = {
     energyThreshold: 0,      // 精力透支阈值 (<= 此值时触发强制睡眠)
-    healthThreshold: 20      // 健康透支阈值 (< 此值时触发强制睡眠)
+    healthThreshold: 0      // 健康透支阈值 (< 此值时触发强制睡眠)
 };
 
 // 生病与医疗等待配置
@@ -305,15 +305,26 @@ export const endingRules = {
     debtSpiralThreshold: 5000,        // 深度破产阈值 (总债务)
     medicalDebtThreshold: 2000,       // 医疗债务阈值 (触发健康崩溃结局的额外条件)
     emergencyHealthRestore: 20,        // 急救后恢复的健康值
-    exhaustionHealthThreshold: 30,     // 精力耗尽结局的健康判定阈值
-    bankruptCreditScore: 500,          // 破产结局信用分阈值
     homelessUnemployedDays: 30,        // 流浪结局失业天数阈值
     criticalHealth: 0,                 // 健康崩溃阈值
     criticalMental: 0,                 // 精神崩溃阈值
-    criticalEnergy: 0,                 // 精力耗尽阈值
     noMoney: 0,                        // 没钱阈值
-    bankruptCreditScore: 400,          // 破产信用分阈值
     wealthThreshold: 10000,            // 财务自由结局存款阈值
+};
+
+export const commuteOptions = {
+    bus: {
+        name: 'ui.status.bus',
+    },
+    subway: {
+        name: 'ui.status.subway',
+    },
+    walk: {
+        name: 'ui.status.walk',
+    },
+    car: {
+        name: 'ui.status.car',
+    },
 };
 
 export const endings = {
@@ -343,11 +354,7 @@ export const endings = {
         get subtitle() { return I18n.t('data.config.endings.mentalBreakdown.subtitle'); },
         get message() { return I18n.t('data.config.endings.mentalBreakdown.message'); },
     },
-    exhaustion: {
-        get title() { return I18n.t('data.config.endings.exhaustion.title'); },
-        get subtitle() { return I18n.t('data.config.endings.exhaustion.subtitle'); },
-        get message() { return I18n.t('data.config.endings.exhaustion.message'); },
-    },
+
     survived: {
         get title() { return I18n.t('data.config.endings.survived.title'); },
         get subtitle() { return I18n.t('data.config.endings.survived.subtitle'); },

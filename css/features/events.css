@@ -167,6 +167,36 @@
     color: var(--color-danger);
 }
 
+#incident-selector {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#incident-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+#incident-options .incident-control-group {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0;
+}
+
+#incident-options .lunch-options {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#incident-options .lunch-opt-btn {
+    width: 100%;
+    align-items: flex-start;
+    text-align: left;
+}
+
 /* 事件选项 - 卡片式 */
 .event-choices {
     display: flex;

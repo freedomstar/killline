@@ -12,7 +12,7 @@ export const healthEvents = [
         title: I18n.t('events.feeling_under_weather.title'),
         description: I18n.t('events.feeling_under_weather.description'),
         period: 'any',
-        condition: (state, context) => state.day > GameData.newbieProtectionDays && state.healthStatus === 'normal' && (state.energy < 30 || context.rng.random() < GameData.eventConfigs.probabilities.feeling_under_weather),
+        condition: (state, context) => state.day > GameData.newbieProtectionDays && (state.healthStatus === 'normal' || state.health >= 85) && state.health >= 85 && (state.energy < 30 || context.rng.random() < GameData.eventConfigs.probabilities.feeling_under_weather),
         weight: GameData.eventWeights.feeling_under_weather,
         isRandom: true,
         choices: [
@@ -82,7 +82,7 @@ export const healthEvents = [
         title: I18n.t('events.worsening_symptoms.title'),
         description: I18n.t('events.worsening_symptoms.description'),
         period: 'any',
-        condition: (state) => state.healthStatus === 'sick' || state.healthStatus === 'cold',
+        condition: (state) => (state.healthStatus === 'sick' || state.healthStatus === 'cold') && state.health < 85,
         weight: GameData.eventWeights.worsening_symptoms,
         isRandom: true,
         choices: [
@@ -169,7 +169,7 @@ export const healthEvents = [
         description: I18n.t('events.medical_emergency.description'),
         period: 'any',
         mandatory: true,
-        condition: (state) => (state.health < 30 || state.healthStatus === 'critical') && (!state.hospitalDaysLeft || state.hospitalDaysLeft <= 0),
+        condition: (state) => (state.health < 30 || (state.healthStatus === 'critical' && state.health < 30)) && (!state.hospitalDaysLeft || state.hospitalDaysLeft <= 0),
         weight: GameData.eventWeights.medical_emergency,
         choices: [
             {
@@ -591,7 +591,7 @@ export const healthEvents = [
                     const medicalDebt = (state.debtItems || [])
                         .filter(item => item.source === 'medical')
                         .reduce((sum, item) => sum + (item.amount || 0), 0);
-                    return I18n.t('events.medical_debt_collection.choices.pay.hint', medicalDebt, conf.payCreditGain, conf.payMentalGain);
+                    return I18n.t('events.medical_debt_collection.choices.pay.hint', medicalDebt, conf.payMentalGain);
                 },
                 hintType: 'negative',
                 condition: (state) => {
@@ -606,7 +606,6 @@ export const healthEvents = [
                         .filter(item => item.source === 'medical')
                         .reduce((sum, item) => sum + (item.amount || 0), 0);
                     const result = context.game.repayDebt(medicalDebt, { state: context.game.state });
-                    state.creditScore = Math.min(850, (state.creditScore || 750) + conf.payCreditGain);
                     state.mental = Math.min(GameData.initialState.maxMental, (state.mental || 100) + conf.payMentalGain);
                     return { message: I18n.t('events.medical_debt_collection.messages.paid', result.paid || medicalDebt), type: 'positive' };
                 }
@@ -616,7 +615,7 @@ export const healthEvents = [
                 hint: (state) => {
                     const conf = GameData.eventConfigs.medical_debt.collection;
                     const monthlyAmount = GameData.debtConfig?.medicalInstallmentMonthly || conf.installmentAmount;
-                    return I18n.t('events.medical_debt_collection.choices.installment.hint', monthlyAmount, conf.creditLoss, conf.installmentMentalLoss);
+                    return I18n.t('events.medical_debt_collection.choices.installment.hint', monthlyAmount, conf.installmentMentalLoss);
                 },
                 hintType: 'neutral',
                 effect: (state, context) => {
@@ -629,7 +628,6 @@ export const healthEvents = [
                     // but here we manually split for legacy compatibility or direct debt management
                     context.game.addMedicalInstallment(medicalDebt, { state });
 
-                    state.creditScore = Math.max(300, (state.creditScore || 750) - conf.creditLoss);
                     state.mental -= conf.installmentMentalLoss;
                     return { message: I18n.t('events.medical_debt_collection.messages.installment', monthlyAmount), type: 'neutral' };
                 }
@@ -638,12 +636,11 @@ export const healthEvents = [
                 text: I18n.t('events.medical_debt_collection.choices.refuse.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.medical_debt.collection;
-                    return I18n.t('events.medical_debt_collection.choices.refuse.hint', conf.refuseCreditLoss, conf.refuseMentalLoss);
+                    return I18n.t('events.medical_debt_collection.choices.refuse.hint', conf.refuseMentalLoss);
                 },
                 hintType: 'negative',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.medical_debt.collection;
-                    state.creditScore = Math.max(300, (state.creditScore || 750) - conf.refuseCreditLoss);
                     state.mental -= conf.refuseMentalLoss;
                     return { message: I18n.t('events.medical_debt_collection.messages.refused'), type: 'negative' };
                 }

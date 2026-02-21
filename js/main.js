@@ -113,11 +113,23 @@ const GameController = {
         }
 
         const formatDelta = (v) => (v > 0 ? `+${v}` : `${v}`);
+        const getDailySummaryEnergyDelta = () => {
+            const reportEntries = Array.isArray(status.dailyFinancialReport) ? status.dailyFinancialReport : [];
+            const breakdownEntry = reportEntries.find((entry) => entry && entry.key === 'game.finance.energyRecoveryBreakdown');
+            if (!breakdownEntry || !Array.isArray(breakdownEntry.args)) {
+                return energyDelta;
+            }
+
+            const totalApplied = Number(breakdownEntry.args[11]);
+            return Number.isFinite(totalApplied) ? totalApplied : energyDelta;
+        };
+
+        const summaryEnergyDelta = getDailySummaryEnergyDelta();
         const getEnergyRecoveryText = () => {
-            if (energyDelta === 0) return I18n.t('ui.dayToast.energyUnchanged');
-            return energyDelta > 0
-                ? I18n.t('ui.dayToast.energyRecovered', formatDelta(energyDelta))
-                : I18n.t('ui.dayToast.energyChanged', formatDelta(energyDelta));
+            if (summaryEnergyDelta === 0) return I18n.t('ui.dayToast.energyUnchanged');
+            return summaryEnergyDelta > 0
+                ? I18n.t('ui.dayToast.energyRecovered', formatDelta(summaryEnergyDelta))
+                : I18n.t('ui.dayToast.energyChanged', formatDelta(summaryEnergyDelta));
         };
         const getHousingBonusText = () => {
             const housingInfo = GameData.housingTypes[game.state.housing];
@@ -566,13 +578,13 @@ const GameController = {
             this.updateUI();
 
             // V2.3 强制睡眠检测（进入夜间但濒死状态）
-            if (status.period === 'night' && (status.energy <= GameData.exhaustionConfig.energyThreshold)) {
+            if (status.period === 'night' && (status.energy <= GameData.faintingConfig.energyThreshold)) {
                 const faintMsg = I18n.t('ui.dayToast.forcedSleep');
                 UI.showToast(faintMsg, 'negative');
                 game.addLog({ key: 'ui.dayToast.forcedSleep', fallback: faintMsg }, 'negative'); // V2.XX Record Log
                 // 强制睡眠，恢复减半
-                const faintEnergy = GameData.exhaustionConfig.faintEnergyRecovery || 20;
-                const faintHealth = GameData.exhaustionConfig.faintHealthRecovery || 5;
+                const faintEnergy = GameData.faintingConfig.faintEnergyRecovery || 20;
+                const faintHealth = GameData.faintingConfig.faintHealthRecovery || 5;
                 game.state.energy = Math.min(100, game.state.energy + faintEnergy);
                 game.state.health = Math.min(100, game.state.health + faintHealth);
                 game.advancePeriod(); // 跳过夜间

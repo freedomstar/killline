@@ -153,6 +153,17 @@ export const UI = {
         this.elements.closeFinanceDetail = document.getElementById('close-finance-detail');
         this.elements.debtAutoRepayBtn = document.getElementById('debt-auto-repay-btn');
 
+        // V2.XX Stat Detail Modal
+        this.elements.statDetailModal = document.getElementById('stat-detail-modal');
+        this.elements.statDetailTitle = document.getElementById('stat-detail-title');
+        this.elements.statDetailIcon = document.getElementById('stat-detail-icon');
+        this.elements.statDetailName = document.getElementById('stat-detail-name');
+        this.elements.statDetailDescription = document.getElementById('stat-detail-description');
+        this.elements.statDetailEffects = document.getElementById('stat-detail-effects');
+        this.elements.statDetailImpacts = document.getElementById('stat-detail-impacts');
+        this.elements.statDetailValue = document.getElementById('stat-detail-value');
+        this.elements.closeStatDetail = document.getElementById('close-stat-detail');
+
         if (this.elements.financeDetailRepayInput) {
             this.elements.financeDetailRepayInput.placeholder = I18n.t('ui_static.finance_detail.repay_placeholder');
         }
@@ -173,6 +184,10 @@ export const UI = {
         this.elements.taskDeadline = document.getElementById('task-deadline');
         this.elements.taskContainer = document.getElementById('dashboard-task');
         this.elements.taskProgressBar = document.getElementById('task-progress-bar');
+
+        // V2.42 裁员风险显示
+        this.elements.layoffRiskContainer = document.getElementById('layoff-risk-container');
+        this.elements.layoffRiskVal = document.getElementById('layoff-risk-val');
 
         // V2.4 午餐选择器
         this.elements.lunchSelector = document.getElementById('lunch-selector');
@@ -225,14 +240,8 @@ export const UI = {
             });
         }
 
-        // 交通通勤
-        this.elements.statusTransportType = document.getElementById('status-transport-type');
-        this.elements.statusGasCost = document.getElementById('status-gas-cost');
-        this.elements.statusCarInsurance = document.getElementById('status-car-insurance');
-
         this.elements.statusCash = document.getElementById('status-cash');
         this.elements.statusDebt = document.getElementById('status-debt');
-        this.elements.statusCredit = document.getElementById('status-credit');
 
         this.elements.statusDaysSurvived = document.getElementById('status-days-survived');
         this.elements.statusMaxWealth = document.getElementById('status-max-wealth');
@@ -528,6 +537,9 @@ export const UI = {
                 });
             }
 
+            // V2.XX Stat Detail Modal Events
+            this.bindStatDetailEvents();
+
             // V2.13 Status Page Copy Seed
             if (this.elements.statusCopySeedBtn) {
                 this.elements.statusCopySeedBtn.addEventListener('click', () => {
@@ -590,6 +602,105 @@ export const UI = {
             okBtn.addEventListener('click', onOk);
             cancelBtn.addEventListener('click', onCancel);
         });
+    },
+
+    /**
+     * V2.XX 绑定属性详情事件
+     */
+    bindStatDetailEvents() {
+        // 绑定五大属性框点击事件
+        const statItems = document.querySelectorAll('#dashboard-stats .status-item[data-stat]');
+        statItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const statType = item.dataset.stat;
+                if (statType) {
+                    this.showStatDetailModal(statType);
+                }
+            });
+        });
+
+        // 绑定关闭按钮事件
+        if (this.elements.closeStatDetail) {
+            this.elements.closeStatDetail.addEventListener('click', () => {
+                this.elements.statDetailModal.classList.add('hidden');
+            });
+        }
+
+        // 点击模态框外部关闭
+        if (this.elements.statDetailModal) {
+            this.elements.statDetailModal.addEventListener('click', (e) => {
+                if (e.target === this.elements.statDetailModal) {
+                    this.elements.statDetailModal.classList.add('hidden');
+                }
+            });
+        }
+    },
+
+    /**
+     * V2.XX 显示属性详情模态框
+     * @param {string} statType - 属性类型: energy, mental, health, social, work_efficiency
+     */
+    showStatDetailModal(statType) {
+        if (!this.elements.statDetailModal) return;
+
+        const statData = I18n.t(`ui_static.stat_detail.${statType}`);
+        if (!statData || typeof statData !== 'object') {
+            console.warn('[UI] Stat detail data not found for:', statType);
+            return;
+        }
+
+        // 获取当前属性值
+        const state = game.getState();
+        let currentValue = '';
+        switch (statType) {
+            case 'energy':
+                currentValue = `${state.energy || 0}/${state.maxEnergy || 100}`;
+                break;
+            case 'mental':
+                currentValue = `${state.mental || 0}/${state.maxMental || 100}`;
+                break;
+            case 'health':
+                currentValue = `${state.health || 0}/${state.maxHealth || 100}`;
+                break;
+            case 'social':
+                currentValue = `${state.social || 0}/${state.maxSocial || 100}`;
+                break;
+            case 'work_efficiency':
+                currentValue = `${state.workEfficiency || 0}%`;
+                break;
+        }
+
+        // 更新模态框内容
+        if (this.elements.statDetailTitle) {
+            this.elements.statDetailTitle.textContent = I18n.t('ui_static.stat_detail.title');
+        }
+        if (this.elements.statDetailIcon) {
+            this.elements.statDetailIcon.textContent = statData.icon || '📊';
+        }
+        if (this.elements.statDetailName) {
+            this.elements.statDetailName.textContent = statData.name || statType;
+        }
+        if (this.elements.statDetailDescription) {
+            this.elements.statDetailDescription.textContent = statData.description || '';
+        }
+        if (this.elements.statDetailEffects) {
+            const effects = statData.effects || [];
+            this.elements.statDetailEffects.innerHTML = effects.map(effect =>
+                `<div class="stat-detail-effect-item">${effect}</div>`
+            ).join('');
+        }
+        if (this.elements.statDetailImpacts) {
+            const impacts = statData.impacts || [];
+            this.elements.statDetailImpacts.innerHTML = impacts.map(impact =>
+                `<div class="stat-detail-impact-item">${impact}</div>`
+            ).join('');
+        }
+        if (this.elements.statDetailValue) {
+            this.elements.statDetailValue.textContent = currentValue;
+        }
+
+        // 显示模态框
+        this.elements.statDetailModal.classList.remove('hidden');
     },
 
     /**
@@ -1425,38 +1536,7 @@ export const UI = {
             }
         }
 
-        // 4. 交通通勤
-        if (this.elements.statusTransportType) {
-            const commuteId = state.selectedCommute || 'bus';
-            if (GameData.commuteOptions[commuteId]) {
-                const cName = this.resolveText(GameData.commuteOptions[commuteId].name);
-                this.elements.statusTransportType.textContent = cName;
-                this.elements.statusTransportType.style.color = '';
-            } else {
-                this.elements.statusTransportType.textContent = I18n.t('ui.status.publicTransitLabel');
-                this.elements.statusTransportType.style.color = 'var(--color-text-muted)';
-            }
-        }
-        if (this.elements.statusGasCost) {
-            if (state.hasCar) {
-                const fuel = state.fuelRemaining || 0;
-                const capacity = state.fuelCapacity || 4;
-                this.elements.statusGasCost.textContent = I18n.t('ui.status.commuteUses', fuel, capacity);
-            } else {
-                this.elements.statusGasCost.textContent = '-';
-            }
-        }
-        if (this.elements.statusCarInsurance) {
-            if (state.hasCar) {
-                const carPlan = GameData.insuranceSystem.carPlans[state.insurance.carPlanId];
-                const premium = carPlan ? carPlan.monthlyPremium : 0;
-                this.elements.statusCarInsurance.textContent = I18n.t('ui.status.perMonthMoney', premium);
-            } else {
-                this.elements.statusCarInsurance.textContent = '-';
-            }
-        }
-
-        // 5. 财务
+        // 4. 财务
         if (this.elements.statusCash) {
             this.elements.statusCash.textContent = game.formatMoney(state.money);
         }
@@ -1464,10 +1544,6 @@ export const UI = {
             const debt = Math.max(0, state.debt || 0);
             this.elements.statusDebt.textContent = `$${debt.toLocaleString()}`;
         }
-        if (this.elements.statusCredit) {
-            this.elements.statusCredit.textContent = state.creditScore || 720;
-        }
-
         // 6. 统计
         if (this.elements.statusDaysSurvived) this.elements.statusDaysSurvived.textContent = I18n.t('ui.status.dayCount', state.day);
         if (this.elements.statusMaxWealth) {
@@ -3418,6 +3494,21 @@ export const UI = {
                             }
                         }
 
+                        if (this.elements.layoffRiskContainer && this.elements.layoffRiskVal) {
+                            // V2.XX: 使用后端计算的综合风险（包含社交、效率、任务逾期等）
+                            const risk = game.calculateLayoffRisk();
+                            if (risk > 0) {
+                                this.elements.layoffRiskContainer.classList.remove('hidden');
+                                this.elements.layoffRiskVal.textContent = `${risk}%`;
+                                this.elements.layoffRiskVal.classList.toggle('danger', risk >= 30);
+                            } else {
+                                // 没有风险时显示 0% 作为正面激励
+                                this.elements.layoffRiskContainer.classList.remove('hidden');
+                                this.elements.layoffRiskVal.textContent = `0%`;
+                                this.elements.layoffRiskVal.classList.remove('danger');
+                            }
+                        }
+
                         if (this.elements.taskProgress && status.workTask) {
                             this.elements.taskProgress.textContent = `${status.workTask.progress}% (${I18n.t('ui_static.finance.difficulty')}: ${status.workTask.difficulty})`;
 
@@ -3726,108 +3817,12 @@ export const UI = {
     /**
      * 渲染午餐选择器 (V2.4)
      */
-    renderLunchSelector(state) {
+    renderLunchSelector() {
         if (!this.elements.lunchSelector) return;
-
-        if (state.period !== 'day' || state.sideActionsLocked) {
-            this.elements.lunchSelector.classList.add('hidden');
-            return;
-        }
-
-        this.elements.lunchSelector.classList.remove('hidden');
-        this.elements.lunchOptions.innerHTML = '';
-
-        // V2.10 使用动态过滤后的午餐选项，增加缓存防止随机项在选择时变化
-        if (!state.currentLunchOptions) {
-            state.currentLunchOptions = GameEvents.getAvailableLunchOptions(state, { game, rng: game.rng });
-        }
-        const availableOptions = state.currentLunchOptions;
-
-        for (const option of availableOptions) {
-            const key = option.key;
-            const button = document.createElement('button');
-            const isActive = state.lunchType === key;
-            button.className = `lunch-opt-btn ${isActive ? 'active' : ''}`;
-
-            // 检查可用性
-            const isDisabled = option.disabled;
-            button.disabled = isDisabled;
-
-            // 自动回退逻辑：如果选中的策略不再可用 (且不是因为钱，例如卖光了)，切回快餐
-            if (isActive && isDisabled && !option.hint.includes('余额不足')) {
-                setTimeout(() => {
-                    state.lunchType = 'fastfood';
-                    this.renderLunchSelector(state);
-                }, 0);
-                return;
-            }
-
-            button.innerHTML = `
-                <span class="lunch-opt-name">${option.name}</span>
-                <span class="lunch-opt-hint">${option.hint}</span>
-            `;
-
-            button.onclick = () => {
-                AudioManager.play('click'); // V2.42 Sound Effect
-                state.lunchType = key;
-                this.renderLunchSelector(state);
-                this.updateMainButtonsState(state); // Update buttons
-                console.log(`[UI] 午餐变更为: ${key}`);
-                window.dispatchEvent(new CustomEvent('ks:subchoiceChanged'));
-            };
-
-            this.elements.lunchOptions.appendChild(button);
-        }
+        this.elements.lunchSelector.classList.add('hidden');
     },
 
-    /**
-     * V2.21 渲染通勤方式选择器
-     */
-    renderCommuteSelector(state) {
-        if (!this.elements.commuteSelector) return;
 
-        // 仅工作日白天显示
-        const isWorkDay = state.job === 'fulltime' && state.day % GameData.timeCycle.weekDays !== GameData.timeCycle.restDayMod;
-        if (!isWorkDay || state.period !== 'day' || state.sideActionsLocked) {
-            this.elements.commuteSelector.classList.add('hidden');
-            return;
-        }
-
-        this.elements.commuteSelector.classList.remove('hidden');
-        this.elements.commuteOptions.innerHTML = '';
-
-        // 获取可用通勤选项（带缓存）
-        if (!state.currentCommuteOptions) {
-            state.currentCommuteOptions = GameEvents.getAvailableCommuteOptions(state, { game, rng: game.rng });
-        }
-        const availableOptions = state.currentCommuteOptions;
-
-        for (const option of availableOptions) {
-            const key = option.key;
-            const button = document.createElement('button');
-            const isActive = state.selectedCommute === key;
-            button.className = `lunch-opt-btn ${isActive ? 'active' : ''}`;
-
-            const isDisabled = option.disabled;
-            button.disabled = isDisabled;
-
-            button.innerHTML = `
-                <span class="lunch-opt-name">${option.name}</span>
-                <span class="lunch-opt-hint">${option.hint}</span>
-            `;
-
-            button.onclick = () => {
-                AudioManager.play('click'); // V2.42 Sound Effect
-                state.selectedCommute = key;
-                this.renderCommuteSelector(state);
-                this.updateMainButtonsState(state);
-                console.log(`[UI] 通勤方式变更为: ${key}`);
-                window.dispatchEvent(new CustomEvent('ks:subchoiceChanged'));
-            };
-
-            this.elements.commuteOptions.appendChild(button);
-        }
-    },
 
     /**
      * 渲染日常行动选择器 (V2.10)
@@ -3839,7 +3834,6 @@ export const UI = {
             state.currentDailyActions = GameEvents.getAvailableDailyActions(state, { game, rng: game.rng });
         }
         const actions = state.currentDailyActions;
-        // 如果只有 "无" 或者不是白天，则隐藏
         if (actions.length <= 1 || state.period !== 'day' || state.sideActionsLocked) {
             this.elements.dailyActionSelector.classList.add('hidden');
             return;
@@ -3878,7 +3872,6 @@ export const UI = {
     renderIncidentSelector(state) {
         if (!this.elements.incidentSelector) return;
 
-        // 如果没有活跃的突发事件，尝试获取
         if (!state.activeIncidents) {
             state.activeIncidents = GameEvents.getAvailableIncidents(state, { game, rng: game.rng });
         }
@@ -3960,13 +3953,7 @@ export const UI = {
             }
         }
 
-        // 3. 检查通勤 (仅白天工作日且显示时)
-        if (state.period === 'day' && this.elements.commuteSelector && !this.elements.commuteSelector.classList.contains('hidden')) {
-            if (!state.selectedCommute) {
-                isValid = false;
-                missing.push(I18n.t('ui.validation.selectCommute'));
-            }
-        }
+
 
         // 4. 检查突发 (仅白天且显示时)
         if (state.period === 'day' && this.elements.incidentSelector && !this.elements.incidentSelector.classList.contains('hidden')) {
@@ -4025,13 +4012,12 @@ export const UI = {
 
         if (isRandomEncounter || isMedicalEmergency || isSideActionsLocked) {
             // V2.42: 随机事件/队列插队事件不显示日常侧边栏
-            if (this.elements.commuteSelector) this.elements.commuteSelector.classList.add('hidden');
+            // if (this.elements.commuteSelector) this.elements.commuteSelector.classList.add('hidden');
             if (this.elements.lunchSelector) this.elements.lunchSelector.classList.add('hidden');
             if (this.elements.dailyActionSelector) this.elements.dailyActionSelector.classList.add('hidden');
             if (this.elements.incidentSelector) this.elements.incidentSelector.classList.add('hidden');
         } else {
-            // V2.21 渲染通勤选择
-            this.renderCommuteSelector(state);
+
             // V2.4 渲染午餐选择
             this.renderLunchSelector(state);
             // V2.10 渲染日常和突发事件
@@ -5325,6 +5311,10 @@ export const UI = {
         // 顶上跑马灯 (V2.9+)
         const tickerCard = document.getElementById('news-ticker-container');
         if (tickerCard) targets.push(tickerCard);
+
+        // V2.XX: 五大属性框（精力、精神、健康、社交、工作能力）
+        const statItems = document.querySelectorAll('#dashboard-stats .status-item[data-stat]');
+        statItems.forEach(item => targets.push(item));
 
         // User requested to remove bottom tab highlights
         // if (tabItems.length > 0) { ... }

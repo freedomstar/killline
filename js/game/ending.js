@@ -82,14 +82,13 @@ export const EndingMixin = {
 
 
 
-        // 破产 + 无收入
-        const bankruptCredit = GameData.endingRules.bankruptCreditScore || 400;
-        if (this.state.money <= GameData.endingRules.noMoney &&
-            (this.state.job === 'unemployed' || this.state.job === 'fired') &&
-            this.state.creditScore < bankruptCredit) {
-            this.isRunning = false;
-            return this.triggerEnding('bankrupt');
-        }
+        // 破产 + 无收入 + 债务
+        // if (this.state.money <= GameData.endingRules.noMoney &&
+        //     (this.state.job === 'unemployed' || this.state.job === 'fired') &&
+        //     (this.state.debt || 0) > 0) {
+        //     this.isRunning = false;
+        //     return this.triggerEnding('bankrupt');
+        // }
 
         // 流浪太久
         if (this.state.housing === 'homeless' && this.state.unemployedDays > GameData.endingRules.homelessUnemployedDays) {

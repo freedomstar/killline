@@ -13,28 +13,38 @@ export const EffectsMixin = {
      * 应用待处理的精力变化
      */
     applyPendingEnergyChange() {
-        if (this.pendingEnergyChange !== 0) {
-            this.state.energy = Math.max(0, Math.min(100,
-                this.state.energy + this.pendingEnergyChange));
-            this.pendingEnergyChange = 0;
-        }
+        const pendingRaw = this.pendingEnergyChange || 0;
+
+        this._dailyEnergyRecoveryParts = {
+            dayStartEnergy: this.state.energy,
+            pendingRaw,
+            pendingApplied: pendingRaw
+        };
+        this.pendingEnergyChange = 0;
     },
 
     /**
      * 睡眠恢复精力
-     * V2.36 修复：熬夜时恢复效率降低为 50%，避免高端住所完全抵消熬夜惩罚
+     * V2.36 修复：熬夜时恢复效率降低为 60%，避免高端住所完全抵消熬夜惩罚
      */
     applySleepRecovery() {
+        const parts = this._dailyEnergyRecoveryParts || {
+            dayStartEnergy: this.state.energy,
+            pendingRaw: 0,
+            pendingApplied: 0
+        };
         const housingInfo = GameData.housingTypes[this.state.housing];
         if (housingInfo) {
-            let recoveryAmount = housingInfo.energyRecovery;
+            const baseRecovery = housingInfo.energyRecovery;
+            const sleepMod = this.state.sleptWell ? 1 : GameData.sleepConfig.poorSleepRecoveryMod;
+            const recoveryAmount = Math.floor(baseRecovery * sleepMod);
 
-            // 如果昨晚没睡好（熬夜），恢复效率减半
-            if (!this.state.sleptWell) {
-                recoveryAmount = Math.floor(recoveryAmount * GameData.sleepConfig.poorSleepRecoveryMod);
-            }
-
-            this.state.energy = Math.min(100, this.state.energy + recoveryAmount);
+            parts.baseRecovery = baseRecovery;
+            parts.sleepMod = sleepMod;
+            parts.theoreticalRecovery = recoveryAmount;
+            parts.housingApplied = recoveryAmount;
+            parts.hasRecoveryBreakdown = true;
+            this._dailyEnergyRecoveryParts = parts;
         }
     },
 
@@ -103,15 +113,59 @@ export const EffectsMixin = {
         // 为了简单，我们直接修改 energy (如果已恢复过，再扣除一部分作为惩罚)
         // 或者在 applySleepRecovery 中引用 healthStatus。
         // 这里采用简单的后扣除法：
+        let healthPenalty = 0;
         if (stage && stage.energyMod < 1.0) {
             // 假设正常恢复了 X，现在扣除 (1-mod) * X ? 
             // 简化：直接扣除固定精力作为生病惩罚
-            const penalty = Math.round(GameData.sicknessConfig.energyPenaltyBase * (1 - stage.energyMod));
-            if (penalty > 0) {
-                this.state.energy = Math.max(0, this.state.energy - penalty);
-                // console.log(`[Health] 生病惩罚: 精力 -${penalty}`);
-            }
+            healthPenalty = Math.round(GameData.sicknessConfig.energyPenaltyBase * (1 - stage.energyMod));
         }
+
+        const parts = this._dailyEnergyRecoveryParts;
+        if (parts && parts.hasRecoveryBreakdown) {
+            const dayStartEnergy = parts.dayStartEnergy ?? this.state.energy;
+            const statusAdjustment = -healthPenalty;
+            const rawTotal = (parts.pendingRaw || 0) + (parts.theoreticalRecovery || 0) + statusAdjustment;
+            const nextEnergy = Math.max(0, Math.min(100, dayStartEnergy + rawTotal));
+            const totalApplied = nextEnergy - dayStartEnergy;
+            this.state.energy = nextEnergy;
+
+            const msg = I18n.t(
+                'game.finance.energyRecoveryBreakdown',
+                parts.pendingApplied,
+                parts.pendingRaw,
+                parts.theoreticalRecovery || 0,
+                parts.baseRecovery || 0,
+                parts.sleepMod || 1,
+                parts.theoreticalRecovery || 0,
+                GameData.sicknessConfig.energyPenaltyBase,
+                healthPenalty,
+                stage ? stage.energyMod : 1,
+                stage && typeof stage.name === 'function' ? stage.name() : '',
+                statusAdjustment,
+                totalApplied
+            );
+            this.pushDailyReport && this.pushDailyReport({
+                key: 'game.finance.energyRecoveryBreakdown',
+                args: [
+                    parts.pendingApplied,
+                    parts.pendingRaw,
+                    parts.theoreticalRecovery || 0,
+                    parts.baseRecovery || 0,
+                    parts.sleepMod || 1,
+                    parts.theoreticalRecovery || 0,
+                    GameData.sicknessConfig.energyPenaltyBase,
+                    healthPenalty,
+                    stage ? stage.energyMod : 1,
+                    stage && typeof stage.name === 'function' ? stage.name() : '',
+                    statusAdjustment,
+                    totalApplied
+                ],
+                fallback: msg
+            });
+        } else if (healthPenalty > 0) {
+            this.state.energy = Math.max(0, this.state.energy - healthPenalty);
+        }
+        this._dailyEnergyRecoveryParts = null;
 
         // 失去工作会失去雇主保险
         if (this.state.job === 'unemployed' || this.state.job === 'fired') {

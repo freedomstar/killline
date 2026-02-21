@@ -61,14 +61,23 @@ export const workEvents = [
         mandatory: false,
         condition: (state) => state.day > GameData.newbieProtectionDays && state.job === 'fulltime' && !state.pipActive && state.day % GameData.timeCycle.weekDays !== GameData.timeCycle.restDayMod,
         weight: (state) => {
+            // 如果已经有了 PIP 预兆，那么极大概率触发
+            if (state.pendingPipWarning) return 500;
+
             // 社交值影响 PIP 触发权重
             const conf = GameData.eventConfigs.layoff_social_modifiers.pip_trigger;
             const social = state.socialValue || 50;
+            const overdueDays = (state.workTask && state.workTask.overdueDays) || 0;
+
             let mod = 1.0;
             if (social >= conf.highSocialThreshold) mod = conf.highSocialMod;
             else if (social < conf.lowSocialThreshold) mod = conf.veryLowSocialMod;
             else if (social < conf.midSocialThreshold) mod = conf.lowSocialMod;
-            return Math.round(GameData.eventWeights.pip_warning * mod);
+
+            // 任务逾期直接增加权重
+            const overduePenalty = overdueDays * 15;
+
+            return Math.round(GameData.eventWeights.pip_warning * mod + overduePenalty);
         },
         choices: [
             {
@@ -193,6 +202,7 @@ export const workEvents = [
                         };
                     } else {
                         state.job = 'fired';
+                        if (state.monthlyIncome > 0) state.lastMonthlyIncome = state.monthlyIncome;
                         state.monthlyIncome = 0;
                         state.mental -= conf.mentalLossFail;
                         return {
@@ -219,14 +229,20 @@ export const workEvents = [
             const conf = GameData.eventConfigs.layoff_social_modifiers.sudden_layoff;
             const social = state.socialValue || 50;
             const efficiency = state.workEfficiency || 100;
+            const overdueDays = (state.workTask && state.workTask.overdueDays) || 0;
 
             let socialMod = 1.0;
             if (social >= conf.highSocialThreshold) socialMod = conf.highSocialMod;
             else if (social < conf.lowSocialThreshold) socialMod = conf.lowSocialMod;
 
-            const efficiencyBonus = (efficiency - 100) * effConf.efficiencyBonusPerPoint;
+            let efficiencyMod = 1.0;
+            if (efficiency >= conf.highEfficiencyThreshold) efficiencyMod = conf.highEfficiencyMod;
+            else if (efficiency < conf.lowEfficiencyThreshold) efficiencyMod = conf.lowEfficiencyMod;
 
-            return Math.round(GameData.eventWeights.sudden_layoff * socialMod + efficiencyBonus);
+            // 任务逾期也会增加突然裁员的权重（不仅是PIP）
+            const overduePenalty = overdueDays * 5;
+
+            return Math.round(GameData.eventWeights.sudden_layoff * socialMod * efficiencyMod + overduePenalty);
         },
         isRandom: true,
         choices: [
@@ -245,6 +261,7 @@ export const workEvents = [
                     const severancePay = Math.round(baseIncome * conf.severanceMonths);
                     state.money += severancePay;
                     state.job = 'fired';
+                    if (state.monthlyIncome > 0) state.lastMonthlyIncome = state.monthlyIncome;
                     state.monthlyIncome = 0;
                     state.mental -= conf.mentalLoss;
                     return { message: I18n.t('events.sudden_layoff.messages.accept', severancePay), type: 'negative' };
@@ -274,6 +291,7 @@ export const workEvents = [
                     state.energy = Math.max(0, state.energy - conf.energyCost);
                     const baseIncome = state.monthlyIncome || GameData.jobTypes.fulltime.income;
                     state.job = 'fired';
+                    if (state.monthlyIncome > 0) state.lastMonthlyIncome = state.monthlyIncome;
                     state.monthlyIncome = 0;
 
                     const successRate = context.successRate || 0.5;
@@ -566,6 +584,7 @@ export const workIncidents = [
 export function getAvailableIncidents(state, context) {
     if ((state.hospitalDaysLeft || 0) > 0) return [];
     if (state.period !== 'day' || state.job !== 'fulltime') return [];
+    if ((state.day || 1) < GameData.incidentUnlockDay) return [];
     // V2.55 修复：工作突发事件仅在工作日触发
     if (state.day % GameData.timeCycle.weekDays === GameData.timeCycle.restDayMod) return [];
     if (context.rng.random() < 0.4) {

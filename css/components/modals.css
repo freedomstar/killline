@@ -778,3 +778,96 @@
     width: auto;
     margin-right: 10px;
 }
+
+/* ========================================
+   Stat Detail Modal Styles
+   ======================================== */
+.stat-detail-modal {
+    max-width: 420px;
+}
+
+.stat-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+}
+
+.stat-detail-icon {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.stat-detail-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.stat-detail-description {
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-info);
+}
+
+.stat-detail-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+}
+
+.stat-detail-section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.stat-detail-effects,
+.stat-detail-impacts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stat-detail-effect-item,
+.stat-detail-impact-item {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    padding: 4px 0;
+}
+
+.stat-detail-current {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--color-surface-elevated);
+    border-radius: var(--radius-md);
+    margin-top: var(--spacing-sm);
+}
+
+.stat-detail-current span:first-child {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.stat-detail-current span:last-child {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}

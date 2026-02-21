@@ -573,8 +573,7 @@ const DebugTools = {
                     'money': '金钱',
                     'energy': '精力',
                     'health': '健康',
-                    'mental': '精神',
-                    'creditScore': '信用分'
+                    'mental': '精神'
                 };
                 const readableProperty = propertyNames[stateProperty] || stateProperty;
                 // 返回动态条件的描述
@@ -720,7 +719,7 @@ const DebugTools = {
             },
             // Explicit Attribute (Chinese/English): 精力+10, Health -5
             {
-                regex: /(精力|energy|健康|health|精神|mental|社交|social|工龄|tenure|食材|ingredients|信用分|信用|credit|PTO|病假|休假|PIP|pip|绩效)[：:\s]*([+-]?\d+)/gi,
+                regex: /(精力|energy|健康|health|精神|mental|社交|social|工龄|tenure|食材|ingredients|PTO|病假|休假|PIP|pip|绩效)[：:\s]*([+-]?\d+)/gi,
                 extract: (m) => {
                     const attrStr = m[1].toLowerCase();
                     let property = 'unknown';
@@ -730,7 +729,6 @@ const DebugTools = {
                     if (attrStr.includes('社') || attrStr.includes('social')) property = 'socialValue';
                     if (attrStr.includes('工') || attrStr.includes('tenure')) property = 'jobTenure';
                     if (attrStr.includes('食') || attrStr.includes('ingredient')) property = 'ingredients';
-                    if (attrStr.includes('信') || attrStr.includes('credit')) property = 'creditScore';
                     if (attrStr.includes('pto') || attrStr.includes('病假') || attrStr.includes('休假')) property = 'sickLeaveDays';
                     if (attrStr.includes('pip') || attrStr.includes('绩效')) property = 'pipPerformanceScore';
                     return { value: parseInt(m[2]), property: property, raw: m[0] };
@@ -738,7 +736,7 @@ const DebugTools = {
             },
             // Reverse Attribute: +10 Energy, +15精神
             {
-                regex: /([+-]?\d+)\s*(精力|energy|健康|health|精神|mental|社交|social|工龄|tenure|食材|ingredients|信用分|信用|credit|PTO|病假|休假|PIP|pip|绩效)/gi,
+                regex: /([+-]?\d+)\s*(精力|energy|健康|health|精神|mental|社交|social|工龄|tenure|食材|ingredients|PTO|病假|休假|PIP|pip|绩效)/gi,
                 extract: (m) => {
                     const attrStr = m[2].toLowerCase();
                     let property = 'unknown';
@@ -748,7 +746,6 @@ const DebugTools = {
                     if (attrStr.includes('社') || attrStr.includes('social')) property = 'socialValue';
                     if (attrStr.includes('工') || attrStr.includes('tenure')) property = 'jobTenure';
                     if (attrStr.includes('食') || attrStr.includes('ingredient')) property = 'ingredients';
-                    if (attrStr.includes('信') || attrStr.includes('credit')) property = 'creditScore';
                     if (attrStr.includes('pto') || attrStr.includes('病假') || attrStr.includes('休假')) property = 'sickLeaveDays';
                     if (attrStr.includes('pip') || attrStr.includes('绩效')) property = 'pipPerformanceScore';
                     return { value: parseInt(m[1]), property: property, raw: m[0] };
@@ -865,7 +862,7 @@ const DebugTools = {
 
                 // 比较状态变化
                 const changes = [];
-                const trackedProperties = ['money', 'health', 'mental', 'energy', 'socialValue', 'ingredients', 'creditScore', 'jobTenure', 'sickLeaveDays', 'pipPerformanceScore', 'job'];
+                const trackedProperties = ['money', 'health', 'mental', 'energy', 'socialValue', 'ingredients', 'jobTenure', 'sickLeaveDays', 'pipPerformanceScore', 'job'];
 
                 for (const prop of trackedProperties) {
                     const before = beforeState[prop] !== undefined ? beforeState[prop] : (typeof afterState[prop] === 'string' ? '' : 0);
@@ -951,7 +948,6 @@ const DebugTools = {
             energy: 100,
             socialValue: 50,
             ingredients: 5,
-            creditScore: 700,
             job: 'fulltime',
             housing: 'apartment',
             housingCost: 800,

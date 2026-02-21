@@ -49,7 +49,6 @@ export const EventManager = {
         const hospitalAllowed = new Set([
             'hospital_stay',
             'rent_due',
-            'credit_collapse',
             'medical_debt_collection'
         ]);
 

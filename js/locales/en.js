@@ -34,11 +34,7 @@ const enOverrides = {
                     subtitle: 'You Gave Up',
                     message: 'Day after day of pressure, anxiety, and despair. When your mental defenses completely collapsed, you lost the will to keep fighting.'
                 },
-                exhaustion: {
-                    title: 'Exhaustion',
-                    subtitle: 'Your Body Issued a Final Warning',
-                    message: 'Chronic sleep deprivation and overwork finally caused your body to go on strike.'
-                },
+
                 survived: {
                     title: 'Survivor',
                     subtitle: 'You Survived 365 Days',
@@ -247,12 +243,7 @@ const enOverrides = {
             tech_layoffs: { title: 'Mass Layoffs', description: '10,000+ job cuts announced' },
             trade_war: { title: 'Trade War Escalation', description: 'Tariff barriers disrupt supply chains' }
         },
-        commuteOptions: {
-            car: { name: 'Drive', hint: (opt) => `Fuel ${opt.fuel || '?'}/${opt.capacity || '?'}` },
-            bus: { name: 'Bus', hint: (opt) => `-$${opt.cost}, ${opt.lateChance * 100}% late chance` },
-            walk: { name: 'Walk', hint: (opt) => `H+${opt.healthEffect}, definitely late` },
-            hospital_stay: { name: 'Hospital', hint: 'Rest' }
-        },
+
         housingTypes: {
             apartment: 'Apartment',
             cheapRoom: 'Cheap Room',
@@ -339,7 +330,7 @@ const enOverrides = {
             setupPrompt: 'Set up auto repay now or adjust later.'
         },
         max: 'Max',
-        manualRepayTip: '(You can repay manually at any time)'
+        manualRepayTip: '(You can repay manually at any time)',
     },
 
     game: {
@@ -476,8 +467,7 @@ const enOverrides = {
             housing_type: 'Housing',
             monthly_rent: 'Rent',
             cash_balance: 'Cash',
-            total_debt: 'Debt',
-            credit_score: 'Credit'
+            total_debt: 'Debt'
         },
         insurance_page: {
             title: 'Insurance',
@@ -517,6 +507,96 @@ const enOverrides = {
             cash_label: 'Cash:',
             confirm_btn: 'Trade',
             max_btn: 'Max'
+        },
+        stat_detail: {
+            title: '📊 Stat Details',
+            effect_title: '📈 Stat Effects',
+            impact_title: '⚠️ Impact Factors',
+            current_value: 'Current:',
+            energy: {
+                name: 'Energy',
+                icon: '⚡',
+                description: 'Your action points. Working, socializing, and handling emergencies all consume energy.',
+                effects: [
+                    '• 1 Energy ≈ 1 action unit',
+                    '• Day actions consume energy, night sleep restores it',
+                    '• When energy is depleted, you cannot act and must rest'
+                ],
+                impacts: [
+                    '• Sleep deprivation reduces energy recovery',
+                    '• Health status affects energy cap',
+                    '• Certain foods and housing provide energy bonuses',
+                    '• Work pressure accelerates energy consumption'
+                ]
+            },
+            mental: {
+                name: 'Mental',
+                icon: '🧠',
+                description: 'Your psychological state and emotional stability. Mental health determines rational decision-making.',
+                effects: [
+                    '• Affects decision quality and event options',
+                    '• Low mental causes insomnia and anxiety',
+                    '• Severe breakdown leads to game over',
+                    '• Affects work efficiency and social ability'
+                ],
+                impacts: [
+                    '• Work pressure is the main mental drain',
+                    '• Social activities can restore mental',
+                    '• Financial crises severely damage mental',
+                    '• Entertainment and rest can restore mental'
+                ]
+            },
+            health: {
+                name: 'Health',
+                icon: '❤️',
+                description: 'Your physical condition. In Country M, health is wealth—because medical bills are so expensive.',
+                effects: [
+                    '• Affects energy recovery rate and work efficiency',
+                    '• Health determines ability to work',
+                    '• Serious illness leads to high medical costs',
+                    '• Zero health means game over'
+                ],
+                impacts: [
+                    '• Diet quality directly affects health',
+                    '• Overwork and sleep deprivation damage health',
+                    '• Illness requires timely treatment',
+                    '• Insurance can reduce medical cost burden'
+                ]
+            },
+            social: {
+                name: 'Social',
+                icon: '🤝',
+                description: 'Your network of relationships. In career and life, connections often matter more than ability.',
+                effects: [
+                    '• Affects job opportunities and career development',
+                    '• Good social connections provide useful information',
+                    '• Some events require certain social value to trigger',
+                    '• Social isolation severely impacts mental health'
+                ],
+                impacts: [
+                    '• Active social activities improve relationships',
+                    '• Neglecting social leads to estrangement',
+                    '• Work performance also affects colleague relationships',
+                    '• Unemployment reduces social opportunities'
+                ]
+            },
+            work_efficiency: {
+                name: 'Work Efficiency',
+                icon: '📈',
+                description: 'Your work performance and skill level. Directly affects income and standing in the company.',
+                effects: [
+                    '• Determines task completion speed and quality',
+                    '• Affects performance reviews and salary growth',
+                    '• Low efficiency increases layoff risk',
+                    '• Work efficiency affects promotion opportunities'
+                ],
+                impacts: [
+                    '• Continuous learning improves work efficiency',
+                    '• Health issues reduce work efficiency',
+                    '• Mental state affects work performance',
+                    '• Long-term unemployment causes skill degradation'
+                ]
+            }
         }
     },
 
@@ -736,21 +816,9 @@ const enOverrides = {
 
 const enMoreOverrides = {
     data: {
-        commute: {
-            car: { name: 'Drive', hint: (opt) => `Fuel ${opt.fuel || '?'}/${opt.capacity || '?'}` },
-            car_repair: { name: 'Repair Then Drive', hint: (repairCost, fuelCost) => `-$${repairCost + fuelCost} total` },
-            car_refuel: { name: 'Refuel Then Drive', hint: (fuelCost) => `-$${fuelCost} fuel` },
-            bus: { name: 'Bus', hint: (opt) => `-$${opt.cost}, ${(opt.lateChance * 100).toFixed(0)}% late chance` },
-            walk: { name: 'Walk', hint: (opt) => `H+${opt.healthEffect}, definitely late` },
-            too_expensive: (need) => `Need $${need} to choose this option`,
-            unavailable: 'This option is currently unavailable',
-            hospital_stay: { name: 'Hospital Stay', hint: 'Rest and recover' }
-        },
+
         commute_messages: {
-            cost: (amount) => `Commute cost: -$${amount}`,
-            health: (amount) => `Health ${amount > 0 ? '+' : ''}${amount}`,
-            late: 'You arrived late.',
-            pip: 'PIP pressure increased due to lateness.'
+            latePenalty: (amount) => `Late to work! Penalty: -$${amount}`,
         },
         periods: {
             day: { name: 'Daytime', description: '08:00 - 18:00' },
@@ -997,6 +1065,8 @@ const enMoreOverrides = {
 
     ui_static: {
         finance: {
+            layoff_risk: 'Layoff Risk',
+            layoff_tip: 'Completing work on time reduces layoff chance',
             provision: 'Stock',
             wait: 'days',
             not_prepared: 'Not prepared'
@@ -1140,11 +1210,11 @@ const enMoreOverrides = {
                 },
                 homelessNow: {
                     text: 'Leave now and become homeless',
-                    hint: (mentalLoss, creditLoss) => `Homeless now, Mental-${mentalLoss}, Credit-${creditLoss}`
+                    hint: (mentalLoss) => `Homeless now, Mental-${mentalLoss}`
                 }
             },
             messages: {
-                negotiateSuccess: (creditLoss) => `Landlord agreed to a short extension. Credit-${creditLoss}`,
+                negotiateSuccess: 'Landlord agreed to a short extension.',
                 moveOut: 'You moved into a cheaper shared room.',
                 carDwelling: 'You packed overnight and moved into your car.',
                 homelessNow: 'You gave up the lease and ended up on the street.'
@@ -1288,12 +1358,14 @@ const enMoreOverrides = {
                 tryHard: {
                     text: 'Go All In',
                     hint: (energy, chance, mentalSuccess, mentalFail) => `E-${energy}, success ${chance}% (affected by work efficiency), success: M+${mentalSuccess}, fail: M-${mentalFail}`,
-                    hint_homeless: (energy) => `E-${energy} (homeless status: interviewer rejects immediately)`
+                    hint_homeless: (energy, chance) => `E-${energy} (homeless status: only ${chance}% success rate, most companies will decline)`
                 },
                 casual: { text: 'Take It Easy', hint: (energy, chance, mental) => `E-${energy}, success ${chance}% (lower than all-in), success: M+${mental}` }
             },
             messages: {
                 homelessReject: 'The interviewer looked at your situation and passed.',
+                homelessSuccess: "🎉 Miracle! The interviewer was moved by your story and gave you a chance! (Perk: starts with 3 PTO days)",
+                homelessFail: 'The interviewer looked at your situation and passed.',
                 success: 'Offer secured! (Perk: starts with 3 PTO days)',
                 fail: 'Interview failed. Keep going.',
                 casualSuccess: 'You actually made it. Lucky break.',
@@ -1422,22 +1494,16 @@ const enMoreOverrides = {
                     hintPartial: (cost, mental) => `-$${cost} (after partial coverage), M-${mental}`,
                     hintOther: (cost, mental) => `-$${cost} (out of pocket), M-${mental}`
                 },
-                creditRepair: {
-                    text: 'Repair on Credit Card',
-                    hint: (cost, credit, mental) => `-$${cost}, Credit-${credit}, M-${mental}`
-                },
-                skip: {
-                    text: 'Delay Repair',
-                    hint: (mental) => `Car remains broken, future drive commute costs extra and may be late, M-${mental}`
-                }
+                selfRepair: { text: 'Self Repair', hint: (cost, energy, mental, risk) => `-$${cost} (Can go into debt), Energy-${energy}, Mental-${mental}, Late Risk ${Math.round(risk * 100)}%` },
             },
             messages: {
-                fullCoverage: 'Good thing you had full coverage. Insurance paid most of it.',
-                partialCoverage: 'Liability coverage helped a bit, but you still paid a lot.',
-                noFullCoverage: 'Without proper coverage, the repair bill hurts badly.',
-                creditRepair: 'You had to rely on credit. Debt pressure rises.',
-                skipRepair: 'You leave the car unrepaired for now. Future drives are riskier and costlier.'
-            }
+                fullCoverage: 'Full coverage saved the day. You only paid the deductible. (Late risk reduced to {0}%)',
+                partialCoverage: 'Liability insurance covered some costs, but you still paid a lot. (Late risk reduced to {0}%)',
+                noFullCoverage: 'No full coverage means you paid for almost everything. Ouch. (Late risk reduced to {0}%)',
+                selfRepairSuccess: 'You spent all night fixing the car. Saved money, but exhausted. (Late risk increased to {0}%)',
+                selfRepairLate: 'You fixed the car, but your amateur skills caused minor issues, making you late... (Late risk increased to {0}%)',
+                selfRepairFail: 'You clearly overestimated your repair skills. The car is completely broken now. (Entered Broken State)',
+            },
         },
         burglary: {
             title: 'Burglary',
@@ -1728,33 +1794,14 @@ const enMoreOverrides = {
             title: 'Debt Collection Call',
             description: (amount) => `Collectors are calling about your medical debt: $${amount}.`,
             choices: {
-                pay: { text: 'Pay in Full', hint: (debt, credit, mental) => `Pay $${debt}, Credit+${credit}, M+${mental}` },
-                installment: { text: 'Negotiate Installments', hint: (monthly, credit, mental) => `Monthly $${monthly}, Credit-${credit}, M-${mental}` },
-                refuse: { text: 'Ignore Calls', hint: (credit, mental) => `Credit-${credit}, M-${mental}` }
+                pay: { text: 'Pay in Full', hint: (debt, mental) => `Pay $${debt}, M+${mental}` },
+                installment: { text: 'Negotiate Installments', hint: (monthly, mental) => `Monthly $${monthly}, M-${mental}` },
+                refuse: { text: 'Ignore Calls', hint: (mental) => `M-${mental}` }
             },
             messages: {
                 paid: (amount) => `Medical debt paid: $${amount}.`,
                 installment: (amount) => `Installment plan started. Monthly payment: $${amount}.`,
-                refused: 'Avoiding collectors does not solve it. Credit score drops sharply.'
-            }
-        },
-        credit_collapse: {
-            title: 'Credit Collapse',
-            description: 'Your credit score falls below 500. Cards are frozen and housing risk rises.',
-            choices: {
-                accept: {
-                    text: 'Accept Reality',
-                    hint: 'Credit cards are frozen; some options become unavailable.'
-                },
-                fix: {
-                    text: 'Try to Repair Credit',
-                    hint: (cost, creditGain, energyCost, mentalLoss) => `-$${cost}, Credit+${creditGain}, E-${energyCost}, M-${mentalLoss}`
-                }
-            },
-            messages: {
-                evicted: 'Credit collapse triggers eviction risk. You are forced out and end up in your car.',
-                frozen: 'Credit collapse: your cards are frozen and daily life becomes harder.',
-                fixed: (cost) => `You spend $${cost} on repair efforts and stabilize your credit a bit.`
+                refused: 'Avoiding collectors does not solve it. Your stress worsens.'
             }
         },
         medical_debt_installment: {
@@ -1762,7 +1809,7 @@ const enMoreOverrides = {
             description: 'This month\'s medical debt installment is due.',
             choices: {
                 pay: { text: (amount) => `Pay $${amount}`, hint: (amount, debt) => `-$${amount}, remaining debt $${debt}` },
-                cantPay: { text: 'Cannot Pay', hint: (score, mental) => `Credit-${score}, M-${mental}, debt + interest` }
+                cantPay: { text: 'Cannot Pay', hint: (score, mental) => `Penalty ${score}, M-${mental}, debt + interest` }
             },
             messages: {
                 paidFinished: 'Congratulations! Medical debt fully paid.',
@@ -1775,11 +1822,11 @@ const enMoreOverrides = {
             description: (cost) => `This month\'s utility bill arrives: $${cost}`,
             choices: {
                 pay: { text: 'Pay Now', hint: (cost) => `-$${cost}` },
-                delay: { text: 'Delay Payment', hint: (score) => `Credit-${score}` }
+                delay: { text: 'Delay Payment', hint: (score) => `Penalty ${score}` }
             },
             messages: {
                 paid: (cost) => `Paid utility bill: $${cost}.`,
-                delayed: 'Payment delayed one week. Credit score affected.'
+                delayed: 'Payment delayed one week. Pressure keeps building.'
             }
         },
         phone_bill_due: {
@@ -2204,11 +2251,7 @@ const enFinalOverrides = {
                 subtitle: 'You Chose to Give Up',
                 message: 'Pressure, anxiety, and despair pile up until your mental defenses collapse.'
             },
-            exhaustion: {
-                title: 'Exhaustion',
-                subtitle: 'Final Warning from Your Body',
-                message: 'Chronic sleep deprivation and overwork force your body to shut down.'
-            },
+
             survived: {
                 title: 'Survivor',
                 subtitle: 'You Survived 365 Days',
@@ -2285,7 +2328,14 @@ const enFinalOverrides = {
             chronicFatigue: (penalty) => `⚠️ Chronic fatigue: Health -${penalty}`,
             severeOverwork: (penalty) => `⚠️ Severe overwork: Health -${penalty}`,
             salaryIncrease: (amount, current) => `💰 Performance review: salary +$${amount} (now $${current})`,
-            rentIncrease: (amount, current) => `🏠 Market pressure: rent +$${amount} (now $${current})`
+            rentIncrease: (amount, current) => `🏠 Market pressure: rent +$${amount} (now $${current})`,
+            energyRecoveryBreakdown: (pendingApplied, pendingRaw, housingApplied, baseRecovery, sleepMod, theoreticalRecovery, energyPenaltyBase, healthPenalty, stageEnergyMod, stageName, statusAdjustment, totalApplied) => {
+                const followupText = statusAdjustment === 0
+                    ? 'None'
+                    : `Health penalty ${statusAdjustment >= 0 ? '+' : ''}${statusAdjustment} (${stageName || 'Unknown stage'}, base ${energyPenaltyBase} x (1 - ${stageEnergyMod}) = -${healthPenalty})`;
+                const lateNightNote = sleepMod < 1 ? ', stayed up late due to a deep-night event' : '';
+                return `⚡ Energy recovery breakdown: Night correction ${pendingApplied >= 0 ? '+' : ''}${pendingApplied} (raw ${pendingRaw >= 0 ? '+' : ''}${pendingRaw}), Housing recovery +${theoreticalRecovery} (base ${baseRecovery} x sleep mod ${sleepMod}${lateNightNote}), Follow-up adjustment ${followupText}, Total ${totalApplied >= 0 ? '+' : ''}${totalApplied}`;
+            }
         },
         medical: {
             medicaidCoverage: 'Medicaid fully covers this cost',

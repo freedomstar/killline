@@ -203,15 +203,6 @@ export const usaFeatures = {
         doctorVisit: 200,       // 普通门诊
         prescription: 150,      // 处方药
         deductible: 500,        // 保险自付额
-    },
-    // 信用分影响阈值
-    creditThresholds: {
-        cannotRentGoodHousing: 600,  // 低于此分无法租好房
-        cannotGetGoodJob: 500,       // 低于此分无法获得好工作
-    },
-    // 逾期惩罚
-    latePenalty: {
-        creditScoreDrop: 50,  // 逾期一次扣信用分
     }
 };
 
@@ -282,44 +273,7 @@ export const lunchOptions = {
     }
 };
 
-export const commuteOptions = {
-    car: {
-        id: 'car',
-        name: () => I18n.t('data.commute.car.name'),
-        hint: (opt) => I18n.t('data.commute.car.hint', opt),
-        cost: 0,
-        lateChance: 0,
-        healthEffect: 0,
-        condition: (state) => state.hasCar
-    },
-    bus: {
-        id: 'bus',
-        name: () => I18n.t('data.commute.bus.name'),
-        hint: (opt) => I18n.t('data.commute.bus.hint', opt),
-        cost: 5,
-        lateChance: 0.2,
-        healthEffect: 0,
-        condition: (state) => true
-    },
-    walk: {
-        id: 'walk',
-        name: () => I18n.t('data.commute.walk.name'),
-        hint: (opt) => I18n.t('data.commute.walk.hint', opt),
-        cost: 0,
-        lateChance: 1.0,
-        healthEffect: 5,
-        condition: (state) => true
-    },
-    hospital_stay: {
-        id: 'hospital_stay',
-        name: () => I18n.t('data.commute.hospital_stay.name'),
-        hint: (opt) => I18n.t('data.commute.hospital_stay.hint', opt),
-        cost: 0,
-        lateChance: 0,
-        healthEffect: 0,
-        condition: (state) => state.hospitalDaysLeft > 0
-    }
-};
+
 
 export const periods = {
     day: {

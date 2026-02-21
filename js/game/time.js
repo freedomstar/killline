@@ -33,44 +33,12 @@ export const TimeMixin = {
         this.state.currentLunchOptions = null;
         this.state.currentDailyActions = null;
         this.state.activeIncidents = null;
-        this.state.currentCommuteOptions = null; // V2.21 通勤选项缓存
         this.state.lunchType = null;           // 默认不选午餐
         this.state.selectedDailyAction = null; // 默认不选
         this.state.selectedIncident = null;    // 默认不选
         this.state.sideActionsLocked = false; // 重置锁定状态
 
-        // V2.30 通勤系统重构：
-        // 1. 先保存上一时段选择的通勤方式
-        // 2. 立即清空 selectedCommute，确保下一个时段/事件生成时是干净的状态
-        // 3. 使用保存的值来处理 car 相关的油量逻辑
-        // 这样可以防止 applyCommuteEffects 使用遗留值，同时正确处理汽车油量
-        const previousCommute = this.state.selectedCommute;
-        this.state.selectedCommute = null; // 清空，防止遗留值被 applyCommuteEffects 使用
 
-        // V2.23 油箱系统: 处理汽车相关通勤选择（油箱逻辑）
-        // 使用保存的 previousCommute 来判断
-
-        if (previousCommute === 'car') {
-            // 有油，消耗1次
-            this.state.fuelRemaining = Math.max(0, (this.state.fuelRemaining || 0) - 1);
-            console.log(`[Game] 使用汽车通勤，剩余油量 ${this.state.fuelRemaining}/${this.state.fuelCapacity}`);
-        } else if (previousCommute === 'car_refuel') {
-            // 加油并开车: 先扣费加满油，再消耗1次
-            const cost = this.state.refuelCost || 20;
-            this.deductMoney(cost, 'commute');
-            this.state.fuelRemaining = (this.state.fuelCapacity || 4) - 1; // 加满后用掉1次
-            console.log(`[Game] 加油 -$${cost}，剩余油量 ${this.state.fuelRemaining}/${this.state.fuelCapacity}`);
-        } else if (previousCommute === 'car_repair') {
-            // V2.24 修车并开车: 扣费、修复故障、消耗油量、必定迟到
-            const repairCost = this.state.insurance.carPlanId === 'full_coverage' ? 500 : 1200;
-            this.deductMoney(repairCost, 'commute');
-            this.state.carBroken = false; // 修复故障
-            this.state.fuelRemaining = Math.max(0, (this.state.fuelRemaining || 0) - 1);
-            // 迟到惩罚由 applyCommuteEffects 或手动处理
-            this.state.pendingLateFromRepair = true; // 标记待处理迟到
-            console.log(`[Game] 修车 -$${repairCost}，故障修复，必定迟到`);
-        }
-        // 注意：bus/walk 的费用扣除在 handleChoice 中处理（约第1050行）
 
         // V2.4 便当过午不食机制
         // 如果是从白天结束（进入夜晚），且还没有吃便当，便当过期
@@ -81,6 +49,35 @@ export const TimeMixin = {
         this.state.coffeeToday = false;
         // 切换到下一个时段
         this.state.period = currentPeriod.next;
+
+        // 睡眠质量仅由深夜事件决定：进入深夜先重置为睡得好
+        if (this.state.period === 'deep_night') {
+            this.state.sleptWell = true;
+        }
+
+        if (this.state.period === 'day') {
+            this.state.dayLunchDone = false;
+        }
+
+        // V2.XX Commute Late Penalty (Daily check when entering Day)
+        if (this.state.period === 'day' && this.state.job === 'fulltime') {
+            const isRestDay = this.state.day % GameData.timeCycle.weekDays === GameData.timeCycle.restDayMod;
+            const isHospitalized = (this.state.hospitalDaysLeft || 0) > 0;
+
+            if (!isRestDay && !isHospitalized) {
+                // 10% chance to be late
+                if (this.rng.random() < 0.1) {
+                    const penalty = 50;
+                    this.deductMoney(penalty, 'commute_penalty');
+                    const msg = I18n.t('game.commute.latePenalty', penalty);
+                    this.addLog(msg, 'negative');
+                    console.log(`[Game] Late penalty triggered: -${penalty}`);
+                    if (window.UI && window.UI.triggerAttributeShake) {
+                        window.UI.triggerAttributeShake({ money: -penalty });
+                    }
+                }
+            }
+        }
 
         // V2.12 自动存档 (在进入新的一天，且时段切换完成后保存)
         if (isDayChange && this.isRunning !== false) {
@@ -427,7 +424,7 @@ export const TimeMixin = {
             }
         }
 
-        // V2.16 精力耗尽昏睡惩罚
+        // V2.16 昏睡惩罚
         // V2.XX Fix: Use faintedToday flag instead of current energy, as UI might have already restored it
         if (this.state.energy <= 0 || this.state.faintedToday) {
             const faintingConfig = GameData.healthConstants.fainting;
@@ -564,7 +561,7 @@ export const TimeMixin = {
             this.state.daysUntilPayday = GameData.timeCycle.monthDays; // 10天周期
         }
 
-        // V2.5 房租结算（每10天）- 带信用分惩罚
+        // V2.5 房租结算（每10天）
         if (this.state.daysUntilRent <= 0) {
             const rentCost = this.state.housingCost;
             const discount = this._getSpendingDiscount ? this._getSpendingDiscount(this.state) : 0;
@@ -580,11 +577,9 @@ export const TimeMixin = {
                 console.log(`[Game] ${msg}`);
             } else {
                 this.state.unpaidRentMonths = (this.state.unpaidRentMonths || 0) + 1;
-                const creditDrop = GameData.usaFeatures.latePenalty.creditScoreDrop;
-                this.state.creditScore = Math.max(300, this.state.creditScore - creditDrop);
                 const msg = I18n.t('game.finance.rentInsufficient', rentCost);
                 this.pushDailyReport && this.pushDailyReport({ key: 'game.finance.rentInsufficient', args: [rentCost], fallback: msg });
-                console.log(`[Game] ${msg} | 信用分 -${creditDrop} (隐藏)`);
+                console.log(`[Game] ${msg}`);
             }
             this.state.daysUntilRent = GameData.timeCycle.monthDays; // 10天周期
 

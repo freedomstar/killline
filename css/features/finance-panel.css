@@ -281,3 +281,35 @@
     width: 0%;
     transition: width 0.3s ease;
 }
+
+/* V2.42 Layoff Risk Display - Inline Style handled in index.html or specific classes if needed */
+.layoff-risk-display {
+    display: none;
+    /* Deprecated */
+}
+
+.layoff-risk-display .finance-label {
+    margin-right: 2px;
+}
+
+.layoff-risk-display .finance-sub {
+    /* Removed, tip moved to task-info-group */
+    display: none;
+}
+
+/* New Styles for Task Group */
+.task-info-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    margin-right: 8px;
+}
+
+.layoff-tip-text {
+    font-size: 0.6rem;
+    opacity: 0.8;
+    margin-top: 2px;
+    white-space: nowrap;
+    line-height: 1;
+}

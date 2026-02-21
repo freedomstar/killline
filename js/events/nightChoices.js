@@ -43,7 +43,6 @@ export const nightChoices = {
         effect: (state, context) => {
             const cfg = GameData.eventConfigs.night_choice_hints.phone;
             state.mental = Math.min(state.maxMental, (state.mental || 0) + cfg.mentalGain);
-            state.sleptWell = false;
             return {
                 message: I18n.t('game.nightResults.phone'),
                 energyRecoveryTomorrow: cfg.energyRecoveryTomorrow
@@ -62,7 +61,6 @@ export const nightChoices = {
             const cfg = GameData.eventConfigs.night_choice_hints.phone_social;
             state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + cfg.socialGain);
             state.mental = Math.min(state.maxMental, (state.mental || 0) + cfg.mentalGain);
-            state.sleptWell = true; // 打电话算休息，不影响睡眠质量？或者算轻微影响？这里暂设为 true (没说熬夜)
             const rumor = getRumorLine(state, context);
             const baseMsg = I18n.t('game.nightResults.phone_social');
             return {
@@ -91,7 +89,6 @@ export const nightChoices = {
                 state.money += cfg.money;
             }
             state.mental = Math.max(0, (state.mental || 0) - cfg.stress);
-            state.sleptWell = false;
 
             // 任务进度 (需 context.game 支持)
             let extraMsg = "";
@@ -129,7 +126,6 @@ export const nightChoices = {
                 state.money -= cfg.money;
             }
             state.mental = Math.min(state.maxMental, (state.mental || 0) + cfg.mental);
-            state.sleptWell = false;
             return {
                 message: I18n.t('game.nightResults.entertainment', cfg.money),
                 energyRecoveryTomorrow: cfg.energyRecoveryTomorrow

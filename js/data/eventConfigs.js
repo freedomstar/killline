@@ -19,14 +19,17 @@ export const eventConfigs = {
             socialBonusLow: -0.10,
             mentalGainSuccess: 10,
             mentalLossFail: 30,
-            initialSickLeaveDays: 3
+            initialSickLeaveDays: 3,
+            homelessRateMultiplier: 0.1,  // 流浪状态成功率惩罚（10%倍率）
+            incomeFluctuation: { min: 0.9, max: 1.2 } // 薪水在新工作中按上一份薪水浮动的比例
         },
         casual: {
             energyCost: 25,
             rateMultiplier: 0.6,
             maxRateGap: 0.05,
             minSuccessRate: 0.05,
-            mentalGainSuccess: 20
+            mentalGainSuccess: 20,
+            incomeFluctuation: { min: 0.8, max: 1.1 } // casual 浮动相对低一些
         }
     },
     afternoon_exercise: {
@@ -116,13 +119,9 @@ export const eventConfigs = {
         billAmount: 60,
         pay: { mentalCost: 0 } // placeholder if needed
     },
-    credit_collapse: {
-        accept: { mentalLoss: 30 },
-        fix: { cost: 200, energyCost: 30, creditGain: 30, mentalLoss: 15 }
-    },
     medical_debt: {
-        collection: { installmentAmount: 100, energyCost: 10, refuseMentalLoss: 10, creditLoss: 10, refuseCreditLoss: 50, payCreditGain: 20, payMentalGain: 5, installmentMentalLoss: 20 },
-        installment: { amount: 100, creditLoss: 20, mentalLoss: 15, interestRate: 0.1 }
+        collection: { installmentAmount: 100, energyCost: 10, refuseMentalLoss: 10, payMentalGain: 5, installmentMentalLoss: 20 },
+        installment: { amount: 100, mentalLoss: 15, interestRate: 0.1 }
     },
     fastfood_warning: {
         healthy: { moneyCost: 20, energyCost: 20, ingredientsGain: 3, ingredientsMax: 10, healthGain: 5 },
@@ -282,10 +281,18 @@ export const eventConfigs = {
             repair: {
                 baseCost: 1200,
                 coverageRates: { full_coverage: 0.6, liability: 0.4, none: 0 },
-                mentalLoss: 10
+                mentalLoss: 10,
+                riskRecovery: 0.1 // 专业维修降低风险
             },
-            credit: { creditScoreLoss: 30, mentalLoss: 15 },
-            skip: { mentalLoss: 25 }
+            self_repair: {
+                cost: 50,
+                energyCost: 30,
+                mentalLoss: 10,
+                riskBase: 0.1, // 基础迟到概率
+                riskIncrement: 0.1, // 每次自行维修增加风险
+                riskMax: 0.5, // 最大风险 50%
+                failChance: 0.1 // 彻底修坏的概率 (进入 carBroken 状态)
+            }
         },
         burglary: {
             report: { insuredDeductible: 250, uninsuredLoss: 2000, insuredMentalLoss: 15, uninsuredMentalLoss: 30 }
@@ -356,12 +363,7 @@ export const eventConfigs = {
     financial_crisis: {
         rent_due: {
             debtThreshold: -500,
-            evictionCreditLossMultiplier: 2,
             evictionThresholdMonths: 2
-        },
-        credit_collapse: {
-            scoreThreshold: 450,
-            fixMinDebt: -500
         }
     },
     probabilities: {
@@ -375,8 +377,7 @@ export const eventConfigs = {
         late_night_craving: 0.18,
         nightmare: 0.08,
         loneliness: 0.25,
-        cold_weather: 0.18,
-        credit_collapse_eviction: 0.3
+        cold_weather: 0.18
     },
     night_events_recovery: {
         craving: { order: 50, cook: 50, water: 45 },

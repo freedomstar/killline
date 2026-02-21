@@ -258,6 +258,34 @@
             </div>
         </div>
 
+        <!-- Stat Detail Modal -->
+        <div id="stat-detail-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel stat-detail-modal">
+                <button id="close-stat-detail" class="close-button">×</button>
+                <h2 class="modal-title" id="stat-detail-title">📊 属性详情</h2>
+                <div class="modal-body stat-detail-body">
+                    <div class="stat-detail-icon" id="stat-detail-icon">⚡</div>
+                    <div class="stat-detail-name" id="stat-detail-name">精力</div>
+                    <div class="stat-detail-description" id="stat-detail-description"></div>
+                    
+                    <div class="stat-detail-section">
+                        <div class="stat-detail-section-title" data-i18n="ui_static.stat_detail.effect_title">📈 属性作用</div>
+                        <div class="stat-detail-effects" id="stat-detail-effects"></div>
+                    </div>
+                    
+                    <div class="stat-detail-section">
+                        <div class="stat-detail-section-title" data-i18n="ui_static.stat_detail.impact_title">⚠️ 影响因素</div>
+                        <div class="stat-detail-impacts" id="stat-detail-impacts"></div>
+                    </div>
+                    
+                    <div class="stat-detail-current">
+                        <span data-i18n="ui_static.stat_detail.current_value">当前值:</span>
+                        <span id="stat-detail-value">100/100</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="news-detail-modal" class="modal-overlay hidden">
             <div class="modal-content glass-panel" style="max-width: 500px;">
                 <button id="close-news-detail" class="close-button">×</button>
@@ -409,7 +437,7 @@
                     <!-- Left Column: Status Bars -->
                     <div id="dashboard-stats">
                         <!-- Energy -->
-                        <div class="status-item status-item-full">
+                        <div class="status-item status-item-full clickable" data-stat="energy">
                             <span class="status-icon">⚡</span>
                             <div class="status-text-row">
                                 <span class="status-label" data-i18n="ui_static.game_header.energy">精力</span>
@@ -422,7 +450,7 @@
                             </div>
                         </div>
                         <!-- Mental -->
-                        <div class="status-item status-item-full">
+                        <div class="status-item status-item-full clickable" data-stat="mental">
                             <span class="status-icon">🧠</span>
                             <div class="status-text-row">
                                 <span class="status-label" data-i18n="ui_static.game_header.mental">精神</span>
@@ -435,7 +463,7 @@
                             </div>
                         </div>
                         <!-- Health -->
-                        <div class="status-item status-item-full">
+                        <div class="status-item status-item-full clickable" data-stat="health">
                             <span class="status-icon">❤️</span>
                             <div class="status-text-row">
                                 <span class="status-label" data-i18n="ui_static.game_header.health">健康</span>
@@ -448,7 +476,7 @@
                             </div>
                         </div>
                         <!-- Social -->
-                        <div class="status-item status-item-full">
+                        <div class="status-item status-item-full clickable" data-stat="social">
                             <span class="status-icon">🤝</span>
                             <div class="status-text-row">
                                 <span class="status-label" data-i18n="ui_static.game_header.social">社交</span>
@@ -461,7 +489,7 @@
                             </div>
                         </div>
                         <!-- Work Efficiency -->
-                        <div class="status-item status-item-full">
+                        <div class="status-item status-item-full clickable" data-stat="work_efficiency">
                             <span class="status-icon">📈</span>
                             <div class="status-text-row">
                                 <span class="status-label" data-i18n="ui_static.game_header.work_efficiency">工作能力</span>
@@ -559,7 +587,20 @@
                 <!-- Bottom Row: Task Bar -->
                 <div id="dashboard-task" class="hidden">
                     <div class="task-bar-content">
-                        <span class="finance-label" data-i18n="ui_static.finance.task">📋 工作任务</span>
+                        <div class="task-info-group">
+                            <div class="task-header-row" style="display: flex; align-items: baseline; gap: 6px;">
+                                <span class="finance-label" data-i18n="ui_static.finance.task">📋 工作任务</span>
+                                <div class="hidden" id="layoff-risk-container"
+                                    style="display: inline-flex; align-items: baseline; gap: 2px;">
+                                    <span class="finance-label danger small-risk" style="font-size: 0.6rem;"
+                                        data-i18n="ui_static.finance.layoff_risk">裁员风险:</span>
+                                    <span class="finance-value danger small-risk" style="font-size: 0.7rem;"
+                                        id="layoff-risk-val">0%</span>
+                                </div>
+                            </div>
+                            <span class="finance-sub layoff-tip-text"
+                                data-i18n="ui_static.finance.layoff_tip">(按时完成工作可减少被裁几率)</span>
+                        </div>
                         <div class="finance-value-group">
                             <span class="finance-value" id="task-progress">0%</span>
                             <span class="finance-sub" id="task-deadline">...</span>
@@ -884,24 +925,6 @@
                         </div>
                     </div>
 
-                    <div class="status-section">
-                        <h3 data-i18n="ui_static.status_page.commute">🚗 交通通勤</h3>
-                        <div class="card-body">
-                            <div class="stat-row">
-                                <span data-i18n="ui_static.status_page.commute_type">通勤方式</span>
-                                <span class="stat-val" id="status-transport-type">私家车</span>
-                            </div>
-                            <div class="stat-row">
-                                <span data-i18n="ui_static.status_page.weekly_gas">每周油费</span>
-                                <span class="stat-val" id="status-gas-cost">$25</span>
-                            </div>
-                            <div class="stat-row">
-                                <span data-i18n="ui_static.status_page.monthly_car_ins">月车险</span>
-                                <span class="stat-val" id="status-car-insurance">$80</span>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Finances -->
                     <div class="status-section">
                         <h3 data-i18n="ui_static.status_page.finance">💰 财务状况</h3>
@@ -913,10 +936,6 @@
                             <div class="stat-row">
                                 <span data-i18n="ui_static.status_page.total_debt">负债总额</span>
                                 <span class="stat-val danger" id="status-debt">$0</span>
-                            </div>
-                            <div class="stat-row">
-                                <span data-i18n="ui_static.status_page.credit_score">信用评分</span>
-                                <span class="stat-val" id="status-credit">720</span>
                             </div>
                         </div>
                     </div>

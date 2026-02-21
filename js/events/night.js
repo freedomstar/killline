@@ -38,7 +38,6 @@ export const nightEvents = [
                     const conf = GameData.eventConfigs.night_events.homeless.street;
                     state.mental -= conf.mentalCost;
                     state.health -= conf.healthCost;
-                    state.sleptWell = false;
                     return {
                         message: I18n.t('events.homeless_night.messages.street'),
                         type: 'negative',
@@ -66,7 +65,6 @@ export const nightEvents = [
                     const successRate = context.successRate || 1.0;
                     if (context.rng.random() < successRate * conf.successChance) {
                         state.mental -= conf.successMentalCost;
-                        state.sleptWell = true;
                         return {
                             message: I18n.t('events.homeless_night.messages.shelterSuccess'),
                             type: 'positive',
@@ -75,7 +73,6 @@ export const nightEvents = [
                     }
                     state.mental -= conf.failMentalCost;
                     state.health -= conf.failHealthCost;
-                    state.sleptWell = false;
                     return {
                         message: I18n.t('events.homeless_night.messages.shelterFail'),
                         type: 'negative',
@@ -105,7 +102,6 @@ export const nightEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.night_events.car.hide;
                     state.mental -= conf.mentalCost;
-                    state.sleptWell = true;
                     return {
                         message: I18n.t('events.car_night.messages.safe'),
                         type: 'neutral',
@@ -130,7 +126,6 @@ export const nightEvents = [
                     const conf = GameData.eventConfigs.night_events.car.park_close;
                     if (context.rng.random() < conf.kickOutChance) {
                         state.mental -= conf.kickOutMentalCost;
-                        state.sleptWell = false;
                         return {
                             message: I18n.t('events.car_night.messages.kickedOut'),
                             type: 'negative',
@@ -138,7 +133,6 @@ export const nightEvents = [
                         };
                     }
                     state.mental -= conf.safeMentalCost;
-                    state.sleptWell = true;
                     return {
                         message: I18n.t('events.car_night.messages.safeNight'),
                         type: 'neutral',

@@ -48,8 +48,7 @@ export const eventWeights = {
     fastfood_warning: 40,
     apartment_accident: 2,
 
-    // Debt / Credit
-    credit_collapse: 150,
+    // Debt
     medical_debt_collection: 50,
     medical_debt_installment: 100
 };

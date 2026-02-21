@@ -34,11 +34,7 @@ export const zh = {
                     subtitle: '你选择了放弃',
                     message: '日复一日的压力、焦虑和绝望。当精神防线彻底崩塌，你失去了继续战斗的意志。'
                 },
-                exhaustion: {
-                    title: '精力耗尽',
-                    subtitle: '你的身体发出了最后警告',
-                    message: '长期的睡眠不足和过度劳累，你的身体终于罢工了。在倒下的那一刻，你还在想着明天的账单。'
-                },
+
                 survived: {
                     title: '幸存者',
                     subtitle: '你活过了一年',
@@ -53,7 +49,7 @@ export const zh = {
             tips: [
                 '小贴士：在M国，一场阑尾手术可能花费 $30,000+',
                 '小贴士：平均每个M国人距离破产只有2.5个月的存款',
-                '小贴士：信用分数决定了你的人生选项',
+                '小贴士：现金流断裂往往比你想象得更快',
                 '小贴士：Uber司机没有任何福利保障',
                 '小贴士：在某些州，雇主可以无理由解雇你',
                 '小贴士：失业救济金通常只有工资的40%',
@@ -63,7 +59,7 @@ export const zh = {
             quotes: [
                 '"努力工作就能成功" —— 某个从未被裁员的人',
                 '"存三个月工资作为应急基金" —— 假设你付得起房租的话',
-                '"医疗费用可以分期" —— 前提是你还有信用',
+                '"医疗费用可以分期" —— 前提是你还扛得住每月账单',
                 '"M国梦对所有人开放" —— 使用条款和条件适用',
                 '"失业是暂时的" —— 但房东不会等你',
                 '"保持积极心态" —— 这不需要花钱',
@@ -232,13 +228,7 @@ export const zh = {
         },
 
 
-        // 通勤选项
-        commuteOptions: {
-            car: { name: '🚗 开车', hint: (opt) => `剩余油量 ${opt.fuel || '?'}/${opt.capacity || '?'}` },
-            bus: { name: '🚌 坐公交', hint: (opt) => `-$${opt.cost}，${opt.lateChance * 100}%概率迟到` },
-            walk: { name: '🚶 步行', hint: (opt) => `健康+${opt.healthEffect}，必定迟到` },
-            hospital_stay: { name: '🛌 住院', hint: (opt) => `安心静养` },
-        },
+
 
         // 午餐条件提示
         lunch_hints: {
@@ -248,46 +238,12 @@ export const zh = {
             too_expensive: (cost) => `余额不足 (需要$${cost})`,
         },
 
-        // 通勤相关消息
-        commute: {
-            car: {
-                name: '🚗 开车',
-                hint: (fuelOrOpt, capacity) => {
-                    const fuel = typeof fuelOrOpt === 'object' ? (fuelOrOpt.fuel ?? '?') : fuelOrOpt;
-                    const tank = typeof fuelOrOpt === 'object' ? (fuelOrOpt.capacity ?? '?') : capacity;
-                    return `剩余油量 ${fuel}/${tank}`;
-                }
-            },
-            car_repair: { name: '🔧 修车后开车', hint: (cost, insuranceInfo) => `-$${cost} ${insuranceInfo}，必定迟到` },
-            car_refuel: { name: '⛽ 加油并开车', hint: (cost) => `-$${cost}，加满油箱` },
-            bus: {
-                name: '🚌 坐公交',
-                hint: (costOrOpt, chance) => {
-                    const cost = typeof costOrOpt === 'object' ? (costOrOpt.cost ?? '?') : costOrOpt;
-                    const lateChance = typeof costOrOpt === 'object'
-                        ? Math.round((costOrOpt.lateChance ?? 0) * 100)
-                        : chance;
-                    return `-$${cost}，${lateChance}%概率迟到`;
-                }
-            },
-            walk: {
-                name: '🚶 步行',
-                hint: (healthOrOpt) => {
-                    const health = typeof healthOrOpt === 'object' ? (healthOrOpt.healthEffect ?? '?') : healthOrOpt;
-                    return `健康+${health}，必定迟到`;
-                }
-            },
-            too_expensive: (cost) => `余额不足 (需要$${cost})`,
-            unavailable: '该选项当前不可用',
-            hospital_stay: { name: '🛌 住院', hint: '安心静养' },
-        },
+
 
         // 通勤结果消息
+        // 通勤结果消息
         commute_messages: {
-            cost: (cost) => `车费 -$${cost}`,
-            health: (health) => `健康 +${health}`,
-            late: (energy, mental, progress) => `迟到了！精力-${energy}，精神-${mental}，任务进度-${progress}%`,
-            pip: (score) => `PIP表现分 -${score}`,
+            latePenalty: (amount) => `通勤迟到，被扣除了 $${amount} (全勤奖/罚款)`,
         },
 
         // 时段名称
@@ -404,11 +360,7 @@ export const zh = {
                 subtitle: '你选择了放弃',
                 message: '日复一日的压力、焦虑和绝望。当精神防线彻底崩塌，你失去了继续战斗的意志。',
             },
-            exhaustion: {
-                title: '精力耗尽',
-                subtitle: '你的身体发出了最后警告',
-                message: '长期的睡眠不足和过度劳累，你的身体终于罢工了。在倒下的那一刻，你还在想着明天的账单。',
-            },
+
             survived: {
                 title: '幸存者',
                 subtitle: '你活过了365天',
@@ -425,7 +377,7 @@ export const zh = {
         sarcasmQuotes: [
             '"努力工作就能成功" —— 某个从未被裁员的人',
             '"存三个月工资作为应急基金" —— 假设你付得起房租的话',
-            '"医疗费用可以分期" —— 前提是你还有信用',
+            '"医疗费用可以分期" —— 前提是你还扛得住每月账单',
             '"M国梦对所有人开放" —— 使用条款和条件适用',
             '"失业是暂时的" —— 但房东不会等你',
             '"保持积极心态" —— 这不需要花钱',
@@ -437,7 +389,7 @@ export const zh = {
         dailyTips: [
             '小贴士：在M国，一场阑尾手术可能花费 $30,000+',
             '小贴士：平均每个M国人距离破产只有2.5个月的存款',
-            '小贴士：信用分数决定了你的人生选项',
+            '小贴士：现金流断裂往往比你想象得更快',
             '小贴士：Uber司机没有任何福利保障',
             '小贴士：在某些州，雇主可以无理由解雇你',
             '小贴士：失业救济金通常只有工资的40%',
@@ -725,6 +677,13 @@ export const zh = {
             investmentCrash: (percent, penalty) => `📉 投资暴跌 ${percent}%! 精神 -${penalty}`,
             chronicFatigue: (penalty) => `⚠️ 长期疲劳: 健康 -${penalty}`,
             severeOverwork: (penalty) => `⚠️ 严重透支: 健康 -${penalty}`,
+            energyRecoveryBreakdown: (pendingApplied, pendingRaw, housingApplied, baseRecovery, sleepMod, theoreticalRecovery, energyPenaltyBase, healthPenalty, stageEnergyMod, stageName, statusAdjustment, totalApplied) => {
+                const followupText = statusAdjustment === 0
+                    ? '无'
+                    : `健康惩罚 ${statusAdjustment >= 0 ? '+' : ''}${statusAdjustment}（${stageName || '未知阶段'}，基数 ${energyPenaltyBase} x (1 - ${stageEnergyMod}) = -${healthPenalty}）`;
+                const lateNightNote = sleepMod < 1 ? '，深夜事件导致熬夜' : '';
+                return `⚡ 精力恢复明细：夜间修正 ${pendingApplied >= 0 ? '+' : ''}${pendingApplied} (原始 ${pendingRaw >= 0 ? '+' : ''}${pendingRaw})，住所恢复 +${theoreticalRecovery} (基础 ${baseRecovery} x 睡眠系数 ${sleepMod}${lateNightNote})，后续调整 ${followupText}，合计 ${totalApplied >= 0 ? '+' : ''}${totalApplied}`;
+            },
             salaryIncrease: (amount, current) => `💰 绩效评估：工作表现优异，月薪上调了 $${amount} (现为 $${current})`,
             salaryNoIncrease: '💼 绩效评估：本月表现平平，薪资维持不变。',
             rentIncrease: (amount, current) => `🏠 市场波动：因市场行情变化，房租上涨了 $${amount} (现为 $${current})`,
@@ -868,6 +827,8 @@ export const zh = {
             next_bill_days: (days) => `下个账单: ${days}天`,
             income: '月薪',
             task: '📋 工作任务',
+            layoff_risk: '裁员风险',
+            layoff_tip: '按时完成工作可减少被裁几率',
             difficulty: '难度',
             meal: '便当',
             provision: '储备',
@@ -962,7 +923,6 @@ export const zh = {
             monthly_car_ins: '月车险',
             cash_balance: '现金余额',
             total_debt: '负债总额',
-            credit_score: '信用评分',
         },
         insurance_page: {
             title: '保险管理中心',
@@ -1017,6 +977,96 @@ export const zh = {
             job: '工作状态',
             energy: '最终精力',
             debt: '最终负债',
+        },
+        stat_detail: {
+            title: '📊 属性详情',
+            effect_title: '📈 属性作用',
+            impact_title: '⚠️ 影响因素',
+            current_value: '当前值:',
+            energy: {
+                name: '精力',
+                icon: '⚡',
+                description: '你的行动点数。无论工作、社交还是处理突发事件，都需要消耗精力。',
+                effects: [
+                    '• 每点精力 ≈ 1个行动单位',
+                    '• 白天行动消耗精力，夜晚睡眠恢复精力',
+                    '• 精力耗尽时将无法行动，被迫休息'
+                ],
+                impacts: [
+                    '• 睡眠不足会降低精力恢复',
+                    '• 健康状态影响精力上限',
+                    '• 某些食物和住所可提供精力加成',
+                    '• 工作压力过大会加速精力消耗'
+                ]
+            },
+            mental: {
+                name: '精神',
+                icon: '🧠',
+                description: '你的心理状态和情绪稳定性。精神健康决定你能否做出理性决策。',
+                effects: [
+                    '• 影响决策质量和事件选项',
+                    '• 过低的精神会导致失眠、焦虑',
+                    '• 严重精神崩溃将导致游戏结束',
+                    '• 影响工作效率和社交能力'
+                ],
+                impacts: [
+                    '• 工作压力是精神消耗的主要来源',
+                    '• 社交活动可以恢复精神',
+                    '• 财务危机会严重打击精神',
+                    '• 某些娱乐活动和休息可以恢复精神'
+                ]
+            },
+            health: {
+                name: '健康',
+                icon: '❤️',
+                description: '你的身体状况。在M国，健康就是财富——因为医疗费太贵了。',
+                effects: [
+                    '• 影响精力恢复速度和工作效率',
+                    '• 健康状况决定能否正常工作',
+                    '• 严重疾病会导致高额医疗费用',
+                    '• 健康归零将导致游戏结束'
+                ],
+                impacts: [
+                    '• 饮食质量直接影响健康',
+                    '• 过度劳累和睡眠不足损害健康',
+                    '• 生病后需要及时治疗',
+                    '• 保险可以降低医疗费用负担'
+                ]
+            },
+            social: {
+                name: '社交',
+                icon: '🤝',
+                description: '你的人际关系网络。在职场和生活中，人脉往往比能力更重要。',
+                effects: [
+                    '• 影响裁员和面试',
+                    '• 良好的社交可以获得有用的信息',
+                    '• 某些事件需要一定社交值才能触发',
+                    '• 社交孤立会严重影响精神健康'
+                ],
+                impacts: [
+                    '• 主动社交活动可以增进关系',
+                    '• 忽视社交会导致关系疏远',
+                    '• 工作表现也影响同事关系',
+                    '• 失业期间社交机会减少'
+                ]
+            },
+            work_efficiency: {
+                name: '工作能力',
+                icon: '📈',
+                description: '你的工作表现和技能水平。直接影响收入和在公司的地位。',
+                effects: [
+                    '• 决定任务完成速度和效果',
+                    '• 影响绩效评估和薪资增长',
+                    '• 过低的能力值会增加被裁员风险',
+                    '• 工作效率影响升职加薪机会'
+                ],
+                impacts: [
+                    '• 持续学习可以提升工作能力',
+                    '• 健康问题会降低工作效率',
+                    '• 精神状态影响工作表现',
+                    '• 长期失业会导致技能退化'
+                ]
+            }
         },
     },
 
@@ -1343,12 +1393,14 @@ export const zh = {
                 tryHard: {
                     text: '全力以赴',
                     hint: (energy, chance, mentalSuccess, mentalFail) => `-${energy} 精力，成功率${chance}%（受工作能力影响），成功精神+${mentalSuccess}，失败精神-${mentalFail}`,
-                    hint_homeless: (energy) => `-${energy} 精力（流浪状态：面试官直接婉拒）`
+                    hint_homeless: (energy, chance) => `-${energy} 精力（流浪状态：成功率仅${chance}%，大部分公司会婉拒）`
                 },
                 casual: { text: '佛系面试', hint: (energy, chance, mental) => `-${energy} 精力，成功率${chance}%（低于全力以赴），成功精神+${mental}` },
             },
             messages: {
                 homelessReject: '面试官看了看你的状态，婉拒了你',
+                homelessSuccess: '🎉 奇迹！面试官被你的故事打动，给了你一个机会！\n(福利：初始3天PTO)',
+                homelessFail: '面试官看了看你的状态，婉拒了你',
                 success: '🎉 恭喜！你拿到了offer！\n(福利：初始3天PTO)',
                 fail: '面试失败了，继续努力吧',
                 casualSuccess: '居然过了！运气不错',
@@ -1493,15 +1545,15 @@ export const zh = {
                     hintPartial: (cost, mental) => `-$${cost} (半险赔付后自付)，精神-${mental}`,
                     hintOther: (cost, mental) => `-$${cost} (自费维修)，精神-${mental}`,
                 },
-                creditRepair: { text: '刷信用卡维修', hint: (cost, credit, mental) => `-$${cost}，信用-${credit}，精神-${mental}` },
-                skip: { text: '暂不修理', hint: (mental) => `车辆故障，下次开车需自费修理，保险不保，精神-${mental}` },
+                selfRepair: { text: '自行维修', hint: (cost, energy, mental, risk) => `-$${cost} (若不足将负债)，精力-${energy}，精神-${mental}，迟到风险 ${Math.round(risk * 100)}%` },
             },
             messages: {
-                fullCoverage: '幸好买了全险，保险公司承担了大部分维修费，你只付了免赔额。',
-                partialCoverage: '半险帮你分担了一部分维修费，但你仍需要自付不少费用。',
-                noFullCoverage: '因为没有足够保险保障，你不得不几乎全额支付昂贵的维修费。心在滴血...',
-                creditRepair: '不得不透支信用卡修车，债务压力增加了',
-                skipRepair: '你决定暂时不修车。在修好之前，开车通勤需要额外支付修理费并会迟到。',
+                fullCoverage: '幸好买了全险，保险公司承担了大部分维修费，你只付了免赔额。(迟到风险降低至 {0}%)',
+                partialCoverage: '半险帮你分担了一部分维修费，但你仍需要自付不少费用。(迟到风险降低至 {0}%)',
+                noFullCoverage: '因为没有足够保险保障，你不得不几乎全额支付昂贵的维修费。心在滴血...(迟到风险降低至 {0}%)',
+                selfRepairSuccess: '你花了一整晚把车修好了。虽然省了钱，但真的累垮了。(迟到风险上升至 {0}%)',
+                selfRepairLate: '虽然车修好了，但因为技术不过关导致的小故障让你还是迟到了...(迟到风险上升至 {0}%)',
+                selfRepairFail: '你显然高估了自己的修车技术。车子彻底坏了，现在你必须找专业维修了。(进入故障状态)',
             },
         },
 
@@ -1628,11 +1680,11 @@ export const zh = {
                 pay: { text: '支付房租', hint: (cost) => `-$${cost}` },
                 negotiate: {
                     text: '协商延期',
-                    hint: (chance, creditSuccess, mentalSuccess, creditFail, mentalFail) => `${chance}% 成功：信用-${creditSuccess}，精神-${mentalSuccess}；失败：被驱逐，信用-${creditFail}，精神-${mentalFail}`
+                    hint: (chance, mentalSuccess, mentalFail) => `${chance}% 成功：精神-${mentalSuccess}；失败：被驱逐，精神-${mentalFail}`
                 },
                 moveOut: { text: '搬到廉价房', hint: (cost, mental) => `月租${cost}，精神-${mental}` },
-                carDwelling: { text: '立刻搬离：住进车里', hint: (mental) => `房租归零，精神-${mental}，信用不变` },
-                homelessNow: { text: '立刻搬离：流落街头', hint: (mental, credit) => `房租归零，精神-${mental}，信用-${credit}` }
+                carDwelling: { text: '立刻搬离：住进车里', hint: (mental) => `房租归零，精神-${mental}` },
+                homelessNow: { text: '立刻搬离：流落街头', hint: (mental) => `房租归零，精神-${mental}` }
             },
             messages: {
                 paid: (cost) => `房租 $${cost} 已支付`,
@@ -1976,10 +2028,10 @@ export const zh = {
             },
             messages: {
                 denied: (cost) => `保险拒赔：商业用途不在保障范围。自付 $${cost} `,
-                fraud: (fine) => `被查出保险欺诈！罚款 $${fine}，信用分暴跌`,
+                fraud: (fine) => `被查出保险欺诈！罚款 $${fine}，压力暴涨`,
                 covered: (cost) => `蒙混过关，自付 $${cost} `,
                 lieSuccess: '保险公司信了你的话，赔付了全部损失！',
-                lieFail: (cost) => `被查出保险欺诈！罚款 $${cost}，信用分暴跌`
+                lieFail: (cost) => `被查出保险欺诈！罚款 $${cost}，压力暴涨`
             }
         },
 
@@ -1989,11 +2041,11 @@ export const zh = {
             description: (cost) => `本月水电费账单寄来了：$${cost} `,
             choices: {
                 pay: { text: '立即支付', hint: (cost) => `- $${cost} ` },
-                delay: { text: '拖延支付', hint: (score) => `信用分数 - ${score} ` }
+                delay: { text: '拖延支付', hint: (score) => `惩罚 +${score} ` }
             },
             messages: {
                 paid: (cost) => `支付了$${cost} 水电费`,
-                delayed: '延期一周，但影响了信用分数'
+                delayed: '延期一周，但压力还在继续累积'
             }
         },
 
@@ -2101,34 +2153,19 @@ export const zh = {
             }
         },
 
-        // 信用崩塌
-        credit_collapse: {
-            title: '💳 信用崩塌',
-            description: '你的信用分数跌破 500 分！银行冻结了你的信用卡，房东也开始怀疑你的支付能力...',
-            choices: {
-                accept: { text: '😰 接受现实', hint: '信用卡被冻结，部分选项不可用' },
-                fix: { text: '💪 尝试修复信用', hint: (cost, score, energy, mental) => `- $${cost} 咨询费，信用 + ${score}，-${energy} 精力，-${mental} 精神` }
-            },
-            messages: {
-                evicted: '信用崩塌！房东以信用问题为由将你驱逐，你只能住在车里',
-                frozen: '信用崩塌！银行冻结了你的信用卡，很多事情变得更难了',
-                fixed: (cost) => `花了 $${cost} 咨询信用修复专家，情况稍有好转`
-            }
-        },
-
         // 医疗债务催收
         medical_debt_collection: {
             title: '📞 债务催收电话',
             description: (debt) => `医疗债务催收公司打来电话，要求你支付 $${debt} 的欠款。`,
             choices: {
-                pay: { text: '💰 全额支付', hint: (debt, credit, mental) => `- $${debt}，信用 + ${credit}，精神 + ${mental} ` },
-                installment: { text: '🤝 协商分期', hint: (amount, score, mental) => `每月还款${amount}，信用分 - ${score}，精神 - ${mental} ` },
-                refuse: { text: '🙈 拒接电话', hint: (score, mental) => `信用分 - ${score}，精神 - ${mental} ` }
+                pay: { text: '💰 全额支付', hint: (debt, mental) => `- $${debt}，精神 + ${mental} ` },
+                installment: { text: '🤝 协商分期', hint: (amount, mental) => `每月还款${amount}，精神 - ${mental} ` },
+                refuse: { text: '🙈 拒接电话', hint: (mental) => `精神 - ${mental} ` }
             },
             messages: {
-                paid: (debt) => `还清了 $${debt} 的医疗债务，信用分稍有恢复`,
+                paid: (debt) => `还清了 $${debt} 的医疗债务，压力有所缓解`,
                 installment: (amount) => `达成分期协议，每月需要还 $${amount} `,
-                refused: '逃避并不能解决问题，信用分大幅下降'
+                refused: '逃避并不能解决问题，压力越来越大'
             }
         },
 

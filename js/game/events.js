@@ -265,11 +265,140 @@ export const EventsMixin = {
         return { triggers, layers };
     },
 
+    /**
+     * V2.XX 计算当前的裁员风险百分比
+     */
+    calculateLayoffRisk() {
+        if (!this.state || (this.state.job !== 'fulltime' && this.state.job !== 'intern')) return 0;
+
+        // 如果已经有待处理的 PIP 预兆，下个工作日几乎必发，直接显示 100%
+        if (this.state.pendingPipWarning) return 100;
+
+        // 裁员风险由两部分组成：
+        // 1. 系统性权重风险 (社交值、工作效率带来的随机事件权重占比)
+        // 2. 行为性触发风险 (任务逾期带来的滚雪球风险)
+
+        const period = this.state.period;
+        const availableEvents = GameEvents.getAvailableEvents(this.state, period, this.rng);
+
+        // 优先处理强制事件，如果强制事件中有裁员类，风险会显著升高
+        const mandatoryEvents = availableEvents.filter(e => e.mandatory === true);
+        let layoffWeight = 0;
+        let totalWeight = 0;
+
+        if (mandatoryEvents.length > 0) {
+            totalWeight = mandatoryEvents.reduce((sum, e) => sum + (typeof e.weight === 'function' ? e.weight(this.state) : (e.weight || 0)), 0);
+            layoffWeight = mandatoryEvents
+                .filter(e => e.type === 'layoff' || e.id === 'pip_warning' || e.id === 'sudden_layoff')
+                .reduce((sum, e) => sum + (typeof e.weight === 'function' ? e.weight(this.state) : (e.weight || 0)), 0);
+        } else {
+            totalWeight = availableEvents.reduce((sum, e) => sum + (typeof e.weight === 'function' ? e.weight(this.state) : (e.weight || 0)), 0);
+            layoffWeight = availableEvents
+                .filter(e => e.type === 'layoff' || e.id === 'pip_warning' || e.id === 'sudden_layoff')
+                .reduce((sum, e) => sum + (typeof e.weight === 'function' ? e.weight(this.state) : (e.weight || 0)), 0);
+        }
+
+        let weightProbability = totalWeight > 0 ? (layoffWeight / totalWeight) : 0;
+
+        // 额外风险：任务逾期的独立触发概率 (time.js 中的逻辑)
+        const overdueDays = (this.state.workTask && this.state.workTask.overdueDays) || 0;
+        let taskRisk = 0;
+        if (overdueDays > 0) {
+            // time.js 中每超时一天增加 10% 概率触发 pendingPipWarning
+            taskRisk = Math.min(1.0, overdueDays * 0.1);
+        }
+
+        // 最终风险 = 1 - (不发生权重裁员的概率 * 不发生逾期裁员的概率)
+        const totalRisk = 1 - (1 - weightProbability) * (1 - taskRisk);
+
+        return Math.round(totalRisk * 100);
+    },
+
+    _applyLunchSettlement(baseState, result) {
+        const state = this._getReactiveState(baseState);
+        const lunchType = state.lunchType || 'skip';
+        const lunchOpt = GameData.lunchOptions[lunchType];
+        if (!lunchOpt) return;
+
+        let totalCost = lunchOpt.cost;
+        let tipAmount = 0;
+        if (lunchType === 'fastfood' && lunchOpt.cost > 0) {
+            tipAmount = Math.round(lunchOpt.cost * GameData.usaFeatures.tipRate);
+            totalCost += tipAmount;
+        }
+        this.deductMoney(totalCost, 'daily', { state: baseState });
+
+        if (lunchOpt.healthEffect) state.health = Math.max(0, Math.min(state.maxHealth || 100, state.health + lunchOpt.healthEffect));
+        if (lunchOpt.energyEffect) state.energy = Math.min(state.maxEnergy || 100, state.energy + lunchOpt.energyEffect);
+        if (lunchOpt.mentalEffect) state.mental = Math.min(state.maxMental || 100, state.mental + lunchOpt.mentalEffect);
+        if (lunchOpt.socialEffect) state.socialValue = Math.min(100, (state.socialValue || 50) + lunchOpt.socialEffect);
+
+        if (lunchType === 'bento') state.hasPreparedMeal = false;
+        const lunchName = typeof lunchOpt.name === 'function' ? lunchOpt.name() : lunchOpt.name;
+        result.message += `\n🍱 ${I18n.t('ui.side.lunchLabel')}: ${lunchName}${totalCost > 0 ? ` -$${totalCost}` : ''}`;
+    },
+
+    _isLunchPhase(state) {
+        if (!state) return false;
+        return state.period === 'day' && !state.dayLunchDone;
+    },
+
+    _createLunchEvent() {
+        const lunchOptions = GameEvents.getAvailableLunchOptions(this.state, { game: this, rng: this.rng }) || [];
+        const availableChoices = lunchOptions
+            .filter(opt => !opt.disabled)
+            .map((opt) => ({
+                id: `lunch_${opt.key}`,
+                text: opt.name,
+                hint: opt.hint,
+                hintType: 'neutral',
+                effect: (state) => {
+                    state.lunchType = opt.key;
+                    state.dayLunchDone = true;
+                    const lunchResult = { message: '', type: 'neutral' };
+                    this._applyLunchSettlement(state, lunchResult);
+                    state.sideActionsLocked = false;
+                    lunchResult.triggerEvent = 'FORCE_NEXT';
+                    return lunchResult;
+                }
+            }));
+
+        if (availableChoices.length === 0) {
+            availableChoices.push({
+                id: 'lunch_skip_fallback',
+                text: I18n.t('data.lunch.skip.name'),
+                hint: I18n.t('data.lunch.skip.hint', GameData.lunchOptions.skip || {}),
+                hintType: 'neutral',
+                effect: (state) => {
+                    state.lunchType = 'skip';
+                    state.dayLunchDone = true;
+                    const lunchResult = { message: '', type: 'neutral' };
+                    this._applyLunchSettlement(state, lunchResult);
+                    state.sideActionsLocked = false;
+                    lunchResult.triggerEvent = 'FORCE_NEXT';
+                    return lunchResult;
+                }
+            });
+        }
+
+        return {
+            id: 'day_lunch',
+            type: 'daily',
+            title: I18n.t('ui.side.lunchLabel'),
+            description: I18n.t('ui.side.lunchLabel'),
+            period: 'day',
+            choices: availableChoices
+        };
+    },
+
 
     /**
      * Get event by ID (Wrapper to support synthetic events and standard lookup)
      */
     getEventById(id) {
+        if (id === 'day_lunch') {
+            return this._createLunchEvent();
+        }
         if (id === 'FORCE_NEXT') {
             return this.getNextEvent();
         }
@@ -283,6 +412,12 @@ export const EventsMixin = {
      */
     getNextEvent() {
         const period = this.state.period;
+
+        if (period === 'day' && this._isLunchPhase(this.state) && !this.state.dayLunchDone) {
+            this.currentEvent = this._createLunchEvent();
+            this.state.sideActionsLocked = true;
+            return this.currentEvent;
+        }
 
 
         // V2.35 检查事件队列 (傍晚事件) - 优先于所有夜间/日常事件
@@ -453,42 +588,11 @@ export const EventsMixin = {
         // 只有在真正执行结算时才锁定，避免随机/插队事件导致侧边栏被永久锁死到当天结束
         state.sideActionsLocked = true; // 结算开始，锁定选择器
 
-        // 1. 结算午餐
-        if (!result.ignoreLunch) {
-            const lunchOpt = GameData.lunchOptions[state.lunchType];
-            if (lunchOpt) {
-                let totalCost = lunchOpt.cost;
-                let tipAmount = 0;
-                if (state.lunchType === 'fastfood' && lunchOpt.cost > 0) {
-                    tipAmount = Math.round(lunchOpt.cost * GameData.usaFeatures.tipRate);
-                    totalCost += tipAmount;
-                }
-                this.deductMoney(totalCost, 'daily', { state: baseState });
-
-                // Apply all effects
-                if (lunchOpt.healthEffect) state.health = Math.max(0, Math.min(state.maxHealth || 100, state.health + lunchOpt.healthEffect));
-                if (lunchOpt.energyEffect) state.energy = Math.min(state.maxEnergy || 100, state.energy + lunchOpt.energyEffect); // V2.55 Fix
-                if (lunchOpt.mentalEffect) state.mental = Math.min(state.maxMental || 100, state.mental + lunchOpt.mentalEffect);
-                if (lunchOpt.socialEffect) state.socialValue = Math.min(100, (state.socialValue || 50) + lunchOpt.socialEffect);
-
-                if (state.lunchType === 'bento') state.hasPreparedMeal = false;
-                const lunchName = typeof lunchOpt.name === 'function' ? lunchOpt.name() : lunchOpt.name;
-                result.message += `\n🍱 ${I18n.t('ui.side.lunchLabel')}: ${lunchName}${totalCost > 0 ? ` -$${totalCost}` : ''}`;
-
-                // Append effect descriptions to message
-                const parts = [];
-                if (lunchOpt.healthEffect) parts.push(`健康${lunchOpt.healthEffect > 0 ? '+' : ''}${lunchOpt.healthEffect}`);
-                if (lunchOpt.energyEffect) parts.push(`精力${lunchOpt.energyEffect > 0 ? '+' : ''}${lunchOpt.energyEffect}`);
-                if (lunchOpt.mentalEffect) parts.push(`精神${lunchOpt.mentalEffect > 0 ? '+' : ''}${lunchOpt.mentalEffect}`);
-                if (lunchOpt.socialEffect) parts.push(`社交${lunchOpt.socialEffect > 0 ? '+' : ''}${lunchOpt.socialEffect}`);
-
-                if (parts.length > 0) {
-                    // result.message += ` (${parts.join(', ')})`;
-                }
-            }
+        if (!result.ignoreLunch && !this._isLunchPhase(state)) {
+            this._applyLunchSettlement(baseState, result);
         }
 
-        // 2. 结算日常侧边行动
+        // 1. 结算日常侧边行动
         if (state.selectedDailyAction && state.selectedDailyAction !== 'none') {
             const dailyAction = GameEvents.getDailyActionById(state.selectedDailyAction);
             if (dailyAction) {
@@ -497,7 +601,7 @@ export const EventsMixin = {
             }
         }
 
-        // 3. 结算突发事件处理
+        // 2. 结算突发事件处理
         if (state.selectedIncident && state.selectedIncident !== 'none') {
             const [incidentId, optionId] = state.selectedIncident.split(':');
             const incident = GameEvents.getIncidentById(incidentId);
@@ -510,45 +614,7 @@ export const EventsMixin = {
             }
         }
 
-        // 4. 结算通勤费用（公交、步行等）
-        const commuteId = state.selectedCommute;
 
-        if (commuteId && commuteId !== 'car' && commuteId !== 'car_refuel' && commuteId !== 'car_repair') {
-            const commuteConfig = GameData.commuteOptions[commuteId];
-            if (commuteConfig) {
-                if (commuteConfig.cost > 0) {
-                    this.deductMoney(commuteConfig.cost, 'commute', { state: baseState });
-                    const commuteName = typeof commuteConfig.name === 'function' ? commuteConfig.name() : commuteConfig.name;
-                    result.message += `\n🚌 ${commuteName}：-$${commuteConfig.cost}`;
-                }
-
-                if (commuteConfig.healthEffect > 0) {
-                    state.health = Math.min(100, state.health + commuteConfig.healthEffect);
-                    const commuteNameWalk = typeof commuteConfig.name === 'function' ? commuteConfig.name() : commuteConfig.name;
-                    result.message += `\n🚶 ${commuteNameWalk}: ${I18n.t('ui.side.healthPlus', commuteConfig.healthEffect)}`;
-                }
-
-                // 预览模式：不执行通勤“迟到”随机判定，避免随机罚值影响确定性预览
-                const isLate = (context && context.isPreview)
-                    ? false
-                    : (context.rng.random() < commuteConfig.lateChance);
-                if (isLate) {
-                    const lateEnergyPenalty = 10;
-                    const lateMentalPenalty = 5;
-                    state.energy = Math.max(0, state.energy - lateEnergyPenalty);
-                    state.mental = Math.max(0, state.mental - lateMentalPenalty);
-                    if (state.workTask) {
-                        state.workTask.progress = Math.max(0, state.workTask.progress - 5);
-                    }
-                    result.message += `\n⏰ ${I18n.t('ui.side.latePenalty', lateEnergyPenalty, lateMentalPenalty)}`;
-                    if (state.pipActive) {
-                        const pipPenalty = 10;
-                        state.pipPerformanceScore = Math.max(0, (state.pipPerformanceScore || 50) - pipPenalty);
-                        result.message += `, ${I18n.t('ui.side.pipPenalty', pipPenalty)}`;
-                    }
-                }
-            }
-        }
     },
 
     /**
@@ -783,7 +849,7 @@ export const EventsMixin = {
             }
 
             // V2.XX 先结算侧边选项（仅限白天且无触发事件时）
-            if (isDaytime && !result.triggerEvent) {
+            if (isDaytime && this.currentEvent.id !== 'day_lunch' && !result.triggerEvent) {
                 this._applyDaytimeSideSettlements(this.state, context, result);
             } else if (isDaytime && result.triggerEvent) {
                 // 如果触发了子事件，防止之后的事件重复显示选择器
@@ -818,8 +884,6 @@ export const EventsMixin = {
                     result.message = (result.message || '') + sideMessage;
                 }
             }
-
-
 
             // 处理精力恢复
             if (result.energyRecoveryTomorrow !== undefined) {

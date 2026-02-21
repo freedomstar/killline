@@ -145,6 +145,7 @@ export const hospitalEvents = [
 
                     if (context.rng.random() < fireChance) {
                         state.job = 'fired';
+                        if (state.monthlyIncome > 0) state.lastMonthlyIncome = state.monthlyIncome;
                         state.monthlyIncome = 0;
                         state.unemployedDays = 0;
                         if (state.insurance.healthPlanId === 'employer_basic' || state.insurance.healthPlanId === 'employer_premium') {

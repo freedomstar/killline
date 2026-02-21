@@ -87,6 +87,35 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Clickable stat items */
+.status-item.clickable {
+    cursor: pointer;
+    position: relative;
+}
+
+.status-item.clickable::after {
+    content: '?';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.5rem;
+    color: var(--color-text-muted);
+    opacity: 0.5;
+    width: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-text-muted);
+    border-radius: 50%;
+}
+
+.status-item.clickable:hover::after {
+    opacity: 1;
+    color: var(--color-text-primary);
+    border-color: var(--color-text-primary);
+}
+
 .status-item-full {
     grid-column: 1 / -1;
     display: flex;

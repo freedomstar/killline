@@ -55,53 +55,63 @@ export const accidentEvents = [
                     state.money -= cost;
                     state.mental -= conf.mentalLoss;
 
+                    // Recover risk
+                    state.carRepairRisk = Math.max(0.1, (state.carRepairRisk || 0.1) - (conf.riskRecovery || 0.1));
+                    const riskPercent = Math.round(state.carRepairRisk * 100);
+
                     if (planId === 'full_coverage') {
-                        return { message: I18n.t('events.car_breakdown.messages.fullCoverage'), type: 'neutral' };
+                        return { message: I18n.t('events.car_breakdown.messages.fullCoverage', riskPercent), type: 'neutral' };
                     }
                     if (planId === 'liability') {
-                        return { message: I18n.t('events.car_breakdown.messages.partialCoverage'), type: 'neutral' };
+                        return { message: I18n.t('events.car_breakdown.messages.partialCoverage', riskPercent), type: 'neutral' };
                     }
-                    return { message: I18n.t('events.car_breakdown.messages.noFullCoverage'), type: 'negative' };
+                    return { message: I18n.t('events.car_breakdown.messages.noFullCoverage', riskPercent), type: 'negative' };
                 }
             },
             {
-                text: I18n.t('events.car_breakdown.choices.creditRepair.text'),
+                text: I18n.t('events.car_breakdown.choices.selfRepair.text'),
                 hint: (state) => {
-                    const conf = GameData.eventConfigs.random_events_cleanup.car_breakdown.repair;
-                    const cost = getCarRepairCost(state);
-                    const creditConf = GameData.eventConfigs.random_events_cleanup.car_breakdown.credit;
-                    return I18n.t('events.car_breakdown.choices.creditRepair.hint', cost, creditConf.creditScoreLoss, creditConf.mentalLoss);
+                    const conf = GameData.eventConfigs.random_events_cleanup.car_breakdown.self_repair;
+                    const risk = state.carRepairRisk || 0.1;
+                    return I18n.t('events.car_breakdown.choices.selfRepair.hint', conf.cost, conf.energyCost, conf.mentalLoss, risk);
                 },
-                hintType: 'negative',
-                condition: (state) => {
-                    const cost = getCarRepairCost(state);
-                    return state.money < cost && state.creditScore > 500;
-                },
+                hintType: 'energy',
+                // Always available, money can go negative
+                condition: (state) => true,
                 effect: (state, context) => {
-                    const creditConf = GameData.eventConfigs.random_events_cleanup.car_breakdown.credit;
-                    const cost = getCarRepairCost(state);
+                    const conf = GameData.eventConfigs.random_events_cleanup.car_breakdown.self_repair;
 
-                    state.money -= cost;
-                    state.creditScore -= creditConf.creditScoreLoss;
-                    state.mental -= creditConf.mentalLoss;
-                    return { message: I18n.t('events.car_breakdown.messages.creditRepair'), type: 'negative' };
-                }
-            },
-            {
-                text: I18n.t('events.car_breakdown.choices.skip.text'),
-                hint: (state) => {
-                    const conf = GameData.eventConfigs.random_events_cleanup.car_breakdown.skip;
-                    return I18n.t('events.car_breakdown.choices.skip.hint', conf.mentalLoss);
-                },
-                hintType: 'danger',
-                effect: (state, context) => {
-                    const conf = GameData.eventConfigs.random_events_cleanup.car_breakdown.skip;
-                    // V2.24 改为设置 carBroken 标记
-                    state.carBroken = true;
+                    state.money -= conf.cost; // Allow negative
+                    state.energy = Math.max(0, state.energy - conf.energyCost);
                     state.mental -= conf.mentalLoss;
+
+                    const currentRisk = state.carRepairRisk || 0.1;
+                    const isLate = context.rng.random() < currentRisk;
+
+                    // Increase risk for next time
+                    state.carRepairRisk = Math.min(conf.riskMax || 0.5, currentRisk + (conf.riskIncrement || 0.1));
+                    const newRiskPercent = Math.round(state.carRepairRisk * 100);
+
+                    if (isLate) {
+                        // Trigger late penalty
+                        const lateConf = GameData.eventConfigs.commute.late;
+                        state.energy = Math.max(0, state.energy - lateConf.energyLoss);
+                        state.mental = Math.max(0, state.mental - lateConf.mentalLoss);
+                        if (state.workTask) {
+                            state.workTask.progress = Math.max(0, state.workTask.progress - lateConf.progressLoss);
+                        }
+                        if (state.pipActive) {
+                            state.pipPerformanceScore = Math.max(0, (state.pipPerformanceScore || 50) - lateConf.pipScoreLoss);
+                        }
+                        return {
+                            message: I18n.t('events.car_breakdown.messages.selfRepairLate', newRiskPercent),
+                            type: 'negative'
+                        };
+                    }
+
                     return {
-                        message: I18n.t('events.car_breakdown.messages.skipRepair'),
-                        type: 'negative'
+                        message: I18n.t('events.car_breakdown.messages.selfRepairSuccess', newRiskPercent),
+                        type: 'neutral'
                     };
                 }
             }
