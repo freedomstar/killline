@@ -774,7 +774,8 @@ export const zh = {
             moveCompleted: (name) => `搬家完成！新住所：${name}`,
             noAlternative: '暂无可选住所',
             insufficientCash: (required) => `现金不足：需要至少 $${required} 才能申请搬家`,
-            insufficientCashShort: (required) => `至少需要 $${required}`
+            insufficientCashShort: (required) => `至少需要 $${required}`,
+            recoverEveryNight: '每晚回复：'
         }
     },
 
@@ -2117,7 +2118,7 @@ export const zh = {
             description: (temp) => `今晚气温骤降至 ${temp}°C！如果不采取措施，可能会生病。`,
             choices: {
                 heatHigh: { text: '🔥 暖气开到最高', hint: (money, energy) => `- $${money}，-${energy} 精力` },
-                wearMore: { text: '🧥 多穿衣服硬抗', hint: (money, energy) => (money ? `- $${money}，-${energy} 精力` : ` - ${energy} 精力`) },
+                wearMore: { text: '🧥 多穿衣服硬抗', hint: (energy, health) => `- ${energy} 精力，-${health} 健康` },
                 gym: { text: '🏃 去健身房过夜', hint: (money, energy, health) => `- $${money}，-${energy} 精力，+${health} 健康` }
             },
             messages: {

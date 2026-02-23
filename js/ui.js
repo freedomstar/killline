@@ -1885,6 +1885,7 @@ export const UI = {
                         <div class="money danger" style="white-space:nowrap; font-weight:700;">$${cost.toLocaleString()}</div>
                     </div>
                     <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; font-size:0.85rem; color:var(--color-text-secondary);">
+                        <span>${I18n.t('game.housing.recoverEveryNight')}</span>
                         <span>⚡ ${fmt(energy)}</span>
                         <span>🧠 ${fmt(mental)}</span>
                         <span>❤️ ${fmt(health)}</span>
@@ -2645,7 +2646,10 @@ export const UI = {
         let effectsHtml = '';
         if (effects.length > 0) {
             effectsHtml = `
-                <div style="margin-top: 15px; margin-bottom: 5px; font-weight: bold; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;">${I18n.t('ui.status.effectsTitle')}</div>
+                <div style="margin-top: 15px; margin-bottom: 5px; font-weight: bold; border-bottom: 1px solid var(--color-border); padding-bottom: 5px; display: flex; align-items: baseline; gap: 8px;">
+                    <span>${I18n.t('ui.status.effectsTitle')}</span>
+                    <span style="font-size: 0.85em; font-weight: normal; color: var(--color-text-secondary);">${I18n.t('game.housing.recoverEveryNight').replace(/[：:]\s*$/, '')}</span>
+                </div>
                 <div class="stat-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
                     ${effects.map(e => `
                         <div class="stat-item">
@@ -2754,12 +2758,23 @@ export const UI = {
                 const baseCost = Math.floor((house.cost || 0) * (state.rentIndex || 1));
                 const affordable = (state.money || 0) >= baseCost;
                 const desc = this.resolveText(house.description) || I18n.t(`data.housing.${id}.description`);
+                const energy = Number(house.energyRecovery || 0);
+                const mental = Number(house.mentalBonus || 0);
+                const health = Number(house.healthBonus || 0);
+                const fmt = (v) => `${v > 0 ? '+' : ''}${v}`;
+
                 return `
                     <button class="plan-option-card housing-change-card" data-housing-id="${id}" style="text-align:left; width:100%;" ${affordable ? '' : 'disabled aria-disabled="true"'}>
                         <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
                             <div>
                                 <div style="font-weight:700;">${icon} ${name}</div>
                                 <div style="margin-top:4px; font-size:0.9em; color:var(--color-text-secondary);">${desc}</div>
+                                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; font-size:0.85rem; color:var(--color-text-secondary);">
+                                    <span>${I18n.t('game.housing.recoverEveryNight')}</span>
+                                    <span>⚡ ${fmt(energy)}</span>
+                                    <span>🧠 ${fmt(mental)}</span>
+                                    <span>❤️ ${fmt(health)}</span>
+                                </div>
                             </div>
                             <div style="text-align:right; white-space:nowrap;">
                                 <div class="money danger">$${baseCost.toLocaleString()}</div>

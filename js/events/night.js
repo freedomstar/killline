@@ -241,13 +241,13 @@ export const nightEvents = [
                 text: I18n.t('events.cold_weather.choices.wearMore.text'),
                 hint: (state) => {
                     const conf = GameData.eventConfigs.cold_weather.wear;
-                    return I18n.t('events.cold_weather.choices.wearMore.hint', conf.moneyCost, conf.energyCost);
+                    return I18n.t('events.cold_weather.choices.wearMore.hint', conf.energyCost, conf.healthLoss);
                 },
-                hintType: 'energy',
+                hintType: 'negative',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.cold_weather.wear;
-                    state.money -= conf.moneyCost;
                     state.energy = Math.max(0, state.energy - conf.energyCost);
+                    state.health = Math.max(0, state.health - conf.healthLoss);
                     return { message: I18n.t('events.cold_weather.messages.wearMore'), type: 'neutral' };
                 }
             },

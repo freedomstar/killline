@@ -1019,7 +1019,8 @@ const enMoreOverrides = {
 
     game: {
         housing: {
-            insufficientCashShort: (need) => `Need $${need}`
+            insufficientCashShort: (need) => `Need $${need}`,
+            recoverEveryNight: 'Recovers every night: '
         },
         artifactDaily: {
             ticker_rumor_label: '[Rumor]',
@@ -1600,7 +1601,7 @@ const enMoreOverrides = {
             description: (temp) => `Temperature drops to ${temp}degC tonight. Without action, you may get sick.`,
             choices: {
                 heatHigh: { text: 'Turn Heat to Max', hint: (money, energy) => `-$${money}, E-${energy}` },
-                wearMore: { text: 'Layer Up and Endure', hint: (money, energy) => (money ? `-$${money}, E-${energy}` : `E-${energy}`) },
+                wearMore: { text: 'Layer Up and Endure', hint: (energy, health) => `E-${energy}, H-${health}` },
                 gym: { text: 'Stay at Gym Overnight', hint: (money, energy, health) => `-$${money}, E-${energy}, H+${health}` }
             },
             messages: {

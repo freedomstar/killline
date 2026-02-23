@@ -69,11 +69,11 @@ export function processArtifactReactions(state, initialDelta, sourceId) {
 
                 const artifact = artifacts[id];
                 if (artifact && artifact.onModifyBase) {
-                    const preArtifact = { ...layerWorking };
-                    const res = artifact.onModifyBase(layerWorking, layerContext);
+                    const tempDelta = { ...layerInput };
+                    const res = artifact.onModifyBase(tempDelta, layerContext, state);
 
                     // V2.XX: Round logic implementation
-                    const rawDiff = getDiff(preArtifact, layerWorking);
+                    const rawDiff = getDiff(layerInput, tempDelta);
                     const validDiff = {};
                     let hasValidChange = false;
 
@@ -90,15 +90,9 @@ export function processArtifactReactions(state, initialDelta, sourceId) {
                     });
 
                     if (hasValidChange) {
-                        // Apply rounded values to ensure state consistency
-                        // Revert any changes that were filtered out
-                        Object.keys(rawDiff).forEach(key => {
-                            const baseVal = preArtifact[key] !== undefined ? preArtifact[key] : 0;
-                            if (validDiff[key] !== undefined) {
-                                layerWorking[key] = baseVal + validDiff[key];
-                            } else {
-                                layerWorking[key] = baseVal;
-                            }
+                        // Apply valid rounded increments securely to layerWorking
+                        Object.keys(validDiff).forEach(key => {
+                            layerWorking[key] = (layerWorking[key] || 0) + validDiff[key];
                         });
 
                         layerTriggers.push({
@@ -109,11 +103,6 @@ export function processArtifactReactions(state, initialDelta, sourceId) {
                         layerHasChange = true;
                         triggeredThisLayer.add(id);
                         totalTriggerCount++;
-                    } else {
-                        // Revert all changes if no valid change found
-                        if (Object.keys(rawDiff).length > 0) {
-                            Object.assign(layerWorking, preArtifact);
-                        }
                     }
                 }
             });
