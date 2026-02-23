@@ -401,6 +401,7 @@ const enOverrides = {
             intro_3: 'But behind the dream lies a <span class="danger">kill line</span>.',
             intro_footer: 'Energy | Mental | Savings',
             start_btn: 'Start Game',
+            about_us: 'About Us',
             seed_label: 'Seed (optional):',
             seed_placeholder: 'Random if empty',
             dev_tools: 'Dev Tools'
@@ -440,6 +441,10 @@ const enOverrides = {
             save_game: 'Save Game',
             cancel: 'Cancel',
             confirm: 'Confirm',
+            about_us_title: 'About Us',
+            about_us_desc1: 'Hello! I am a former tech company game developer. After years in the industry, I have deeply experienced both its charm and cruelty. In this field full of myths and high salaries, it is still hard to withstand a layoff notice; the invisible "kill zone" can drop at any time.',
+            about_us_desc2: 'Currently, I am exploring Vibe Coding. "Killzone Survivor" is my attempt to let you experience survival dilemmas and black humor. If you have any questions or suggestions, feel free to contact me!',
+            contact_info: 'Contact: killzone-survivor@foxmail.com',
             dev_editor: 'Edit',
             news_detail: '📰 Market Intel'
         },

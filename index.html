@@ -267,17 +267,19 @@
                     <div class="stat-detail-icon" id="stat-detail-icon">⚡</div>
                     <div class="stat-detail-name" id="stat-detail-name">精力</div>
                     <div class="stat-detail-description" id="stat-detail-description"></div>
-                    
+
                     <div class="stat-detail-section">
-                        <div class="stat-detail-section-title" data-i18n="ui_static.stat_detail.effect_title">📈 属性作用</div>
+                        <div class="stat-detail-section-title" data-i18n="ui_static.stat_detail.effect_title">📈 属性作用
+                        </div>
                         <div class="stat-detail-effects" id="stat-detail-effects"></div>
                     </div>
-                    
+
                     <div class="stat-detail-section">
-                        <div class="stat-detail-section-title" data-i18n="ui_static.stat_detail.impact_title">⚠️ 影响因素</div>
+                        <div class="stat-detail-section-title" data-i18n="ui_static.stat_detail.impact_title">⚠️ 影响因素
+                        </div>
                         <div class="stat-detail-impacts" id="stat-detail-impacts"></div>
                     </div>
-                    
+
                     <div class="stat-detail-current">
                         <span data-i18n="ui_static.stat_detail.current_value">当前值:</span>
                         <span id="stat-detail-value">100/100</span>
@@ -303,6 +305,25 @@
                 <h2 class="modal-title" data-i18n="ui_static.modals.message_history">📜 历史消息</h2>
                 <div class="message-history-list" id="message-history-list">
                     <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- About Us Modal -->
+        <div id="about-us-modal" class="modal-overlay hidden">
+            <div class="modal-content glass-panel" style="max-width: 450px; text-align: center;">
+                <button id="close-about-us" class="close-button">×</button>
+                <h2 class="modal-title" data-i18n="ui_static.modals.about_us_title">关于我们</h2>
+                <div class="modal-body" style="padding: 20px; line-height: 1.6; font-size: 0.95em;">
+                    <p data-i18n="ui_static.modals.about_us_desc1"
+                        style="margin-bottom: 12px; text-align: left; text-indent: 2em;">
+                        你好，我是一名前大厂游戏开发员工。在互联网狂飙多年后，我深刻体会到了这个行业的魅力与残酷。在这个充满梦想与高薪神话的行业里，有时候依然难以抵挡一纸裁员通知，那条隐形的“斩杀线”随时可能落下。
+                    </p>
+                    <p data-i18n="ui_static.modals.about_us_desc2"
+                        style="margin-bottom: 16px; text-align: left; text-indent: 2em;">
+                        目前我正在探索 Vibe Coding 的可能性，《斩杀线生存》正是我的一次尝试，希望能让你感受到生存的困境与黑色幽默。如果有任何问题或建议，欢迎联系我探讨！</p>
+                    <p style="font-weight: bold; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;"
+                        data-i18n="ui_static.modals.contact_info">联系方式：killzone-survivor@foxmail.com</p>
                 </div>
             </div>
         </div>
@@ -392,7 +413,6 @@
             <button id="start-button" class="primary-button start-btn-lg" data-i18n="ui_static.start.start_btn">
                 开始游戏
             </button>
-
             <div class="seed-input-container seed-group">
                 <label for="seed-input" class="seed-label" data-i18n="ui_static.start.seed_label">世界线种子
                     (选填):</label>
@@ -400,11 +420,13 @@
                     placeholder="留空则随机">
             </div>
 
-            <div class="dev-tools-container dev-tools-area">
-                <a href="devtools.html" class="dev-tools-btn dev-tools-link">
-                    <span data-i18n="ui_static.start.dev_tools">🔧 开发者工具</span>
-                </a>
-            </div>
+            <button id="about-us-btn" class="action-btn outline"
+                style="margin: 20px auto 0; font-size: 0.85em; padding: 6px 20px; width: auto; max-width: 200px; display: block;"
+                data-i18n="ui_static.start.about_us">
+                关于我们
+            </button>
+
+
         </div>
 
         <!-- SECTION: GAME SCREEN -->
@@ -825,8 +847,10 @@
                         <div class="card-body">
                             <button id="save-game-btn" class="primary-button status-btn-full mb-xs"
                                 data-i18n="ui_static.status_page.save_btn">保存游戏</button>
-                            <button id="return-to-title-btn" class="action-btn outline status-btn-full"
+                            <button id="return-to-title-btn" class="action-btn outline status-btn-full mb-xs"
                                 data-i18n="ui_static.status_page.return_btn">返回标题</button>
+                            <button id="status-about-us-btn" class="action-btn outline status-btn-full"
+                                data-i18n="ui_static.start.about_us">关于我们</button>
                         </div>
                     </div>
 
@@ -964,21 +988,7 @@
                         </div>
                     </div>
 
-                    <!-- Dev Tools -->
-                    <div class="status-section dev-tools-card">
-                        <h3 data-i18n="ui_static.status_page.dev_tools">🔧 开发者工具</h3>
-                        <div class="card-body">
-                            <a href="devtools.html" class="action-btn dev-check-btn">
-                                <span data-i18n="ui_static.status_page.dev_check">📋 事件一致性检查</span>
-                            </a>
-                            <p class="dev-tools-desc">
-                                <span data-i18n="ui_static.status_page.dev_desc">分析事件效果与描述是否一致</span>
-                            </p>
-                            <button id="dev-edit-btn" class="action-btn outline" style="margin-top: 8px;">
-                                <span data-i18n="ui_static.modals.dev_editor">🔧 修改属性</span>
-                            </button>
-                        </div>
-                    </div>
+
                 </div>
                 <div class="spacer-bottom"></div>
             </div>

@@ -79,7 +79,7 @@ export const artifactConfig = {
 
     super_vitamin: {
         unit: 1,
-        mentalRestoreRatio: 0.5 // Recover 0.5 Mental per unit Health
+        mentalRestoreRatio: 1 // Recover 0.5 Mental per unit Health
     },
 
     // 赛博修仙流 (Cyber-Enhancement)
@@ -119,7 +119,7 @@ export const artifactConfig = {
     // 精神回复流 (Mental Gain)
     quantum_meditation_mat: {
         unit: 1,
-        healthRestoreRatio: 0.5 // Recover 0.5 Health per unit Mental
+        healthRestoreRatio: 1 // Recover 0.5 Health per unit Mental
     },
 
     streamer_mic: {

@@ -9,6 +9,7 @@ import { GameEvents } from './events/index.js';
 import { GameData } from './data/index.js';
 import { AudioManager } from './audio.js';
 import { initGMPanel } from './gm_panel.js';
+
 import { I18n } from './i18n.js';
 import { getArtifact } from './data/artifacts.js';
 

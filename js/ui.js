@@ -314,6 +314,9 @@ export const UI = {
 
         // V2.12 Start Screen Refactor
         this.elements.startButton = document.getElementById('start-button');
+        this.elements.aboutUsBtn = document.getElementById('about-us-btn');
+        this.elements.aboutUsModal = document.getElementById('about-us-modal');
+        this.elements.closeAboutUs = document.getElementById('close-about-us');
         this.elements.loadModal = document.getElementById('load-modal');
         this.elements.loadModalSlots = document.getElementById('load-modal-slots');
         this.elements.closeLoadModal = document.getElementById('close-load-modal');
@@ -510,6 +513,37 @@ export const UI = {
             // V2.12 Start Button -> Load Modal
             if (this.elements.startButton) {
                 this.elements.startButton.addEventListener('click', () => this.showLoadModal());
+            }
+            if (this.elements.aboutUsBtn) {
+                this.elements.aboutUsBtn.addEventListener('click', () => {
+                    if (this.elements.aboutUsModal) {
+                        this.elements.aboutUsModal.classList.remove('hidden');
+                    }
+                });
+            }
+
+            this.elements.statusAboutUsBtn = document.getElementById('status-about-us-btn');
+            if (this.elements.statusAboutUsBtn) {
+                this.elements.statusAboutUsBtn.addEventListener('click', () => {
+                    if (this.elements.aboutUsModal) {
+                        this.elements.aboutUsModal.classList.remove('hidden');
+                    }
+                });
+            }
+
+            if (this.elements.closeAboutUs) {
+                this.elements.closeAboutUs.addEventListener('click', () => {
+                    if (this.elements.aboutUsModal) {
+                        this.elements.aboutUsModal.classList.add('hidden');
+                    }
+                });
+            }
+            if (this.elements.aboutUsModal) {
+                this.elements.aboutUsModal.addEventListener('click', (e) => {
+                    if (e.target === this.elements.aboutUsModal) {
+                        this.elements.aboutUsModal.classList.add('hidden');
+                    }
+                });
             }
             if (this.elements.closeLoadModal) {
                 this.elements.closeLoadModal.addEventListener('click', () => this.hideLoadModal());
