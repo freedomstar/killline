@@ -2474,7 +2474,7 @@ const enFinalOverrides = {
                 title: '2. How a Day Progresses (Core Loop)',
                 content: 'The game progresses by days, but each day is divided into multiple periods:',
                 list: [
-                    '`Daytime`: Handle work-related events and complete daily "commute/lunch/extra action/sudden" choices.',
+                    '`Daytime`: Handle work-related events and complete daily "lunch/extra action/sudden" choices.',
                     '`Night`: More focused on life and risk (may also see "omens/rumors").',
                     '`Late Night`: End of the day, then enter the next day.'
                 ],
@@ -2508,7 +2508,7 @@ const enFinalOverrides = {
                 content: 'The main interface consists of two parts: the **Dashboard** above (your current survival status), and the **Event Cards** below (what you need to do today).',
                 image: {
                     src: 'assets/images/Explanation/en/ui_dashboard_light.jpg',
-                    alt: 'Main Interface (Daytime: Commute+Lunch+Events)',
+                    alt: 'Main Interface (Daytime: Lunch+Events)',
                     width: 400
                 }
             },
@@ -2615,7 +2615,7 @@ const enFinalOverrides = {
                             alt: 'Auto-payment Settings (On/Off/Retained Cash/Daily Limit)',
                             width: 400
                         },
-                        note: 'Suggestion: Before familiarizing with version rhythm, set retained cash higher first to avoid being drained by auto-payment and unable to eat/commute the next day.'
+                        note: 'Suggestion: Before familiarizing with version rhythm, set retained cash higher first to avoid being drained by auto-payment and unable to eat the next day.'
                     }
                 ]
             },
@@ -2801,7 +2801,7 @@ const enFinalOverrides = {
                         content: 'At each day\'s settlement, the system generates a financial report summarizing the day\'s income and expenses:',
                         list: [
                             '**Income Sources**: Salary, investment gains, artifact rewards, etc.',
-                            '**Expense Items**: Rent, insurance, utilities, medical, commute, meals, etc.',
+                            '**Expense Items**: Rent, insurance, utilities, medical, meals, etc.',
                             '**Debt Changes**: New debt, auto-payment, interest accumulation, etc.',
                             '**Exceptions**: Claim denials, fines, unexpected expenses, etc.'
                         ]
@@ -2823,11 +2823,9 @@ const enFinalOverrides = {
                 id: 'quick_start',
                 title: '11. Quick Start (Recommended)',
                 list: [
-                    'Daytime first choose commute: When unsure, choose the safer option.',
-                    'Then choose lunch strategy: Eat bento if possible, don\'t force fast food; health chain is hard to repair.',
+                    'Daytime first choose lunch strategy: Eat bento if possible, don\'t force fast food; health chain is hard to repair.',
                     'Then handle event choices: First survive (health/mental/energy) then talk about gains.',
                     'Every few days open: `Bill Details` + `Financial Details`, arrange cash and repayment in advance.',
-                    'At end of each day click 📜 **History**, confirm today\'s income/expenses and events have no anomalies.',
                     'After funds are comfortable, then consider: investment and insurance upgrades.'
                 ]
             }
