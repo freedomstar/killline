@@ -287,7 +287,7 @@ const enOverrides = {
             },
             coffee_drip: {
                 name: 'Coffee IV',
-                description: 'Energy locked at >= {0}, never zero.'
+                description: 'When energy hits zero, {1}% chance to lock at {0} to prevent fainting.'
             },
             piggy_bank: {
                 name: 'Piggy Bank',

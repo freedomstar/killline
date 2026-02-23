@@ -9,8 +9,8 @@ import { getArtifact } from '../data/artifacts.js';
 export const rentIncreaseBonusEvent = {
     id: 'rent_increase_bonus',
     type: 'special',
-    title: () => I18n.t('data.artifacts.rent_increase_bonus.title'),
-    description: () => I18n.t('data.artifacts.rent_increase_bonus.description'),
+    title: I18n.t('data.artifacts.rent_increase_bonus.title'),
+    description: I18n.t('data.artifacts.rent_increase_bonus.description'),
     period: 'any',
     isRandom: false,
     isRandomEncounter: true,

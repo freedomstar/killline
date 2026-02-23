@@ -317,7 +317,7 @@ export const artifacts = {
     coffee_drip: {
         id: 'coffee_drip',
         name: () => I18n.t('data.artifacts.coffee_drip.name'),
-        description: () => I18n.t('data.artifacts.coffee_drip.description', artifactConfig.coffee_drip.minEnergy),
+        description: () => I18n.t('data.artifacts.coffee_drip.description', artifactConfig.coffee_drip.minEnergy, Math.round((artifactConfig.coffee_drip.chance || 0) * 100)),
         icon: '☕',
         rarity: 'common'
     },

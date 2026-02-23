@@ -119,16 +119,27 @@ export class Game {
      * 限制数值范围
      */
     clampValues() {
-        const minEnergy = this.hasArtifact && this.hasArtifact('coffee_drip') ? 1 : 0;
         // 使用动态上限，回退到 100
         const maxEnergy = this.state.maxEnergy || 100;
         const maxMental = this.state.maxMental || 100;
         const maxHealth = this.state.maxHealth || 100;
 
+        let minEnergy = 0;
+
         // V2.XX Fix: Set fainted flag BEFORE clamping to minEnergy if it dropped to <= 0
         // Only trigger if NOT in preview mode (isPreview is property of game instance, not state)
-        if (this.state.energy <= 0 && !this.isPreview && minEnergy === 0) {
-            this.state.faintedToday = true;
+        if (this.state.energy <= 0 && !this.isPreview) {
+            if (!this.state.faintedToday && this.hasArtifact && this.hasArtifact('coffee_drip')) {
+                // Determine probability trigger
+                const triggerChance = GameData.artifactConfig?.coffee_drip?.chance || 0.3;
+                if (this.rng && this.rng.random() < triggerChance) {
+                    minEnergy = GameData.artifactConfig?.coffee_drip?.minEnergy || 1;
+                    this.addLog({ key: 'game.artifactTriggers.coffee_drip', fallback: '☕ 咖啡点滴生效，强行吊着一口气！' }, 'positive', { key: 'ui_static.finance.artifact', fallback: '神器' });
+                }
+            }
+            if (minEnergy === 0) {
+                this.state.faintedToday = true;
+            }
         }
 
         this.state.energy = Math.max(minEnergy, Math.min(maxEnergy, this.state.energy));

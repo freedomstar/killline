@@ -458,7 +458,7 @@ export const zh = {
             },
             coffee_drip: {
                 name: '咖啡点滴',
-                description: '精力锁定 ≥ {0}，永远不会归零透支。',
+                description: '精力归零时，有 {1}% 几率强行恢复至 {0} 点，避免晕倒。',
             },
 
             gig_cap: {
@@ -775,7 +775,7 @@ export const zh = {
             noAlternative: '暂无可选住所',
             insufficientCash: (required) => `现金不足：需要至少 $${required} 才能申请搬家`,
             insufficientCashShort: (required) => `至少需要 $${required}`,
-            recoverEveryNight: '每晚回复：'
+            recoverEveryNight: '每晚恢复：'
         }
     },
 

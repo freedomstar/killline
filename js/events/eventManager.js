@@ -7,12 +7,11 @@ import { dailyEvents, randomDailyActions, generateDailyWorkEvent, getAvailableDa
 import { accidentEvents } from './accidents.js';
 import { healthEvents } from './health.js';
 import { hospitalEvents } from './hospital.js';
-import { randomEvents } from './random.js';
+import { randomEvents, rentIncreaseBonusEvent } from './random.js';
 import { nightEvents, getNightChoiceEvent } from './night.js';
 import { financialEvents } from './financial.js';
 import { GameData } from '../data/index.js';
 
-// Aggregate all events
 const allEvents = [
     ...workEvents,
     ...dailyEvents,
@@ -20,6 +19,7 @@ const allEvents = [
     ...healthEvents,
     ...hospitalEvents,
     ...randomEvents,
+    rentIncreaseBonusEvent,
     ...nightEvents,
     ...financialEvents
 ];

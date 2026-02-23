@@ -195,6 +195,7 @@
     width: 100%;
     align-items: flex-start;
     text-align: left;
+    padding-left: 20px;
 }
 
 /* 事件选项 - 卡片式 */
@@ -207,7 +208,7 @@
 .choice-button {
     font-family: var(--font-primary);
     font-size: 0.95rem;
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) 24px;
     min-height: 64px;
     background: var(--color-surface-elevated);
     color: var(--color-text-primary);

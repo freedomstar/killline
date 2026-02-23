@@ -40,7 +40,8 @@ export const artifactConfig = {
 
     // 卷王流 (Grind)
     coffee_drip: {
-        minEnergy: 1
+        minEnergy: 1,
+        chance: 0.5 // 30% 保底几率
     },
 
 
