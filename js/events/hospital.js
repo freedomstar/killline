@@ -32,7 +32,7 @@ const getRandomHealthRecovery = (context) => {
 const applyHealthRecoveryAndCheckDischarge = (state, context) => {
     const hospConfig = GameData.healthConstants.hospitalization;
     const recoveryAmount = getRandomHealthRecovery(context);
-    state.health = Math.min(GameData.initialState.maxHealth, state.health + recoveryAmount);
+    state.health = Math.min((state.maxHealth || 100), state.health + recoveryAmount);
 
     // 检查是否达到出院健康值
     if (state.health >= hospConfig.dischargeHealthMin) {

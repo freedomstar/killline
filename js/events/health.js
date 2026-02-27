@@ -37,7 +37,7 @@ export const healthEvents = [
                         return { message: I18n.t('events.feeling_under_weather.messages.clinicFail'), type: 'negative' };
                     }
 
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + opt.effectiveness);
+                    state.health = Math.min((state.maxHealth || 100), state.health + opt.effectiveness);
                     return { message: I18n.t('events.feeling_under_weather.messages.clinicSuccess'), type: 'positive' };
                 }
             },
@@ -101,7 +101,7 @@ export const healthEvents = [
                     const result = context.game.calculateMedicalCost(baseCost, true);
                     context.game.commitMedicalTransaction(result);
                     context.game.deductMoney(result.youPay, 'medical', { state: context.game.state, allowInstallment: true });
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min((state.maxHealth || 100), state.health + conf.healthGain);
 
                     let msg = I18n.t('events.worsening_symptoms.messages.urgentCareTreated', result.youPay);
                     if (result.riskFactor?.isOutOfNetwork) {
@@ -324,7 +324,7 @@ export const healthEvents = [
                 condition: (state) => true,
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.special_events.emergency_oon.nearest;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min((state.maxHealth || 100), state.health + conf.healthGain);
                     if (context.rng.random() < conf.oonChance) {
                         const oonCost = conf.baseCost;
                         // OON treatment is usually not covered by insurance, so no commitMedicalTransaction
@@ -384,7 +384,7 @@ export const healthEvents = [
                 condition: (state) => true,
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.surgery_required.urgent;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min((state.maxHealth || 100), state.health + conf.healthGain);
                     // Urgent = Denied
                     const risk = { isDenied: true, note: '未获审批' };
                     const result = context.game.calculateMedicalCost(conf.baseCost, false, risk);
@@ -432,7 +432,7 @@ export const healthEvents = [
 
                     // Whether approved or denied, the surgery is performed
                     const urgentConf = GameData.eventConfigs.surgery_required.urgent;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + urgentConf.healthGain);
+                    state.health = Math.min((state.maxHealth || 100), state.health + urgentConf.healthGain);
 
                     if (context.rng.random() < (conf.successChance / 100)) {
                         // Success: Approved!
@@ -496,7 +496,7 @@ export const healthEvents = [
                         const result = context.game.calculateMedicalCost(urgentConf.baseCost);
                         context.game.commitMedicalTransaction(result);
                         context.game.deductMoney(result.youPay, 'medical', { state: context.game.state, allowInstallment: true });
-                        state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.successHealthGain);
+                        state.health = Math.min((state.maxHealth || 100), state.health + conf.successHealthGain);
                         return { message: I18n.t('events.surgery_approval.messages.approved', result.youPay, conf.successHealthGain), type: 'positive' };
                     }
 
@@ -507,7 +507,7 @@ export const healthEvents = [
                     context.game.commitMedicalTransaction(failResult);
 
                     context.game.deductMoney(failResult.youPay, 'medical', { state: context.game.state, allowInstallment: true });
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.failHealthGain);
+                    state.health = Math.min((state.maxHealth || 100), state.health + conf.failHealthGain);
                     state.mental = Math.max(0, state.mental - conf.failMentalLoss);
                     return { message: I18n.t('events.surgery_approval.messages.denied', failResult.youPay, conf.failHealthGain, conf.failMentalLoss), type: 'negative' };
                 }
@@ -542,7 +542,7 @@ export const healthEvents = [
                     context.game.deductMoney(conf.moneyCost, 'daily', { state: context.game.state });
                     state.consecutiveFastFood = 0;
                     state.ingredients = Math.min(conf.ingredientsMax, state.ingredients + conf.ingredientsGain);
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min((state.maxHealth || 100), state.health + conf.healthGain);
                     return { message: I18n.t('events.fastfood_warning.messages.healthy'), type: 'positive' };
                 }
             },
@@ -606,7 +606,7 @@ export const healthEvents = [
                         .filter(item => item.source === 'medical')
                         .reduce((sum, item) => sum + (item.amount || 0), 0);
                     const result = context.game.repayDebt(medicalDebt, { state: context.game.state });
-                    state.mental = Math.min(GameData.initialState.maxMental, (state.mental || 100) + conf.payMentalGain);
+                    state.mental = Math.min((state.maxMental || 100), (state.mental || 100) + conf.payMentalGain);
                     return { message: I18n.t('events.medical_debt_collection.messages.paid', result.paid || medicalDebt), type: 'positive' };
                 }
             },
@@ -630,19 +630,6 @@ export const healthEvents = [
 
                     state.mental -= conf.installmentMentalLoss;
                     return { message: I18n.t('events.medical_debt_collection.messages.installment', monthlyAmount), type: 'neutral' };
-                }
-            },
-            {
-                text: I18n.t('events.medical_debt_collection.choices.refuse.text'),
-                hint: (state) => {
-                    const conf = GameData.eventConfigs.medical_debt.collection;
-                    return I18n.t('events.medical_debt_collection.choices.refuse.hint', conf.refuseMentalLoss);
-                },
-                hintType: 'negative',
-                effect: (state, context) => {
-                    const conf = GameData.eventConfigs.medical_debt.collection;
-                    state.mental -= conf.refuseMentalLoss;
-                    return { message: I18n.t('events.medical_debt_collection.messages.refused'), type: 'negative' };
                 }
             }
         ]

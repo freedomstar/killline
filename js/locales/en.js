@@ -1422,7 +1422,7 @@ const enMoreOverrides = {
             title: 'PIP Result',
             description: 'The review period is over. HR asks you into a room.',
             choices: {
-                enter: { text: 'Walk In', hint: (mentalGain, mentalLoss) => `Hear final result (pass: M+${mentalGain}, fail: M-${mentalLoss}, fail = fired)` }
+                enter: { text: 'Walk In', hint: (passChance, mentalGain, mentalLoss) => `Pass chance: ${passChance}% (pass: M+${mentalGain}, fail: M-${mentalLoss}, fail = fired)` },
             },
             messages: {
                 passed: 'You passed the PIP. The company keeps you.',

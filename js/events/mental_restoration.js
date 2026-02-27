@@ -27,7 +27,7 @@ export const mentalRestorationEvents = [
 
             // Restore Max Mental
             const oldMax = state.maxMental;
-            state.maxMental = Math.min(GameData.initialState.maxMental, state.maxMental + conf.maxMentalGain);
+            state.maxMental = (state.maxMental || 100) + conf.maxMentalGain;
             const maxGain = state.maxMental - oldMax;
 
             // Restore Current Mental
@@ -57,13 +57,13 @@ export const mentalRestorationEvents = [
 
             // Restore Max Mental
             const oldMax = state.maxMental;
-            state.maxMental = Math.min(GameData.initialState.maxMental, state.maxMental + conf.maxMentalGain);
+            state.maxMental = (state.maxMental || 100) + conf.maxMentalGain;
             const maxGain = state.maxMental - oldMax;
 
             // Restore Stats
             state.mental = Math.min(state.maxMental, state.mental + conf.mentalGain);
             if (conf.healthGain) {
-                state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
             }
 
             return {
@@ -94,7 +94,7 @@ export const mentalRestorationEvents = [
                     const conf = GameData.eventConfigs.mental_restoration.meditation_insight;
 
                     const oldMax = state.maxMental;
-                    state.maxMental = Math.min(GameData.initialState.maxMental, state.maxMental + conf.maxMentalGain);
+                    state.maxMental = (state.maxMental || 100) + conf.maxMentalGain;
                     const maxGain = state.maxMental - oldMax;
 
                     return {
@@ -119,7 +119,7 @@ export const mentalRestorationEvents = [
 
             // Restore Max Mental
             const oldMax = state.maxMental;
-            state.maxMental = Math.min(GameData.initialState.maxMental, state.maxMental + conf.maxMentalGain);
+            state.maxMental = (state.maxMental || 100) + conf.maxMentalGain;
             const maxGain = state.maxMental - oldMax;
 
             state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.socialGain);

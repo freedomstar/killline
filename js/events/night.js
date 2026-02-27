@@ -162,7 +162,7 @@ export const nightEvents = [
                 hintType: 'positive',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.night_events.hot_weather.ac;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     state.utilityBill += conf.billCost;
                     state.sleptWell = true;
                     return {
@@ -262,7 +262,7 @@ export const nightEvents = [
                     const conf = GameData.eventConfigs.cold_weather.gym;
                     state.money -= conf.moneyCost;
                     state.energy = Math.max(0, state.energy - conf.energyCost);
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
                     return { message: I18n.t('events.cold_weather.messages.gym'), type: 'positive' };
                 }
             }
@@ -311,7 +311,7 @@ export const nightEvents = [
                 hintType: 'neutral',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.night_events.insomnia.phone;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     state.sleptWell = false;
                     return {
                         message: I18n.t('events.insomnia.messages.phone'),
@@ -335,7 +335,7 @@ export const nightEvents = [
                 hintType: 'positive',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.night_events.insomnia.meditate;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     if (context.rng.random() < conf.successChance) {
                         state.sleptWell = true;
                         return {
@@ -526,7 +526,7 @@ export const nightEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.night_events.craving.order;
                     state.money -= conf.cost;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     state.health = Math.max(0, state.health - conf.healthCost);
                     state.sleptWell = true;
                     return {
@@ -550,7 +550,7 @@ export const nightEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.night_events.craving.cook;
                     state.ingredients -= conf.ingredientsCost;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
                     state.sleptWell = true;
                     return {
                         message: I18n.t('events.late_night_craving.messages.cook'),
@@ -625,7 +625,7 @@ export const nightEvents = [
                 hintType: 'neutral',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.night_events.nightmare.get_up;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     state.sleptWell = false;
                     return {
                         message: I18n.t('events.nightmare.messages.distract'),
@@ -662,7 +662,7 @@ export const nightEvents = [
                     const conf = GameData.eventConfigs.night_events.loneliness.contact;
                     state.money -= conf.cost;
                     state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.socialGain);
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     state.sleptWell = true;
                     return {
                         message: I18n.t('events.loneliness.messages.contact'),

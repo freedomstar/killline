@@ -287,15 +287,15 @@ export const EventsMixin = {
         let totalWeight = 0;
 
         if (mandatoryEvents.length > 0) {
-            totalWeight = mandatoryEvents.reduce((sum, e) => sum + (typeof e.weight === 'function' ? e.weight(this.state) : (e.weight || 0)), 0);
+            totalWeight = mandatoryEvents.reduce((sum, e) => sum + GameEvents.getEventWeight(e, this.state), 0);
             layoffWeight = mandatoryEvents
                 .filter(e => e.type === 'layoff' || e.id === 'pip_warning' || e.id === 'sudden_layoff')
-                .reduce((sum, e) => sum + (typeof e.weight === 'function' ? e.weight(this.state) : (e.weight || 0)), 0);
+                .reduce((sum, e) => sum + GameEvents.getEventWeight(e, this.state), 0);
         } else {
-            totalWeight = availableEvents.reduce((sum, e) => sum + (typeof e.weight === 'function' ? e.weight(this.state) : (e.weight || 0)), 0);
+            totalWeight = availableEvents.reduce((sum, e) => sum + GameEvents.getEventWeight(e, this.state), 0);
             layoffWeight = availableEvents
                 .filter(e => e.type === 'layoff' || e.id === 'pip_warning' || e.id === 'sudden_layoff')
-                .reduce((sum, e) => sum + (typeof e.weight === 'function' ? e.weight(this.state) : (e.weight || 0)), 0);
+                .reduce((sum, e) => sum + GameEvents.getEventWeight(e, this.state), 0);
         }
 
         let weightProbability = totalWeight > 0 ? (layoffWeight / totalWeight) : 0;
@@ -492,7 +492,7 @@ export const EventsMixin = {
             const allDeepNightEvents = GameEvents.getAvailableEvents(this.state, 'deep_night', this.rng);
             // 排除 any 事件，避免账单/机会类在深夜触发
             const availableDeepNightEvents = allDeepNightEvents.filter(e => e.period === 'deep_night');
-            const deepNightRandomEvent = GameEvents.selectRandomEvent(availableDeepNightEvents, this.rng);
+            const deepNightRandomEvent = GameEvents.selectRandomEvent(availableDeepNightEvents, this.rng, this.state);
 
             if (deepNightRandomEvent) {
                 this.currentEvent = { ...deepNightRandomEvent, isRandomEncounter: true };
@@ -508,7 +508,7 @@ export const EventsMixin = {
         // 强制事件优先（如医疗紧急情况）
         const mandatoryEvents = GameEvents.getMandatoryEvents(this.state, period, this.rng);
         if (mandatoryEvents && mandatoryEvents.length > 0) {
-            const mandatoryEvent = GameEvents.selectRandomEvent(mandatoryEvents, this.rng);
+            const mandatoryEvent = GameEvents.selectRandomEvent(mandatoryEvents, this.rng, this.state);
             this.currentEvent = this._applyDynamicChoices(mandatoryEvent, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
             this.recordRandomEvent(this.currentEvent);
             return this.currentEvent;
@@ -516,7 +516,7 @@ export const EventsMixin = {
 
         // 随机选择事件
         const availableEvents = GameEvents.getAvailableEvents(this.state, period, this.rng);
-        let selectedEvent = GameEvents.selectRandomEvent(availableEvents, this.rng);
+        let selectedEvent = GameEvents.selectRandomEvent(availableEvents, this.rng, this.state);
 
         // V2.42+：白天主事件优先级
         // - 工作日：优先 day_work

@@ -206,7 +206,7 @@ export const TimeMixin = {
                 });
             }
 
-            const randomEvent = GameEvents.selectRandomEvent(validRandom, this.rng);
+            const randomEvent = GameEvents.selectRandomEvent(validRandom, this.rng, this.state);
             if (randomEvent) {
                 this.state.eventQueue.push(randomEvent);
                 queuedIds.add(randomEvent.id);

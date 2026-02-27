@@ -56,6 +56,7 @@ export const eventConfigs = {
     pip_result: {
         passChanceCap: 0.9,
         passChanceMin: 0.1,
+        riskPenaltyMultiplier: 0.2,  // 裁员风险对 PIP 通过率的惩罚系数（风险100% = 20%惩罚）
         mentalGainPass: 10,
         mentalLossFail: 45
     },

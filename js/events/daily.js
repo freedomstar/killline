@@ -53,7 +53,7 @@ export const dailyEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.routine_events.day_rest.sleep;
                     state.energy = Math.min(GameData.initialState.maxEnergy, state.energy + conf.energyGain);
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
                     return { message: I18n.t('events.day_rest.messages.sleep'), type: 'positive', ignoreLunch: true };
                 }
             },
@@ -72,7 +72,7 @@ export const dailyEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.routine_events.day_rest.cook;
                     state.ingredients -= conf.ingredientsCost;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
                     state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     return { message: I18n.t('events.day_rest.messages.cook'), type: 'positive', ignoreLunch: true };
                 }
@@ -169,7 +169,7 @@ export const dailyEvents = [
                     const conf = GameData.eventConfigs.routine_events.day_rest.deep_sleep;
                     state.energy = GameData.initialState.maxEnergy;
 
-                    state.maxHealth = Math.min(GameData.initialState.maxHealth, (state.maxHealth || 100) + conf.healthMaxGain);
+                    state.maxHealth = (state.maxHealth || 100) + conf.healthMaxGain;
 
                     state.socialValue = Math.max(0, (state.socialValue || 0) - conf.socialLoss);
 
@@ -195,7 +195,7 @@ export const dailyEvents = [
 
                     state.energy = Math.max(0, state.energy - conf.energyCost);
 
-                    state.maxHealth = Math.min(GameData.initialState.maxHealth, (state.maxHealth || 100) + conf.healthMaxGain);
+                    state.maxHealth = (state.maxHealth || 100) + conf.healthMaxGain;
 
                     state.health = Math.min(state.maxHealth, state.health + conf.healthGain);
 
@@ -226,7 +226,7 @@ export const dailyEvents = [
                     state.energy = Math.max(0, state.energy - conf.energyCost);
 
                     const oldMax = state.maxMental;
-                    state.maxMental = Math.min(GameData.initialState.maxMental, state.maxMental + conf.maxMentalGain);
+                    state.maxMental = (state.maxMental || 100) + conf.maxMentalGain;
                     const maxGain = state.maxMental - oldMax;
                     state.mental = Math.min(state.maxMental, state.mental + conf.mentalGain);
 
@@ -254,11 +254,11 @@ export const dailyEvents = [
                     state.energy = Math.max(0, state.energy - conf.energyCost);
 
                     const oldMax = state.maxMental;
-                    state.maxMental = Math.min(GameData.initialState.maxMental, state.maxMental + conf.maxMentalGain);
+                    state.maxMental = (state.maxMental || 100) + conf.maxMentalGain;
                     const maxGain = state.maxMental - oldMax;
 
                     state.mental = Math.min(state.maxMental, state.mental + conf.mentalGain);
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
 
                     return { message: I18n.t('data.mental_restoration.nature_retreat.messages.success', maxGain), type: 'positive', ignoreLunch: true };
                 }
@@ -276,7 +276,7 @@ export const dailyEvents = [
                     state.energy = Math.max(0, state.energy - conf.energyCost);
 
                     const oldMax = state.maxMental;
-                    state.maxMental = Math.min(GameData.initialState.maxMental, state.maxMental + conf.maxMentalGain);
+                    state.maxMental = (state.maxMental || 100) + conf.maxMentalGain;
                     const maxGain = state.maxMental - oldMax;
 
                     state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.socialGain);
@@ -342,7 +342,7 @@ export const dailyEvents = [
                 hintType: 'neutral',
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.routine_events.day_jobless.relax;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     return { message: I18n.t('events.day_jobless.messages.relax'), type: 'neutral' };
                 }
             },
@@ -471,7 +471,7 @@ export const dailyEvents = [
                         const mult = minMult + context.rng.random() * (maxMult - minMult);
                         state.monthlyIncome = Math.round(baseIncome * mult);
                         state.sickLeaveDays = conf.initialSickLeaveDays;
-                        state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGainSuccess);
+                        state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGainSuccess);
                         if (state.housing === 'homeless') {
                             return { message: I18n.t('events.afternoon_interview.messages.homelessSuccess'), type: 'positive' };
                         }
@@ -527,7 +527,7 @@ export const dailyEvents = [
                         const mult = minMult + context.rng.random() * (maxMult - minMult);
                         state.monthlyIncome = Math.round(baseIncome * mult);
                         state.sickLeaveDays = tryHardConf.initialSickLeaveDays;
-                        state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGainSuccess);
+                        state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGainSuccess);
                         return { message: I18n.t('events.afternoon_interview.messages.casualSuccess'), type: 'positive' };
                     }
                     return { message: I18n.t('events.afternoon_interview.messages.casualFail'), type: 'neutral' };
@@ -614,8 +614,8 @@ export const randomDailyActions = [
         effect: (state, context) => {
             const conf = GameData.eventConfigs.daily_actions.take_walk;
             state.energy = Math.max(0, state.energy - conf.energyCost);
-            state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
-            state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+            state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
+            state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
             return { message: I18n.t('events.daily_actions.take_walk.message'), type: 'positive' };
         }
     },
@@ -1013,7 +1013,7 @@ export function applyCommuteEffects(state, context) {
     }
 
     if (config.healthEffect > 0) {
-        state.health = Math.min(GameData.initialState.maxHealth, state.health + config.healthEffect);
+        state.health = Math.min(state.maxHealth || 100, state.health + config.healthEffect);
         messages.push(I18n.t('data.commute_messages.health', config.healthEffect));
     }
 

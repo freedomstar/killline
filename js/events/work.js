@@ -174,9 +174,26 @@ export const workEvents = [
         choices: [
             {
                 text: I18n.t('events.pip_result.choices.enter.text'),
-                hint: (state) => {
+                hint: (state, context) => {
                     const conf = GameData.eventConfigs.pip_result;
-                    return I18n.t('events.pip_result.choices.enter.hint', conf.mentalGainPass, conf.mentalLossFail);
+                    const score = state.pipPerformanceScore || 50;
+                    const baseChance = score / 100;
+
+                    // 计算裁员风险惩罚
+                    const risk = context.game?.calculateLayoffRisk?.() || 0;
+                    const riskPenalty = (risk / 100) * conf.riskPenaltyMultiplier;
+
+                    // 工作效率加成
+                    const effConf = GameData.eventConfigs.layoff_social_modifiers.pip_result;
+                    const efficiency = state.workEfficiency || 100;
+                    const efficiencyBonus = (efficiency - 100) * effConf.efficiencyBonusPerPoint;
+
+                    // 最终通过率
+                    const passChance = Math.min(conf.passChanceCap, Math.max(conf.passChanceMin,
+                        baseChance - riskPenalty + efficiencyBonus));
+
+                    return I18n.t('events.pip_result.choices.enter.hint',
+                        Math.round(passChance * 100), conf.mentalGainPass, conf.mentalLossFail);
                 },
                 hintType: 'neutral',
                 effect: (state, context) => {
@@ -184,12 +201,16 @@ export const workEvents = [
                     const score = state.pipPerformanceScore || 50;
                     const baseChance = score / 100;
 
+                    // 裁员风险影响 PIP 通过率
+                    const risk = context.game?.calculateLayoffRisk?.() || 0;
+                    const riskPenalty = (risk / 100) * conf.riskPenaltyMultiplier;
+
                     // 工作效率影响 PIP 通过率
                     const effConf = GameData.eventConfigs.layoff_social_modifiers.pip_result;
                     const efficiency = state.workEfficiency || 100;
                     const efficiencyBonus = (efficiency - 100) * effConf.efficiencyBonusPerPoint;
-                    const passChance = Math.min(conf.passChanceCap, Math.max(conf.passChanceMin, baseChance + efficiencyBonus));
-
+                    const passChance = Math.min(conf.passChanceCap, Math.max(conf.passChanceMin,
+                        baseChance - riskPenalty + efficiencyBonus));
                     state.pipActive = false;
                     state.pipDaysRemaining = 0;
                     state.pipPerformanceScore = 0;
@@ -389,7 +410,7 @@ export const workIncidents = [
                 },
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.colleague_help.decline;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     state.socialValue = Math.max(0, (state.socialValue || 0) - conf.socialLoss);
                     state.workEfficiency = Math.max(0, (state.workEfficiency || 100) - conf.workEfficiencyLoss);
                     return { message: I18n.t('events.work_incidents.colleague_help.messages.decline'), type: 'neutral' };
@@ -493,7 +514,7 @@ export const workIncidents = [
                 },
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.client_meeting.wing_it;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     const efficiency = state.workEfficiency || 100;
                     const risk = Math.max(0.05, Math.min(0.9, conf.baseRisk - (efficiency - 100) * conf.efficiencyImpact));
                     if (context.rng.random() < risk) {
@@ -517,7 +538,7 @@ export const workIncidents = [
                 },
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.office_drama.listen;
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     state.energy = Math.max(0, state.energy - conf.energyCost);
                     state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.socialGain);
                     return { message: I18n.t('events.work_incidents.office_drama.messages.listen'), type: 'neutral' };
@@ -531,7 +552,7 @@ export const workIncidents = [
                 },
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.office_drama.avoid;
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
                     state.socialValue = Math.max(0, (state.socialValue || 0) - conf.socialLoss);
                     return { message: I18n.t('events.work_incidents.office_drama.messages.avoid'), type: 'positive' };
                 }

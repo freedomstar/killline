@@ -292,8 +292,8 @@ export const randomEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.afternoon_exercise.gym;
                     state.energy = Math.max(0, state.energy - conf.energyCost);
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
-                    state.health = Math.min(GameData.initialState.maxHealth, state.health + conf.healthGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
+                    state.health = Math.min(state.maxHealth || 100, state.health + conf.healthGain);
                     return { message: I18n.t('events.afternoon_exercise.messages.gym'), type: 'positive' };
                 }
             },
@@ -308,7 +308,7 @@ export const randomEvents = [
                 effect: (state, context) => {
                     const conf = GameData.eventConfigs.afternoon_exercise.walk;
                     state.energy = Math.max(0, state.energy - conf.energyCost);
-                    state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.mentalGain);
+                    state.mental = Math.min(state.maxMental || 100, state.mental + conf.mentalGain);
                     return { message: I18n.t('events.afternoon_exercise.messages.walk'), type: 'positive' };
                 }
             },
@@ -556,7 +556,7 @@ export const randomEvents = [
                     const rng = context.rng || Math;
                     if (rng.random() < successChance) {
                         state.workEfficiency = Math.min(GameData.initialState.maxWorkEfficiency, (state.workEfficiency || 100) + conf.successWorkEfficiencyGain);
-                        state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.successMentalGain);
+                        state.mental = Math.min(state.maxMental || 100, state.mental + conf.successMentalGain);
                         state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.successSocialGain);
                         return { message: I18n.t('events.after_work_drinks.messages.success', conf.successWorkEfficiencyGain, conf.successMentalGain, conf.successSocialGain), type: 'positive' };
                     } else {
@@ -611,7 +611,7 @@ export const randomEvents = [
                     const rng = context.rng || Math;
                     if (rng.random() < successChance) {
                         state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.successSocialGain);
-                        state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.successMentalGain);
+                        state.mental = Math.min(state.maxMental || 100, state.mental + conf.successMentalGain);
                         return { message: I18n.t('events.industry_mixer.messages.success', conf.successSocialGain, conf.successMentalGain), type: 'positive' };
                     } else {
                         state.mental = Math.max(0, state.mental - conf.failMentalLoss);
@@ -657,7 +657,7 @@ export const randomEvents = [
 
                     const rng = context.rng || Math;
                     if (rng.random() < successChance) {
-                        state.mental = Math.min(GameData.initialState.maxMental, state.mental + conf.successMentalGain);
+                        state.mental = Math.min(state.maxMental || 100, state.mental + conf.successMentalGain);
                         state.socialValue = Math.min(GameData.initialState.maxSocialValue, (state.socialValue || 0) + conf.successSocialGain);
                         return { message: I18n.t('events.alumni_reunion.messages.success', conf.successMentalGain, conf.successSocialGain), type: 'positive' };
                     } else {

@@ -73,17 +73,44 @@ export const EventManager = {
         return events.filter(e => e.mandatory === true);
     },
 
-    selectRandomEvent(availableEvents, rng) {
+    getEventWeight(event, state = null) {
+        if (!event) return 0;
+
+        try {
+            const rawWeight = typeof event.weight === 'function'
+                ? event.weight(state)
+                : (event.weight || 0);
+            const numericWeight = Number(rawWeight);
+
+            if (!Number.isFinite(numericWeight)) return 0;
+            return Math.max(0, numericWeight);
+        } catch (err) {
+            console.warn(`[EventManager] Failed to resolve weight for event '${event.id}':`, err);
+            return 0;
+        }
+    },
+
+    selectRandomEvent(availableEvents, rng, state = null) {
         if (!availableEvents || availableEvents.length === 0) return null;
 
-        const totalWeight = availableEvents.reduce((sum, event) => sum + (event.weight || 0), 0);
+        const weightedEvents = availableEvents
+            .map((event) => ({ event, weight: this.getEventWeight(event, state) }))
+            .filter((item) => item.weight > 0);
+
+        if (weightedEvents.length === 0) {
+            const fallbackIndex = Math.floor(rng.random() * availableEvents.length);
+            return availableEvents[fallbackIndex] || null;
+        }
+
+        const totalWeight = weightedEvents.reduce((sum, item) => sum + item.weight, 0);
         let random = rng.random() * totalWeight;
 
-        for (const event of availableEvents) {
-            random -= (event.weight || 0);
-            if (random <= 0) return event;
+        for (const item of weightedEvents) {
+            random -= item.weight;
+            if (random <= 0) return item.event;
         }
-        return availableEvents[availableEvents.length - 1];
+
+        return weightedEvents[weightedEvents.length - 1].event;
     },
 
     calculateSuccessRate(state) {

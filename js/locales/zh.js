@@ -1465,7 +1465,7 @@ export const zh = {
             title: '📋 PIP结果公布',
             description: '观察期结束，HR约你谈话...',
             choices: {
-                enter: { text: '走进会议室', hint: (mentalGain, mentalLoss) => `听取最终结果（通过精神+${mentalGain}，失败精神-${mentalLoss}，失败被解雇）` },
+                enter: { text: '走进会议室', hint: (passChance, mentalGain, mentalLoss) => `通过概率 ${passChance}%，通过精神+${mentalGain}，失败精神-${mentalLoss}（失败被解雇）` },
             },
             messages: {
                 passed: '你通过了PIP！公司决定留用你。',
