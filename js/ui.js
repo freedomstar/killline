@@ -3896,7 +3896,7 @@ export const UI = {
             const isActive = state.selectedDailyAction === (action.id || action.text);
             button.className = `lunch-opt-btn ${isActive ? 'active' : ''}`;
 
-            const hintText = typeof action.hint === 'function' ? action.hint(state) : action.hint;
+            const hintText = typeof action.hint === 'function' ? action.hint(state, { game, rng: game.rng }) : action.hint;
             button.innerHTML = `
                 <span class="lunch-opt-name">${action.text}</span>
                 <span class="lunch-opt-hint">${hintText}</span>
@@ -3954,7 +3954,7 @@ export const UI = {
                 // 确保按钮占满整行
                 button.style.width = '100%';
 
-                const incidentHint = typeof choice.hint === 'function' ? choice.hint(state) : choice.hint;
+                const incidentHint = typeof choice.hint === 'function' ? choice.hint(state, { game, rng: game.rng }) : choice.hint;
                 button.innerHTML = `
                     <span class="lunch-opt-name">${choice.text}</span>
                     <span class="lunch-opt-hint">${incidentHint}</span>
@@ -4128,7 +4128,7 @@ export const UI = {
                 hintSpan.className = `choice-hint ${choice.hintType || ''}`;
                 // 支持动态提示
                 hintSpan.textContent = typeof choice.hint === 'function'
-                    ? choice.hint(state)
+                    ? choice.hint(state, { game, rng: game.rng })
                     : choice.hint;
                 metaDiv.appendChild(hintSpan);
             }

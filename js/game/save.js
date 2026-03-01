@@ -236,35 +236,20 @@ export const SaveMixin = {
             }
 
             // V2.XX 根因修复：统一重建读档事件（JSON 会丢失 function）
-            const buildEveningDashboardEvent = (savedEvent) => {
+            // V2.36: evening_dashboard 已移除，改为自动顺序处理
+            const processQueuedEvent = () => {
                 if (!Array.isArray(this.state.eventQueue) || this.state.eventQueue.length === 0) {
                     return null;
                 }
-
-                const title = (savedEvent && savedEvent.title) || '待处理事项';
-                const description = (savedEvent && savedEvent.description) || '今晚有几件事需要你处理...';
-
-                return {
-                    id: 'evening_dashboard',
-                    title,
-                    description,
-                    period: 'night',
-                    choices: this.state.eventQueue.map((evt) => ({
-                        text: `处理: ${evt && evt.title ? evt.title : '未知事件'}`,
-                        effect: (state) => {
-                            const qIdx = Array.isArray(state.eventQueue)
-                                ? state.eventQueue.findIndex(e => e && evt && e.id === evt.id)
-                                : -1;
-                            if (qIdx >= 0) {
-                                state.eventQueue.splice(qIdx, 1);
-                            }
-                            return {
-                                triggerEvent: evt && evt.id ? evt.id : null,
-                                message: `正在处理: ${evt && evt.title ? evt.title : '未知事件'}`
-                            };
-                        }
-                    }))
-                };
+                // 直接取队列第一个事件
+                const evt = this.state.eventQueue[0];
+                const baseEvent = GameEvents.events.find(e => e.id === evt.id);
+                if (baseEvent) {
+                    return this._applyDynamicChoices
+                        ? this._applyDynamicChoices(baseEvent, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) })
+                        : { ...baseEvent };
+                }
+                return evt;
             };
 
             const rehydrateEvent = (savedEvent) => {
@@ -287,7 +272,8 @@ export const SaveMixin = {
                 }
 
                 if (savedEvent.id === 'evening_dashboard') {
-                    return buildEveningDashboardEvent(savedEvent);
+                    // 旧存档兼容：不再重建 dashboard，直接处理队列第一个事件
+                    return processQueuedEvent();
                 }
 
                 const baseEvent = GameEvents.events.find(e => e.id === savedEvent.id);

@@ -428,43 +428,14 @@ export const EventsMixin = {
                 : this.state.eventQueue;
 
             if (queuedEvents.length > 0) {
-                // 如果只有一个事件，直接触发
-                if (queuedEvents.length === 1) {
-                    const evt = queuedEvents[0];
-                    const idx = this.state.eventQueue.findIndex(e => e.id === evt.id);
-                    if (idx >= 0) this.state.eventQueue.splice(idx, 1);
-                    this.currentEvent = this._applyDynamicChoices(evt, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
-                    this.recordRandomEvent(evt);
-                    return this.currentEvent;
-                }
-
-                // 如果有多个事件，生成 Dashboard
-                console.log('[Game] Multiple events pending, showing dashboard.');
-                const dashboardEvent = {
-                    id: 'evening_dashboard',
-                    title: '待处理事项',
-                    description: '今晚有几件事需要你处理...',
-                    period: 'night',
-                    choices: queuedEvents.map((evt, index) => {
-                        return {
-                            text: `处理: ${evt.title}`,
-                            effect: (state) => {
-                                // 从队列中找到并移除该事件
-                                const qIdx = state.eventQueue.findIndex(e => e.id === evt.id);
-                                if (qIdx >= 0) {
-                                    state.eventQueue.splice(qIdx, 1);
-                                }
-                                // 触发该事件
-                                return {
-                                    triggerEvent: evt.id,
-                                    message: `正在处理: ${evt.title}`
-                                };
-                            }
-                        };
-                    })
-                };
-                this.currentEvent = dashboardEvent;
-                return dashboardEvent;
+                // 直接取第一个事件处理，按顺序自动触发
+                const evt = queuedEvents[0];
+                const idx = this.state.eventQueue.findIndex(e => e.id === evt.id);
+                if (idx >= 0) this.state.eventQueue.splice(idx, 1);
+                console.log(`[Game] Processing queued event: ${evt.id}, remaining in queue: ${this.state.eventQueue.length}`);
+                this.currentEvent = this._applyDynamicChoices(evt, { game: this, rng: this.rng, successRate: GameEvents.calculateSuccessRate(this.state) });
+                this.recordRandomEvent(evt);
+                return this.currentEvent;
             }
         }
 

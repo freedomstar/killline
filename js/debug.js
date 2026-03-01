@@ -500,8 +500,14 @@ const DebugTools = {
      */
     resolveHint(hint) {
         if (typeof hint === 'function') {
-            try { return hint(this.createMockState()); }
-            catch { return '[动态hint]'; }
+            const mockContext = {
+                rng: { random: () => 0.5 },
+                successRate: 1.0,
+                game: window.game,
+                GameData: window.GameData
+            };
+            try { return hint(this.createMockState(), mockContext); }
+            catch (e) { console.warn(e); return '[动态hint]'; }
         }
         return hint || '';
     },
