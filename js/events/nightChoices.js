@@ -134,7 +134,10 @@ export const nightChoices = {
     },
     prepareMeal: {
         id: 'prepareMeal',
-        condition: (housing) => housing === 'apartment' || housing === 'cheapRoom',
+        condition: (housing, state) => {
+            const cost = GameData.eventConfigs.night_choice_hints.prepareMeal.cost || 1;
+            return (housing === 'apartment' || housing === 'cheapRoom') && state && (state.ingredients || 0) >= cost;
+        },
         hint: () => I18n.t('data.night_choices.prepareMeal.hint',
             GameData.eventConfigs.night_choice_hints.prepareMeal.cost,
             GameData.eventConfigs.night_choice_hints.prepareMeal.energyRecoveryTomorrow,
